@@ -1,0 +1,21 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(grep -n '^\\\\s*`$' \"C:\\\\Users\\\\ahmedfuad\\\\Documents\\\\crypto-course\\\\Crypto-Course-V1.0\\\\crypto_course_app_270326.html\")",
+      "Bash(node --check \"c:/Users/ahmedfuad/Documents/crypto-course/Crypto-Course-V1.0/crypto_course_app_270326.html\")",
+      "Bash(node check_html.js)",
+      "Bash(grep -n \"\\\\`\" \"c:/Users/ahmedfuad/Documents/crypto-course/Crypto-Course-V1.0/crypto_course_app_270326.html\")",
+      "Bash(grep -v \"^[0-9]*:.*\\\\`.*\\\\`\")",
+      "Bash(node check2.js)",
+      "Bash(node -e \":*)",
+      "Bash(node --input-type=module)",
+      "Bash(node -e ':*)",
+      "Bash(node --check /tmp/check_js.js)",
+      "Bash(node --check \"C:/Users/ahmedfuad/AppData/Local/Temp/check_js.js\")",
+      "Bash(node --check \"C:/Users/ahmedfuad/AppData/Local/Temp/check_js3.js\")",
+      "Bash(node --check \"C:/Users/ahmedfuad/AppData/Local/Temp/sb0.js\")",
+      "Bash(node --check \"C:/Users/ahmedfuad/AppData/Local/Temp/sb1.js\")",
+      "Bash(node --check \"C:/Users/ahmedfuad/AppData/Local/Temp/sb2.js\")"
+    ]
+  }
+}

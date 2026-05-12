@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <!-- Background rounded square -->
+  <rect width="512" height="512" rx="112" fill="#1E3A8A"/>
+  <!-- Outer glow ring -->
+  <rect x="32" y="32" width="448" height="448" rx="90" fill="none" stroke="#3B82F6" stroke-width="4" opacity="0.3"/>
+  <!-- Lock shackle (arc) -->
+  <path d="M168 226 L168 172 C168 106 344 106 344 172 L344 226"
+        fill="none" stroke="#DBEAFE" stroke-width="36" stroke-linecap="round" stroke-linejoin="round"/>
+  <!-- Lock body -->
+  <rect x="128" y="222" width="256" height="196" rx="28" fill="#DBEAFE"/>
+  <!-- Keyhole circle -->
+  <circle cx="256" cy="318" r="32" fill="#1E3A8A"/>
+  <!-- Keyhole stem -->
+  <rect x="244" y="332" width="24" height="42" rx="10" fill="#1E3A8A"/>
+  <!-- XP accent dots (decorative) -->
+  <circle cx="96" cy="96" r="10" fill="#60A5FA" opacity="0.5"/>
+  <circle cx="416" cy="96" r="10" fill="#60A5FA" opacity="0.5"/>
+  <circle cx="96" cy="416" r="10" fill="#60A5FA" opacity="0.3"/>
+  <circle cx="416" cy="416" r="10" fill="#60A5FA" opacity="0.3"/>
+</svg>

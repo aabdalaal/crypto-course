@@ -1,0 +1,36 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Start Crypto-Course Server",
+            "type": "node-terminal",
+            "request": "launch",
+            "command": "python server.py 8000",
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "name": "Open Crypto-Course Browser",
+            "type": "node-terminal",
+            "request": "launch",
+            "command": "powershell -NoProfile -Command \"Start-Sleep -Seconds 2; explorer.exe 'http://localhost:8000/crypto_course_app.html'\"",
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "name": "Open Crypto-Course HTML",
+            "type": "node-terminal",
+            "request": "launch",
+            "command": "powershell -NoProfile -Command \"explorer.exe '${workspaceFolder}\\crypto_course_app.html'\"",
+            "cwd": "${workspaceFolder}"
+        }
+    ],
+    "compounds": [
+        {
+            "name": "Run Crypto-Course",
+            "configurations": [
+                "Start Crypto-Course Server",
+                "Open Crypto-Course Browser"
+            ],
+            "stopAll": true
+        }
+    ]
+}
