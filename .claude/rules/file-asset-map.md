@@ -4,7 +4,7 @@ alwaysApply: true
 ---
 
 ```
-crypto_course_app.html          ← entire application (single file)
+index.html                      ← entire application (single file)
 sw.js                           ← service worker (required for PWA/offline)
 manifest.json                   ← PWA manifest (required for installability)
 

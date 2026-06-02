@@ -15,7 +15,7 @@
 //                   Covers YouTube thumbnails (optional, nice UX).
 // ============================================================
 
-const VERSION      = 'v3';
+const VERSION      = 'v4';
 const SHELL_CACHE  = `cc-shell-${VERSION}`;
 const CDN_CACHE    = `cc-cdn-${VERSION}`;
 const IMG_CACHE    = `cc-img-${VERSION}`;
@@ -27,6 +27,11 @@ const SHELL_PRECACHE = [
   './index.html',
   './manifest.json',
   './icon.svg',
+  './icon-180.png',
+  './icon-192.png',
+  './icon-512.png',
+  './icon-512-maskable.png',
+  './favicon-32.png',
 ];
 
 // Chart.js and Mermaid.js are now lazy-loaded on first use — they are
@@ -96,6 +101,17 @@ self.addEventListener('fetch', event => {
   // Only handle GET requests.
   if (req.method !== 'GET') return;
 
+  // ── 0. Navigation requests (bare / or /repo/) ────────────
+  // Installed PWA opens at start_url (./) which never matches
+  // the .html pathname check below. Return the cached shell so
+  // the app opens offline from the home-screen shortcut.
+  if (req.mode === 'navigate') {
+    event.respondWith(
+      caches.match('./index.html').then(r => r || fetch(req))
+    );
+    return;
+  }
+
   // ── 1. App shell (same origin .html) ─────────────────────
   // Cache-first with a network refresh in the background.
   // If the network returns a newer version the next load uses it.
@@ -106,7 +122,7 @@ self.addEventListener('fetch', event => {
 
   // ── 2. Manifest and icon (same origin static files) ──────
   if (url.origin === self.location.origin &&
-      (url.pathname.endsWith('.json') || url.pathname.endsWith('.svg'))) {
+      (url.pathname.endsWith('.json') || url.pathname.endsWith('.svg') || url.pathname.endsWith('.png'))) {
     event.respondWith(cacheFirst(req, SHELL_CACHE));
     return;
   }

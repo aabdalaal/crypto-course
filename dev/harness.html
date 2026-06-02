@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Crypto-Course — Cryptographic Correctness Harness</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --night:#0F172A; --panel:#15203a; --panel2:#1b2945; --line:#2a3a5e;
+    --blue:#2563EB; --blue-glow:rgba(37,99,235,.35);
+    --emer:#10B981; --amber:#F59E0B; --crimson:#ef4444; --purple:#8B5CF6;
+    --ink:#e7ecf6; --muted:#93a2c4; --faint:#64759c;
+    --mono:'JetBrains Mono',ui-monospace,SFMono-Regular,Menlo,monospace;
+    --ui:'Outfit',system-ui,sans-serif;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{
+    font-family:var(--ui); color:var(--ink); background:var(--night);
+    background-image:
+      radial-gradient(900px 500px at 12% -10%, rgba(37,99,235,.18), transparent 60%),
+      radial-gradient(700px 500px at 100% 0%, rgba(139,92,246,.12), transparent 55%),
+      linear-gradient(180deg,#0b1326,#0F172A 40%);
+    min-height:100vh; line-height:1.55; padding:0 0 80px;
+  }
+  .wrap{max-width:1080px; margin:0 auto; padding:0 22px}
+  header{padding:46px 0 26px; border-bottom:1px solid var(--line)}
+  .kicker{font-family:var(--mono); font-size:12px; letter-spacing:.28em; text-transform:uppercase; color:var(--blue); font-weight:700}
+  h1{font-size:clamp(28px,4.4vw,44px); font-weight:700; letter-spacing:-.02em; margin:8px 0 6px; line-height:1.05}
+  h1 .v{color:var(--emer)}
+  .sub{color:var(--muted); max-width:70ch; font-size:15.5px}
+  .meta{margin-top:14px; font-family:var(--mono); font-size:12.5px; color:var(--faint)}
+
+  .controls{position:sticky; top:0; z-index:20; backdrop-filter:blur(10px);
+    background:linear-gradient(180deg,rgba(15,23,42,.92),rgba(15,23,42,.72));
+    border-bottom:1px solid var(--line); padding:14px 0; margin-bottom:30px}
+  .controls .wrap{display:flex; align-items:center; gap:16px; flex-wrap:wrap}
+  button.run{font-family:var(--ui); font-weight:600; font-size:15px; color:#fff;
+    background:linear-gradient(135deg,var(--blue),#1d4ed8); border:0; border-radius:11px;
+    padding:11px 20px; cursor:pointer; box-shadow:0 6px 24px var(--blue-glow), inset 0 1px 0 rgba(255,255,255,.2);
+    transition:transform .12s ease, box-shadow .2s}
+  button.run:hover{transform:translateY(-1px); box-shadow:0 10px 30px var(--blue-glow)}
+  button.run:active{transform:translateY(0)}
+  button.ghost{background:transparent; border:1px solid var(--line); color:var(--muted); box-shadow:none}
+  button.ghost:hover{border-color:var(--blue); color:var(--ink)}
+  .tally{display:flex; gap:10px; margin-left:auto; font-family:var(--mono); font-size:13px}
+  .pill{padding:6px 13px; border-radius:999px; border:1px solid var(--line); display:flex; gap:8px; align-items:center}
+  .pill b{font-weight:700}
+  .pill.pass b{color:var(--emer)} .pill.fail b{color:var(--crimson)} .pill.run b{color:var(--amber)}
+
+  section.group{margin:0 0 26px; border:1px solid var(--line); border-radius:16px; overflow:hidden;
+    background:linear-gradient(180deg,var(--panel),rgba(21,32,58,.6))}
+  .ghd{display:flex; align-items:center; gap:14px; padding:16px 20px; border-bottom:1px solid var(--line);
+    background:linear-gradient(90deg,rgba(37,99,235,.10),transparent)}
+  .ghd .idx{font-family:var(--mono); font-size:12px; font-weight:700; color:var(--night);
+    background:var(--blue); padding:3px 9px; border-radius:6px}
+  .ghd h2{font-size:18px; font-weight:600; letter-spacing:-.01em}
+  .ghd p{font-size:13px; color:var(--muted); margin-top:2px}
+  .ghd .htxt{flex:1}
+  .ghd .gstat{font-family:var(--mono); font-size:12px; color:var(--faint)}
+
+  .test{border-top:1px solid rgba(42,58,94,.6); padding:14px 20px; display:grid;
+    grid-template-columns:26px 1fr auto; gap:14px; align-items:start}
+  .test:first-of-type{border-top:0}
+  .badge{width:22px; height:22px; border-radius:50%; margin-top:2px; flex:0 0 auto;
+    border:2px solid var(--line); position:relative; transition:.2s}
+  .badge.pass{border-color:var(--emer); background:radial-gradient(circle,var(--emer),transparent 70%)}
+  .badge.pass::after{content:"✓"; position:absolute; inset:0; display:grid; place-items:center; color:#0b1f17; font-size:13px; font-weight:700}
+  .badge.fail{border-color:var(--crimson); background:radial-gradient(circle,var(--crimson),transparent 70%)}
+  .badge.fail::after{content:"✕"; position:absolute; inset:0; display:grid; place-items:center; color:#2a0a0a; font-size:12px; font-weight:700}
+  .badge.run{border-color:var(--amber); animation:spin 1s linear infinite}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  .tname{font-weight:500; font-size:15px}
+  .tname .tag{font-family:var(--mono); font-size:10.5px; letter-spacing:.05em; text-transform:uppercase;
+    color:var(--faint); border:1px solid var(--line); border-radius:5px; padding:1px 6px; margin-left:8px; vertical-align:middle}
+  .tname .src{display:block; font-family:var(--mono); font-size:11.5px; color:var(--faint); margin-top:3px}
+  .kv{font-family:var(--mono); font-size:12px; margin-top:8px; display:none}
+  .kv.show{display:block}
+  .kv div{display:flex; gap:8px; padding:2px 0; word-break:break-all}
+  .kv .lbl{color:var(--faint); flex:0 0 64px; text-align:right}
+  .kv .exp{color:var(--muted)} .kv .act-ok{color:var(--emer)} .kv .act-bad{color:var(--crimson)}
+  .tright{font-family:var(--mono); font-size:12px; color:var(--faint); text-align:right; white-space:nowrap}
+
+  table.claims{width:100%; border-collapse:collapse; font-size:13.5px}
+  table.claims th,table.claims td{text-align:left; padding:11px 20px; border-top:1px solid rgba(42,58,94,.6); vertical-align:top}
+  table.claims th{font-size:11px; letter-spacing:.08em; text-transform:uppercase; color:var(--faint); font-weight:600; background:rgba(37,99,235,.06)}
+  table.claims td .claim{font-weight:500}
+  table.claims td .src{font-family:var(--mono); font-size:11px; color:var(--faint); display:block; margin-top:3px}
+  table.claims td.comp{font-family:var(--mono); font-size:11.5px; color:var(--muted); max-width:280px; word-break:break-word}
+  select.verdict{font-family:var(--ui); font-size:13px; background:var(--panel2); color:var(--ink);
+    border:1px solid var(--line); border-radius:8px; padding:6px 10px; cursor:pointer}
+  select.verdict.pass{border-color:var(--emer); color:var(--emer)}
+  select.verdict.fail{border-color:var(--crimson); color:var(--crimson)}
+  select.verdict.review{border-color:var(--amber); color:var(--amber)}
+  .note{font-size:12.5px; color:var(--faint); padding:12px 20px; border-top:1px solid rgba(42,58,94,.6); font-style:italic}
+  footer{color:var(--faint); font-size:12.5px; font-family:var(--mono); text-align:center; margin-top:36px}
+  a{color:var(--blue)}
+</style>
+</head>
+<body>
+<header>
+  <div class="wrap">
+    <div class="kicker">Crypto-Course · QA Instrument</div>
+    <h1>Cryptographic Correctness Harness <span class="v">/ verify</span></h1>
+    <p class="sub">Runs the same <code style="font-family:var(--mono);color:var(--amber)">crypto.subtle</code> operations the app's labs depend on, checked against published NIST&nbsp;CAVP / RFC known-answer vectors, plus property tests and recomputation of the app's hash-lab display values. Open in any modern browser and press <b>Run all tests</b>. Nothing is mocked; every result below is computed live by the Web&nbsp;Crypto API in your browser.</p>
+    <div class="meta" id="env">Environment: detecting…</div>
+  </div>
+</header>
+
+<div class="controls">
+  <div class="wrap">
+    <button class="run" id="runAll">▶ Run all tests</button>
+    <button class="run ghost" id="toggleDetail">Show values</button>
+    <div class="tally">
+      <span class="pill pass">PASS <b id="cPass">0</b></span>
+      <span class="pill fail">FAIL <b id="cFail">0</b></span>
+      <span class="pill run">PENDING <b id="cPend">0</b></span>
+    </div>
+  </div>
+</div>
+
+<div class="wrap" id="root"></div>
+
+<footer class="wrap">
+  Crypto-Course correctness harness · vectors: FIPS 180-4 (SHA), RFC 4231 (HMAC), NIST SP 800-38D (GCM) · property tests for randomised primitives (RSA-OAEP, ECDSA, ECDH) · run offline; no network required after fonts load.
+</footer>
+
+<script>
+/* ============================================================
+   Utilities
+   ============================================================ */
+const enc = new TextEncoder();
+const subtle = (window.crypto && window.crypto.subtle) || null;
+
+const toHex = buf => Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
+const fromHex = h => new Uint8Array(h.match(/.{1,2}/g).map(x=>parseInt(x,16)));
+const eqHex = (a,b) => a.toLowerCase() === b.toLowerCase();
+const bitDiff = (h1,h2) => {
+  const a=fromHex(h1), b=fromHex(h2); let n=0;
+  for(let i=0;i<a.length;i++){ let x=a[i]^b[i]; while(x){n+=x&1;x>>=1;} }
+  return n;
+};
+
+/* Test registry --------------------------------------------- */
+const SECTIONS = [];
+function section(idx, title, desc, tests){ SECTIONS.push({idx,title,desc,tests}); }
+
+/* A test returns {pass:bool, expected, actual, detail?} or throws */
+let counts = {pass:0, fail:0, pend:0};
+
+/* ============================================================
+   SECTION 1 — Known-answer vectors (deterministic primitives)
+   ============================================================ */
+section('01','Known-answer vectors','Deterministic primitives checked against published test vectors. A failure here means the browser\'s Web Crypto implementation disagrees with the standard — investigate before trusting any lab output.', [
+  { name:'SHA-256("abc")', tag:'KAT', src:'FIPS 180-4 example', run: async()=>{
+      const exp='ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad';
+      const act=toHex(await subtle.digest('SHA-256', enc.encode('abc')));
+      return {pass:eqHex(exp,act), expected:exp, actual:act}; } },
+  { name:'SHA-256("") empty string', tag:'KAT', src:'FIPS 180-4', run: async()=>{
+      const exp='e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855';
+      const act=toHex(await subtle.digest('SHA-256', enc.encode('')));
+      return {pass:eqHex(exp,act), expected:exp, actual:act}; } },
+  { name:'SHA-256("test")  — app hash-chain input', tag:'KAT', src:'used by runChainedHashLab / newline lab', run: async()=>{
+      const exp='9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08';
+      const act=toHex(await subtle.digest('SHA-256', enc.encode('test')));
+      return {pass:eqHex(exp,act), expected:exp, actual:act}; } },
+  { name:'SHA-1("abc")', tag:'KAT', src:'FIPS 180-4 (legacy; app teaches it as broken)', run: async()=>{
+      const exp='a9993e364706816aba3e25717850c26c9cd0d89d';
+      const act=toHex(await subtle.digest('SHA-1', enc.encode('abc')));
+      return {pass:eqHex(exp,act), expected:exp, actual:act}; } },
+  { name:'HMAC-SHA256 — RFC 4231 Test Case 1', tag:'KAT', src:'RFC 4231 §4.2', run: async()=>{
+      const exp='b0344c61d8db38535ca8afceaf0bf12b881dc200c9833da726e9376c2e32cff7';
+      const key=new Uint8Array(20).fill(0x0b);
+      const k=await subtle.importKey('raw',key,{name:'HMAC',hash:'SHA-256'},false,['sign']);
+      const act=toHex(await subtle.sign('HMAC',k,enc.encode('Hi There')));
+      return {pass:eqHex(exp,act), expected:exp, actual:act}; } },
+  { name:'HMAC-SHA256 — RFC 4231 Test Case 2 ("Jefe")', tag:'KAT', src:'RFC 4231 §4.3', run: async()=>{
+      const exp='5bdcc146bf60754e6a042426089575c75a003f089d2739839dec58b964ec3843';
+      const k=await subtle.importKey('raw',enc.encode('Jefe'),{name:'HMAC',hash:'SHA-256'},false,['sign']);
+      const act=toHex(await subtle.sign('HMAC',k,enc.encode('what do ya want for nothing?')));
+      return {pass:eqHex(exp,act), expected:exp, actual:act}; } },
+  { name:'AES-256-GCM — zero key/IV, empty plaintext (tag only)', tag:'KAT', src:'NIST SP 800-38D test set', run: async()=>{
+      const exp='530f8afbc74536b9a963b4f1c4cb738b';
+      const key=await subtle.importKey('raw',new Uint8Array(32),{name:'AES-GCM'},false,['encrypt']);
+      const ct=await subtle.encrypt({name:'AES-GCM',iv:new Uint8Array(12)},key,new Uint8Array(0));
+      const act=toHex(ct); // Web Crypto returns ciphertext||tag; empty PT ⇒ tag only
+      return {pass:eqHex(exp,act), expected:exp, actual:act}; } },
+  { name:'AES-256-GCM — zero key/IV, 16-byte zero plaintext (CT‖tag)', tag:'KAT', src:'NIST SP 800-38D test set', run: async()=>{
+      const exp='cea7403d4d606b6e074ec5d3baf39d18d0d1c8a799996bf0265b98b5d48ab919';
+      const key=await subtle.importKey('raw',new Uint8Array(32),{name:'AES-GCM'},false,['encrypt']);
+      const ct=await subtle.encrypt({name:'AES-GCM',iv:new Uint8Array(12)},key,new Uint8Array(16));
+      const act=toHex(ct);
+      return {pass:eqHex(exp,act), expected:exp, actual:act}; } },
+]);
+
+/* ============================================================
+   SECTION 2 — Lab property tests (randomised primitives)
+   ============================================================ */
+section('02','Lab property tests','The AES, RSA, ECDH and signature labs use randomised keys/IVs, so they have no fixed known answer. Instead we verify the security properties they rely on: round-trip recovery, shared-secret agreement, and tamper rejection — mirroring runAESLab, runRSALab, runECDHLab, runSignLab.', [
+  { name:'AES-256-GCM round-trip recovers plaintext', tag:'PROP', src:'mirrors runAESLab / runAESDecrypt', run: async()=>{
+      const msg='Verify before you trust.';
+      const key=await subtle.generateKey({name:'AES-GCM',length:256},true,['encrypt','decrypt']);
+      const iv=crypto.getRandomValues(new Uint8Array(12));
+      const ct=await subtle.encrypt({name:'AES-GCM',iv},key,enc.encode(msg));
+      const pt=new TextDecoder().decode(await subtle.decrypt({name:'AES-GCM',iv},key,ct));
+      return {pass:pt===msg, expected:msg, actual:pt}; } },
+  { name:'AES-256-GCM rejects a tampered ciphertext', tag:'PROP', src:'AEAD integrity guarantee', run: async()=>{
+      const key=await subtle.generateKey({name:'AES-GCM',length:256},true,['encrypt','decrypt']);
+      const iv=crypto.getRandomValues(new Uint8Array(12));
+      const ct=new Uint8Array(await subtle.encrypt({name:'AES-GCM',iv},key,enc.encode('integrity')));
+      ct[0]^=0x01; // flip one bit
+      let rejected=false;
+      try{ await subtle.decrypt({name:'AES-GCM',iv},key,ct); }catch(_){ rejected=true; }
+      return {pass:rejected, expected:'decryption throws (tag mismatch)', actual: rejected?'rejected ✓':'ACCEPTED tampered data'}; } },
+  { name:'RSA-OAEP-2048 round-trip recovers plaintext', tag:'PROP', src:'mirrors runRSALab / runRSAEncrypt / runRSADecrypt', run: async()=>{
+      const msg='asymmetric';
+      const kp=await subtle.generateKey({name:'RSA-OAEP',modulusLength:2048,publicExponent:new Uint8Array([1,0,1]),hash:'SHA-256'},true,['encrypt','decrypt']);
+      const ct=await subtle.encrypt({name:'RSA-OAEP'},kp.publicKey,enc.encode(msg));
+      const pt=new TextDecoder().decode(await subtle.decrypt({name:'RSA-OAEP'},kp.privateKey,ct));
+      return {pass:pt===msg, expected:msg, actual:pt}; } },
+  { name:'ECDH P-256 — both parties derive the same key', tag:'PROP', src:'mirrors runECDHLab', run: async()=>{
+      const a=await subtle.generateKey({name:'ECDH',namedCurve:'P-256'},true,['deriveKey']);
+      const b=await subtle.generateKey({name:'ECDH',namedCurve:'P-256'},true,['deriveKey']);
+      const kA=await subtle.deriveKey({name:'ECDH',public:b.publicKey},a.privateKey,{name:'AES-GCM',length:256},true,['encrypt']);
+      const kB=await subtle.deriveKey({name:'ECDH',public:a.publicKey},b.privateKey,{name:'AES-GCM',length:256},true,['encrypt']);
+      const hA=toHex(await subtle.exportKey('raw',kA)), hB=toHex(await subtle.exportKey('raw',kB));
+      return {pass:hA===hB, expected:'Alice key === Bob key', actual: hA===hB?('match: '+hA.slice(0,24)+'…'):'KEYS DIFFER'}; } },
+  { name:'ECDSA P-256 — valid signature verifies', tag:'PROP', src:'mirrors runSignLab / runVerifyLab', run: async()=>{
+      const msg='authentic message';
+      const kp=await subtle.generateKey({name:'ECDSA',namedCurve:'P-256'},true,['sign','verify']);
+      const sig=await subtle.sign({name:'ECDSA',hash:'SHA-256'},kp.privateKey,enc.encode(msg));
+      const ok=await subtle.verify({name:'ECDSA',hash:'SHA-256'},kp.publicKey,sig,enc.encode(msg));
+      return {pass:ok, expected:'verify = true', actual:String(ok)}; } },
+  { name:'ECDSA P-256 — altered message fails verification', tag:'PROP', src:'the tamper demo in runVerifyLab', run: async()=>{
+      const kp=await subtle.generateKey({name:'ECDSA',namedCurve:'P-256'},true,['sign','verify']);
+      const sig=await subtle.sign({name:'ECDSA',hash:'SHA-256'},kp.privateKey,enc.encode('original'));
+      const ok=await subtle.verify({name:'ECDSA',hash:'SHA-256'},kp.publicKey,sig,enc.encode('original.'));
+      return {pass:ok===false, expected:'verify = false', actual:String(ok)}; } },
+]);
+
+/* ============================================================
+   SECTION 3 — App hash-lab display recomputation
+   ============================================================ */
+section('03','Hash-lab display recomputation','The hash labs print literal digest values a learner can reproduce with openssl. Here we recompute exactly what the app should display and assert the algebra of the avalanche and hash-chain demonstrations holds.', [
+  { name:'Newline avalanche — SHA-256("test\\n") ≠ SHA-256("test")', tag:'RECOMP', src:'mirrors runNewlineLab (Seminar 4 Task 8)', run: async()=>{
+      const withNL=toHex(await subtle.digest('SHA-256', enc.encode('test\n')));
+      const noNL=toHex(await subtle.digest('SHA-256', enc.encode('test')));
+      const differ = withNL!==noNL;
+      return {pass:differ, expected:'two digests differ', actual: differ?'differ ✓':'IDENTICAL', detail:{ 'with \\n':withNL, 'no \\n':noNL }}; } },
+  { name:'Newline avalanche — ~50% of output bits flip', tag:'RECOMP', src:'avalanche claim shown to learner', run: async()=>{
+      const withNL=toHex(await subtle.digest('SHA-256', enc.encode('test\n')));
+      const noNL=toHex(await subtle.digest('SHA-256', enc.encode('test')));
+      const bits=bitDiff(withNL,noNL); const pct=(bits/256*100).toFixed(1);
+      const inBand = bits>=96 && bits<=160; // ~37.5–62.5%, expected ≈128
+      return {pass:inBand, expected:'96–160 of 256 bits differ (≈50%)', actual:`${bits}/256 bits (${pct}%)`}; } },
+  { name:'Hash chain — H₁,H₂,H₃ are three distinct 32-byte digests', tag:'RECOMP', src:'mirrors runChainedHashLab (H₂=SHA256 of raw bytes of H₁)', run: async()=>{
+      const h1=await subtle.digest('SHA-256', enc.encode('test'));
+      const h2=await subtle.digest('SHA-256', new Uint8Array(h1));
+      const h3=await subtle.digest('SHA-256', new Uint8Array(h2));
+      const x1=toHex(h1),x2=toHex(h2),x3=toHex(h3);
+      const ok = x1!==x2 && x2!==x3 && x1!==x3 && h1.byteLength===32 && h2.byteLength===32 && h3.byteLength===32;
+      const h1kat = eqHex(x1,'9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08');
+      return {pass:ok && h1kat, expected:'H₁=SHA256("test") KAT; H₁≠H₂≠H₃; each 32 bytes',
+              actual:`H₁kat ${h1kat?'✓':'✗'}, distinct ${ok?'✓':'✗'}`, detail:{'H₁':x1,'H₂':x2,'H₃':x3}}; } },
+]);
+
+/* ============================================================
+   SECTION 4 — Classical / claim demonstrations (executed)
+   ============================================================ */
+const ALPHA52 = (()=>{ let s=''; for(let i=65;i<=90;i++)s+=String.fromCharCode(i); for(let i=97;i<=122;i++)s+=String.fromCharCode(i); return s; })();
+function vernam52(pt,key){ // Vigenère over the 52-letter mixed-case alphabet (CrypTool Vernam app)
+  let out=''; for(let i=0;i<pt.length;i++){ const p=ALPHA52.indexOf(pt[i]); const k=ALPHA52.indexOf(key[i%key.length]);
+    out += (p<0)? pt[i] : ALPHA52[(p+k)%52]; } return out; }
+
+section('04','Worked-example demonstrations','Numeric claims the app states in lesson text and rationales are not executed by the app, so nothing catches an error but review. Where the maths is tractable we execute it here. The two-time-pad identity and the Seminar Vernam vectors are verified computationally.', [
+  { name:'Two-time-pad identity: C₁⊕C₂ = P₁⊕P₂', tag:'EXEC', src:'Modules 2/3 CTR nonce-reuse rationale', run: async()=>{
+      const P1=enc.encode('attack at dawn!!'), P2=enc.encode('retreat by night');
+      const n=Math.min(P1.length,P2.length); const K=crypto.getRandomValues(new Uint8Array(n));
+      const C1=P1.map((b,i)=>b^K[i]), C2=P2.map((b,i)=>b^K[i]);
+      const lhs=Array.from({length:n},(_,i)=>C1[i]^C2[i]);
+      const rhs=Array.from({length:n},(_,i)=>P1[i]^P2[i]);
+      const ok=lhs.every((v,i)=>v===rhs[i]);
+      return {pass:ok, expected:'C₁⊕C₂ equals P₁⊕P₂ (key cancels)', actual: ok?'identity holds ✓':'identity FAILED',
+              detail:{'C₁⊕C₂':toHex(lhs),'P₁⊕P₂':toHex(rhs)}}; } },
+  { name:'Vernam (CrypTool) — "GilbertVernam" / key "comprehensible"', tag:'EXEC', src:'Seminar 2 §2.3 worked example', run: async()=>{
+      const exp='iWXQVVazRjVBX';
+      const act=vernam52('GilbertVernam','comprehensible');
+      return {pass:act===exp, expected:exp, actual:act}; } },
+  { name:'Vernam (CrypTool) — "JosephMauborgne" / key "unconventionally"', tag:'EXEC', src:'Seminar 2 §2.3 worked example', run: async()=>{
+      const exp='DbUSccqNnJceGYP';
+      const act=vernam52('JosephMauborgne','unconventionally');
+      return {pass:act===exp, expected:exp, actual:act}; } },
+]);
+
+/* ============================================================
+   Render
+   ============================================================ */
+const root=document.getElementById('root');
+const allTests=[];
+SECTIONS.forEach(sec=>{
+  const s=document.createElement('section'); s.className='group';
+  s.innerHTML=`<div class="ghd"><span class="idx">${sec.idx}</span>
+    <div class="htxt"><h2>${sec.title}</h2><p>${sec.desc}</p></div>
+    <span class="gstat" data-gstat>—</span></div>`;
+  sec.tests.forEach(t=>{
+    const row=document.createElement('div'); row.className='test';
+    row.innerHTML=`<div class="badge" data-badge></div>
+      <div><div class="tname">${t.name}<span class="tag">${t.tag}</span><span class="src">${t.src}</span></div>
+        <div class="kv" data-kv></div></div>
+      <div class="tright" data-time></div>`;
+    s.appendChild(row);
+    allTests.push({...t, el:row, sec});
+  });
+  root.appendChild(s);
+});
+
+function setBadge(el,state){ const b=el.querySelector('[data-badge]'); b.className='badge'+(state?(' '+state):''); }
+function renderKV(el,res){
+  const kv=el.querySelector('[data-kv]'); let html='';
+  if(res.expected!==undefined) html+=`<div><span class="lbl">expect</span><span class="exp">${escapeHtml(String(res.expected))}</span></div>`;
+  if(res.actual!==undefined) html+=`<div><span class="lbl">actual</span><span class="${res.pass?'act-ok':'act-bad'}">${escapeHtml(String(res.actual))}</span></div>`;
+  if(res.detail) for(const k in res.detail) html+=`<div><span class="lbl">${escapeHtml(k)}</span><span class="exp">${escapeHtml(String(res.detail[k]))}</span></div>`;
+  kv.innerHTML=html;
+}
+function escapeHtml(s){return s.replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));}
+
+let detailOpen=false;
+document.getElementById('toggleDetail').onclick=()=>{
+  detailOpen=!detailOpen;
+  document.querySelectorAll('.kv').forEach(k=>k.classList.toggle('show',detailOpen));
+  document.getElementById('toggleDetail').textContent=detailOpen?'Hide values':'Show values';
+};
+
+function updateTally(){
+  document.getElementById('cPass').textContent=counts.pass;
+  document.getElementById('cFail').textContent=counts.fail;
+  document.getElementById('cPend').textContent=counts.pend;
+}
+function updateSectionStat(sec){
+  const rows=allTests.filter(t=>t.sec===sec);
+  const p=rows.filter(r=>r._state==='pass').length, f=rows.filter(r=>r._state==='fail').length;
+  const node=[...root.querySelectorAll('.group')].find(g=>g.querySelector('.idx').textContent===sec.idx).querySelector('[data-gstat]');
+  node.textContent=`${p}/${rows.length} pass${f?` · ${f} fail`:''}`;
+  node.style.color = f? 'var(--crimson)' : (p===rows.length? 'var(--emer)':'var(--faint)');
+}
+
+async function runOne(t){
+  setBadge(t.el,'run'); t.el.querySelector('[data-time]').textContent='…';
+  const t0=performance.now();
+  try{
+    const res=await t.run();
+    const ms=(performance.now()-t0).toFixed(0);
+    t._state=res.pass?'pass':'fail';
+    setBadge(t.el,t._state);
+    renderKV(t.el,res); if(detailOpen) t.el.querySelector('[data-kv]').classList.add('show');
+    if(!res.pass) t.el.querySelector('[data-kv]').classList.add('show');
+    t.el.querySelector('[data-time]').textContent=ms+' ms';
+  }catch(e){
+    t._state='fail'; setBadge(t.el,'fail');
+    renderKV(t.el,{pass:false,expected:'no exception',actual:'threw: '+e.message});
+    t.el.querySelector('[data-kv]').classList.add('show');
+    t.el.querySelector('[data-time]').textContent='err';
+  }
+  updateSectionStat(t.sec);
+}
+
+async function runAll(){
+  counts={pass:0,fail:0,pend:allTests.length}; updateTally();
+  allTests.forEach(t=>{ t._state=null; setBadge(t.el,''); });
+  for(const t of allTests){
+    await runOne(t);
+    counts={pass:allTests.filter(x=>x._state==='pass').length,
+            fail:allTests.filter(x=>x._state==='fail').length,
+            pend:allTests.filter(x=>!x._state).length};
+    updateTally();
+  }
+}
+document.getElementById('runAll').onclick=runAll;
+
+/* env line */
+(function(){
+  const ua=navigator.userAgent;
+  const ok = subtle? 'Web Crypto API available':'⚠ Web Crypto API NOT available (must run over https:// or file://)';
+  document.getElementById('env').textContent=`Environment: ${ok} · ${ua}`;
+  if(!subtle){ document.getElementById('runAll').disabled=true;
+    document.getElementById('env').style.color='var(--crimson)'; }
+})();
+</script>
+</body>
+</html>

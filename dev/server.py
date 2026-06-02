@@ -6,8 +6,8 @@ Overrides guess_type() so Windows Registry MIME mappings cannot interfere
 Also serves /api/sync/:userId  GET + PUT for multi-device progress sync.
 
 Usage:
-    python server.py          # serves on http://localhost:8000
-    python server.py 9000     # custom port
+    python dev/server.py          # serves on http://localhost:8000
+    python dev/server.py 9000     # custom port
 """
 import http.server
 import json
@@ -28,7 +28,8 @@ MIME_OVERRIDES = {
     '.woff':        'font/woff',
 }
 
-SYNC_DIR = os.path.join(os.path.dirname(__file__), 'sync-data')
+# sync-data/ lives at the project root, one level up from this file
+SYNC_DIR = os.path.join(os.path.dirname(__file__), '..', 'sync-data')
 os.makedirs(SYNC_DIR, exist_ok=True)
 
 CORS_HEADERS = {

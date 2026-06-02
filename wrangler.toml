@@ -1,0 +1,10 @@
+name = "crypto-course-sync"
+main = "crypto-course-sync-worker.js"
+compatibility_date = "2024-11-01"
+
+kv_namespaces = [
+  { binding = "SYNC", id = "00c13686962c422cbd363db8dc3806e4" }
+]
+
+workers_dev = true
+preview_urls = false

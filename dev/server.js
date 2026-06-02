@@ -1,5 +1,6 @@
 // Local dev server — explicit MIME types so sw.js is never served as text/plain
 // Also serves the /api/sync/:userId endpoint for multi-device progress sync (PR13)
+// Also serves the /api/content endpoint for shared content registry (videos, flowcharts, modules)
 const http = require('http');
 const fs   = require('fs');
 const path = require('path');
@@ -23,7 +24,7 @@ const CORS = {
 };
 
 const PORT     = process.argv[2] || 8000;
-const ROOT     = __dirname;
+const ROOT     = path.join(__dirname, '..');
 const DATA_DIR = path.join(ROOT, 'sync-data');
 
 if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
@@ -75,9 +76,43 @@ http.createServer((req, res) => {
     return;
   }
 
+  // ── Content registry API ─────────────────────────────────────
+  // GET /api/content        → return shared content registry (204 if none published yet)
+  // PUT /api/content        → save content registry (admin pushes; ≤4 MB)
+  if (req.url === '/api/content') {
+    const file = path.join(DATA_DIR, '_content.json');
+    if (req.method === 'GET') {
+      if (!fs.existsSync(file)) { res.writeHead(204); res.end(); return; }
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(fs.readFileSync(file));
+      return;
+    }
+    if (req.method === 'PUT') {
+      let body = '';
+      req.on('data', chunk => {
+        body += chunk;
+        if (body.length > 4_000_000) { res.writeHead(413); res.end('{"error":"payload too large"}'); return; }
+      });
+      req.on('end', () => {
+        try {
+          JSON.parse(body);
+          fs.writeFileSync(file, body, 'utf8');
+          res.writeHead(200, { 'Content-Type': 'application/json' });
+          res.end('{"ok":true}');
+        } catch(e) {
+          res.writeHead(400, { 'Content-Type': 'application/json' });
+          res.end('{"error":"invalid json"}');
+        }
+      });
+      return;
+    }
+    res.writeHead(405); res.end('Method Not Allowed');
+    return;
+  }
+
   // ── Static file serving ──────────────────────────────────────
   let urlPath = req.url.split('?')[0];
-  if (urlPath === '/') urlPath = '/crypto_course_app.html';
+  if (urlPath === '/') urlPath = '/index.html';
 
   const filePath = path.join(ROOT, urlPath);
   const ext      = path.extname(filePath).toLowerCase();

@@ -6,7 +6,7 @@ This file tracks evolving decisions, active work, known issues, and context that
 
 ## Current State
 
-- **Single file:** `crypto_course_app.html` (~15,500 lines)
+- **Single file:** `index.html` (~15,500 lines)
 - **Companion files needed:** `sw.js` (service worker) and `manifest.json` (PWA manifest) — these do not yet exist in the repo; PWA/offline features will silently fail without them
 - **Auth:** Simulated only — tokens are unsigned base64, passwords are plaintext in localStorage. Not production-ready.
 - **Sync:** `triggerSync()` is a stub — logs to console only, no real HTTP call
@@ -112,7 +112,7 @@ Use this when reviewing changes to verify nothing has broken a formal requiremen
 
 ## File Notes
 
-- **`crypto_course_app.html`** — The whole app. Sections are separated by `// ============` comment blocks. Use these as landmarks when navigating.
+- **`index.html`** — The whole app. Sections are separated by `// ============` comment blocks. Use these as landmarks when navigating.
 - **`sw.js`** — Needs to be created. Should cache the HTML file and all Google Fonts requests. Use a cache-first strategy for the HTML and a network-first strategy for fonts.
 - **`manifest.json`** — Needs to be created. App name: `CryptoCourse`, theme colour: `#0F172A`, background: `#0F172A`, display: `standalone`, icons needed at 192×192 and 512×512.
 - **`Paper2_*.docx`** — Technology selection framework. Read this before changing the architecture.
