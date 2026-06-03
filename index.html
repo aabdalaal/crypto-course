@@ -11617,6 +11617,90 @@ async function loadCohortPanel() {
 }
 
 // Approve a student — updates server record and local user list.
+function showStudentActionSheet(semId, semCode, studentJson) {
+  const s = typeof studentJson === 'string' ? JSON.parse(studentJson) : studentJson;
+  document.getElementById('student-action-sheet')?.remove();
+  const el = document.createElement('div');
+  el.id = 'student-action-sheet';
+  el.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:600;display:flex;align-items:flex-end;justify-content:center';
+  el.innerHTML = `
+    <div style="background:var(--bg);border-radius:20px 20px 0 0;padding:24px 20px 40px;width:100%;max-width:500px">
+      <div style="font-size:16px;font-weight:800;margin-bottom:4px">${s.name}</div>
+      <div style="font-size:12px;color:var(--muted);margin-bottom:20px">${s.userId}</div>
+      <div style="display:flex;flex-direction:column;gap:8px">
+        ${s.pending ? `<button class="btn btn-primary" onclick="manageStudent('approve','${s.userId}','${semId}','${semCode}')">✓ Approve account</button>` : ''}
+        ${s.suspended
+          ? `<button class="btn btn-secondary" onclick="manageStudent('unsuspend','${s.userId}','${semId}','${semCode}')">▶ Unsuspend</button>`
+          : `<button class="btn" style="background:var(--accent-l);color:var(--accent-d)" onclick="manageStudent('suspend','${s.userId}','${semId}','${semCode}')">⏸ Suspend</button>`}
+        <button class="btn" style="background:var(--bg);border:1px solid var(--border);color:var(--text2)" onclick="showEditStudentName('${s.userId}','${s.name}','${semId}','${semCode}')">✏️ Edit name</button>
+        <button class="btn" style="background:var(--danger-l);color:var(--danger)" onclick="manageStudent('delete','${s.userId}','${semId}','${semCode}')">🗑 Remove from cohort</button>
+      </div>
+      <button class="btn btn-ghost" onclick="document.getElementById('student-action-sheet').remove()" style="margin-top:8px;color:var(--muted)">Cancel</button>
+    </div>`;
+  document.body.appendChild(el);
+  el.addEventListener('click', e => { if (e.target === el) el.remove(); });
+}
+
+function showEditStudentName(userId, currentName, semId, semCode) {
+  document.getElementById('student-action-sheet')?.remove();
+  const el = document.createElement('div');
+  el.id = 'student-action-sheet';
+  el.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:600;display:flex;align-items:flex-end;justify-content:center';
+  el.innerHTML = `
+    <div style="background:var(--bg);border-radius:20px 20px 0 0;padding:24px 20px 40px;width:100%;max-width:500px">
+      <div style="font-size:16px;font-weight:800;margin-bottom:16px">✏️ Edit Name</div>
+      <input id="edit-student-name-input" type="text" value="${currentName}"
+        style="width:100%;padding:12px 14px;border:2px solid var(--border);border-radius:10px;font-size:14px;font-family:var(--font);box-sizing:border-box;background:var(--bg);color:var(--text);margin-bottom:12px">
+      <button class="btn btn-primary" onclick="manageStudent('update','${userId}','${semId}','${semCode}')">Save</button>
+      <button class="btn btn-ghost" onclick="document.getElementById('student-action-sheet').remove()" style="margin-top:8px;color:var(--muted)">Cancel</button>
+    </div>`;
+  document.body.appendChild(el);
+  setTimeout(() => document.getElementById('edit-student-name-input')?.focus(), 80);
+}
+
+async function manageStudent(action, userId, semId, semCode) {
+  const base = getSyncEndpoint();
+  const tt = localStorage.getItem('crypto_course_teacher_token');
+  if (!base || !tt) { showToast('Teacher token not set — check Profile → Sync & Data'); return; }
+
+  const method = action === 'delete' ? 'DELETE' : 'PUT';
+  const path = action === 'delete' ? `student/${userId}` : `${action}/${userId}`;
+  const body = action === 'update'
+    ? JSON.stringify({ name: document.getElementById('edit-student-name-input')?.value?.trim() || '' })
+    : undefined;
+
+  if (action === 'delete') {
+    const confirmed = confirm(`Remove this student from the cohort? This cannot be undone.`);
+    if (!confirmed) return;
+  }
+
+  document.getElementById('student-action-sheet')?.remove();
+  try {
+    const r = await fetchWithTimeout(`${base}/${path}`, {
+      method,
+      headers: { 'Authorization': 'Bearer ' + tt, ...(body ? { 'Content-Type': 'application/json' } : {}) },
+      ...(body ? { body } : {}),
+    }, 8000);
+    if (r.ok) {
+      const msgs = { approve: '✓ Student approved', suspend: '⏸ Student suspended', unsuspend: '▶ Student unsuspended', update: '✓ Name updated', delete: '🗑 Student removed' };
+      showToast(msgs[action] || 'Done');
+      // Also update local user record if present
+      if (action === 'approve') {
+        const users = loadUsers(); const idx = users.findIndex(u => u.id === userId);
+        if (idx >= 0) { users[idx].emailVerified = true; saveUsers(users); }
+      }
+      // Refresh the expanded list
+      const el = document.getElementById('sem-students-' + semId);
+      if (el && el.style.display === 'block') {
+        el.style.display = 'none';
+        toggleSemesterStudents(semId, semCode);
+      }
+    } else {
+      showToast('Action failed (' + r.status + ')');
+    }
+  } catch(e) { showToast('Could not reach server'); }
+}
+
 async function approveStudent(userId, semId, semCode) {
   const base = getSyncEndpoint();
   const tt = localStorage.getItem('crypto_course_teacher_token');
@@ -12651,6 +12735,11 @@ async function doLogin() {
           }, 6000);
           if (r.ok) {
             const data = await r.json();
+            if (data.suspended) {
+              const el = document.getElementById('auth-error');
+              if (el) { el.textContent = 'Your account has been suspended. Contact your teacher.'; el.style.display = 'block'; }
+              authLogout(); return;
+            }
             if (data.emailVerified) {
               verified = true;
               const idx = users.findIndex(u => u.id === result.user.sub);
@@ -18914,21 +19003,26 @@ async function toggleSemesterStudents(semId, code) {
       const p = s.payload || {};
       const modsDone = Object.values((p.quizOutcomes || {}).moduleProgress || {}).filter(v => v >= 1).length;
       const pending = s.emailVerified === false;
+      const suspended = s.suspended === true;
       const displayName = s.name || s.userId;
       const initials = displayName.split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase() || '?';
+      const avatarBg = suspended ? 'var(--danger-l)' : pending ? 'var(--accent-l)' : 'var(--primary-l)';
+      const avatarColor = suspended ? 'var(--danger)' : pending ? 'var(--accent-d)' : 'var(--primary)';
+      const badge = suspended
+        ? '<span style="font-size:10px;font-weight:700;background:var(--danger-l);color:var(--danger);padding:1px 6px;border-radius:100px;margin-left:4px">Suspended</span>'
+        : pending
+          ? '<span style="font-size:10px;font-weight:700;background:var(--accent-l);color:var(--accent-d);padding:1px 6px;border-radius:100px;margin-left:4px">Pending</span>'
+          : '';
+      const studentJson = encodeURIComponent(JSON.stringify({ userId: s.userId, name: displayName, pending, suspended }));
       return `
-        <div style="display:flex;align-items:center;gap:10px;padding:10px 12px;border-bottom:1px solid var(--border)">
-          <div style="width:34px;height:34px;border-radius:50%;background:${pending ? 'var(--accent-l)' : 'var(--primary-l)'};display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:${pending ? 'var(--accent-d)' : 'var(--primary)'};flex-shrink:0">${initials}</div>
+        <div onclick="showStudentActionSheet('${semId}','${code}',decodeURIComponent('${studentJson}'))"
+          style="display:flex;align-items:center;gap:10px;padding:10px 12px;border-bottom:1px solid var(--border);cursor:pointer;active:background:var(--bg)">
+          <div style="width:34px;height:34px;border-radius:50%;background:${avatarBg};display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:${avatarColor};flex-shrink:0">${initials}</div>
           <div style="flex:1;min-width:0">
-            <div style="font-size:13px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">
-              ${displayName}
-              ${pending ? '<span style="font-size:10px;font-weight:700;background:var(--accent-l);color:var(--accent-d);padding:1px 6px;border-radius:100px;margin-left:4px">Pending</span>' : ''}
-            </div>
-            <div style="font-size:11px;color:var(--muted)">${modsDone}/${allMods.length} modules${pending ? '' : ' · ' + (p.xpDelta || 0) + ' XP'}</div>
+            <div style="font-size:13px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${displayName}${badge}</div>
+            <div style="font-size:11px;color:var(--muted)">${modsDone}/${allMods.length} modules${(!pending && !suspended) ? ' · ' + (p.xpDelta || 0) + ' XP' : ''}</div>
           </div>
-          ${pending
-            ? `<button onclick="approveStudent('${s.userId}','${semId}','${code}')" class="btn btn-sm" style="background:var(--secondary-l);color:var(--secondary-d);width:auto;padding:4px 10px;font-size:11px;font-weight:700;flex-shrink:0">✓ Approve</button>`
-            : `<div style="font-size:13px;font-weight:800;color:var(--primary);flex-shrink:0">${p.xpDelta || 0} XP</div>`}
+          <div style="color:var(--muted);font-size:16px">›</div>
         </div>`;
     }).join('') + `<div style="padding:8px 12px;text-align:right"><button onclick="toggleSemesterStudents('${semId}','${code}')" style="border:none;background:none;color:var(--muted);font-size:11px;cursor:pointer">▲ Hide</button></div>`;
   } catch(e) { el.innerHTML = '<div style="padding:12px;font-size:12px;color:var(--muted)">Could not connect — check your connection.</div>'; }

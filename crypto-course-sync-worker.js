@@ -64,6 +64,46 @@ export default {
         return json({ cohort: code, count: out.length, students: out }, 200, cors);
       }
 
+      // Teacher account management routes (all require teacher token)
+      const mgmtMatch = url.pathname.match(/^\/(approve|suspend|unsuspend|update|student)\/([^/]+)\/?$/);
+      if (mgmtMatch) {
+        const [, action, rawId] = mgmtMatch;
+        const userId = decodeURIComponent(rawId);
+        if (!isTeacher(bearer(request), cohorts)) return json({ error: 'unauthorized' }, 401, cors);
+
+        // DELETE /student/{userId} — remove from cohort
+        if (action === 'student' && request.method === 'DELETE') {
+          const list = await env.SYNC.list({ prefix: 'student:' });
+          for (const k of list.keys) {
+            if (k.name.endsWith(':' + userId)) {
+              await env.SYNC.delete(k.name);
+              return json({ ok: true }, 200, cors);
+            }
+          }
+          return json({ error: 'not found' }, 404, cors);
+        }
+
+        // PUT /approve|suspend|unsuspend|update/{userId}
+        if (request.method === 'PUT') {
+          const list = await env.SYNC.list({ prefix: 'student:' });
+          for (const k of list.keys) {
+            if (k.name.endsWith(':' + userId)) {
+              const rec = (await env.SYNC.get(k.name, 'json')) || {};
+              if (action === 'approve')   rec.emailVerified = true;
+              if (action === 'suspend')   rec.suspended = true;
+              if (action === 'unsuspend') rec.suspended = false;
+              if (action === 'update') {
+                const body = await request.json().catch(() => ({}));
+                if (body.name) rec.name = String(body.name).substring(0, 100);
+              }
+              await env.SYNC.put(k.name, JSON.stringify(rec), { expirationTtl: RETENTION_DAYS * 86400 });
+              return json({ ok: true }, 200, cors);
+            }
+          }
+          return json({ error: 'not found' }, 404, cors);
+        }
+      }
+
       // Approval route:  PUT /approve/{userId}  (teacher token auth)
       const approveMatch = url.pathname.match(/^\/approve\/([^/]+)\/?$/);
       if (approveMatch && request.method === 'PUT') {
@@ -169,7 +209,7 @@ export default {
         const out = [];
         for (const k of list.keys) {
           const rec = await env.SYNC.get(k.name, 'json');
-          if (rec) out.push({ userId: k.name.split(':').slice(2).join(':'), name: rec.name || '', role: rec.role || 'student', emailVerified: rec.emailVerified || false, registeredAt: rec.registeredAt || null, updatedAt: rec.updatedAt || null, payload: rec.payload || null });
+          if (rec) out.push({ userId: k.name.split(':').slice(2).join(':'), name: rec.name || '', role: rec.role || 'student', emailVerified: rec.emailVerified || false, suspended: rec.suspended || false, registeredAt: rec.registeredAt || null, updatedAt: rec.updatedAt || null, payload: rec.payload || null });
         }
         return json({ semCode, cohort, count: out.length, students: out }, 200, cors);
       }
@@ -185,7 +225,7 @@ export default {
         if (request.method === 'GET') {
           const rec = await env.SYNC.get(key, 'json');
           if (!rec) return new Response(null, { status: 204, headers: cors });
-          return json({ ...(rec.payload || {}), emailVerified: rec.emailVerified || false }, 200, cors);
+          return json({ ...(rec.payload || {}), emailVerified: rec.emailVerified || false, suspended: rec.suspended || false }, 200, cors);
         }
 
         if (request.method === 'PUT') {
