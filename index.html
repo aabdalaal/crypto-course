@@ -19929,14 +19929,14 @@ function renderAnalyticsTab() {
       </div>`;
     })()}
 
-    <!-- Cohort sync panel (requires sync URL + teacher token) -->
-    ${getSyncEndpoint() ? `
+    <!-- Cohort sync panel -->
     <div class="section-card" style="margin-top:12px">
       <div class="section-card-header" style="justify-content:space-between">
         <span>🔗 Cohort Sync</span>
         <span style="font-size:11px;color:var(--muted);font-weight:600">remote progress</span>
       </div>
       <div style="padding:12px 16px">
+        ${!getSyncEndpoint() ? `<div style="background:var(--accent-l);border-radius:var(--radius-xs);padding:10px 12px;margin-bottom:12px;font-size:12px;color:var(--accent-d)">⚠ Sync URL not set. Open your browser console and run: <code>localStorage.setItem('crypto_course_sync_url','https://crypto-course-sync.abdalaalfm.workers.dev')</code></div>` : ''}
         <div style="display:flex;gap:8px;margin-bottom:12px">
           <input id="cohort-code-input" type="text" maxlength="20" placeholder="Cohort code e.g. WMIN2026"
             value="${localStorage.getItem('crypto_course_last_cohort') || ''}"
@@ -19946,10 +19946,7 @@ function renderAnalyticsTab() {
         </div>
         <div id="cohort-results" style="font-size:13px;color:var(--muted);text-align:center;padding:8px 0">Enter a cohort code to load student progress.</div>
       </div>
-    </div>` : `
-    <div style="margin-top:12px;padding:14px 16px;background:var(--bg);border-radius:var(--radius-sm);border:1px dashed var(--border);font-size:12px;color:var(--muted);text-align:center">
-      🔗 Cohort sync not configured — set <strong>crypto_course_sync_url</strong> and <strong>crypto_course_teacher_token</strong> in localStorage to enable.
-    </div>`}
+    </div>
   `;
 }
 
