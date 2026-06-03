@@ -11568,7 +11568,7 @@ function pushRegistration() {
   fetchWithTimeout(`${base}/register/${encodeURIComponent(userId)}`, {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + wt },
-    body: JSON.stringify({ name: currentUser.name || '', role: currentUser.role || 'student' }),
+    body: JSON.stringify({ name: currentUser.name || '', role: currentUser.role || 'student', emailVerified: false }),
   }, 6000).catch(() => {});
 }
 
@@ -11597,20 +11597,46 @@ async function loadCohortPanel() {
       const displayName = s.name || s.userId;
       const initials = displayName.split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase() || '?';
       const notSynced = !s.updatedAt && s.registeredAt;
+      const pending = s.emailVerified === false;
       return `
         <div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border)">
-          <div style="width:32px;height:32px;border-radius:50%;background:${notSynced ? 'var(--border)' : 'var(--primary-l)'};display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:${notSynced ? 'var(--muted)' : 'var(--primary)'};flex-shrink:0">${initials}</div>
+          <div style="width:32px;height:32px;border-radius:50%;background:${pending ? 'var(--accent-l)' : notSynced ? 'var(--border)' : 'var(--primary-l)'};display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:${pending ? 'var(--accent-d)' : notSynced ? 'var(--muted)' : 'var(--primary)'};flex-shrink:0">${initials}</div>
           <div style="flex:1;min-width:0">
-            <div style="font-size:13px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${displayName}</div>
+            <div style="font-size:13px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${displayName} ${pending ? '<span style="font-size:10px;font-weight:700;background:var(--accent-l);color:var(--accent-d);padding:1px 6px;border-radius:100px">Pending</span>' : ''}</div>
             <div style="font-size:11px;color:var(--muted)">${notSynced ? 'Registered · no progress synced yet' : modsDone + '/' + allMods.length + ' modules · ' + syncLabel}</div>
           </div>
-          <div style="text-align:right;flex-shrink:0">
-            <div style="font-size:14px;font-weight:800;color:var(--primary)">${p.xpDelta || 0} XP</div>
-            <div style="font-size:11px;color:var(--muted)">🔥 ${p.streak || 0}</div>
-          </div>
+          ${pending
+            ? `<button onclick="approveStudent('${s.userId}')" class="btn btn-sm" style="background:var(--secondary-l);color:var(--secondary-d);width:auto;padding:5px 12px;font-size:11px;font-weight:700;flex-shrink:0">✓ Approve</button>`
+            : `<div style="text-align:right;flex-shrink:0">
+                <div style="font-size:14px;font-weight:800;color:var(--primary)">${p.xpDelta || 0} XP</div>
+                <div style="font-size:11px;color:var(--muted)">🔥 ${p.streak || 0}</div>
+              </div>`}
         </div>`;
     }).join('')}
   `;
+}
+
+// Approve a student — updates server record and local user list.
+async function approveStudent(userId) {
+  const base = getSyncEndpoint();
+  const tt = localStorage.getItem('crypto_course_teacher_token');
+  if (!base || !tt) { showToast('Teacher token not set — check Profile → Sync & Data'); return; }
+  try {
+    const r = await fetchWithTimeout(`${base}/approve/${encodeURIComponent(userId)}`, {
+      method: 'PUT',
+      headers: { 'Authorization': 'Bearer ' + tt },
+    }, 8000);
+    if (r.ok) {
+      // Also update local user record if present
+      const users = loadUsers();
+      const idx = users.findIndex(u => u.id === userId);
+      if (idx >= 0) { users[idx].emailVerified = true; saveUsers(users); }
+      showToast('✓ Student approved');
+      loadCohortPanel(); // refresh panel
+    } else {
+      showToast('Approval failed (' + r.status + ')');
+    }
+  } catch(e) { showToast('Could not reach server'); }
 }
 
 // Fetch all students in a cohort — teacher dashboard use only.
@@ -12435,7 +12461,7 @@ async function authRegister(name, email, password, elevationCode) {
   if (elevationCode === 'TEACH2025') role = ROLES.TEACHER;
   if (elevationCode === 'ADMIN2025') role = ROLES.ADMIN;
   const { hash, salt } = await hashPassword(password);
-  const user = { id: 'u-' + Date.now(), email, passwordHash: hash, passwordSalt: salt, name, role };
+  const user = { id: 'u-' + Date.now(), email, passwordHash: hash, passwordSalt: salt, name, role, emailVerified: role !== ROLES.STUDENT };
   users.push(user);
   saveUsers(users);
   const token = makeToken(user);
@@ -12603,6 +12629,33 @@ async function doLogin() {
     el.textContent = result.error; el.style.display = 'block';
     return;
   }
+  // Check approval for students
+  if (result.user?.role === ROLES.STUDENT) {
+    const users = loadUsers();
+    const me = users.find(u => u.id === result.user.sub);
+    let verified = me?.emailVerified;
+    if (!verified) {
+      // Check server for approval
+      const base = getSyncEndpoint();
+      const wt = localStorage.getItem('crypto_course_write_token');
+      if (base && wt) {
+        try {
+          const r = await fetchWithTimeout(`${base}/${encodeURIComponent(result.user.sub)}`, {
+            headers: { 'Authorization': 'Bearer ' + wt }
+          }, 6000);
+          if (r.ok) {
+            const data = await r.json();
+            if (data.emailVerified) {
+              verified = true;
+              const idx = users.findIndex(u => u.id === result.user.sub);
+              if (idx >= 0) { users[idx].emailVerified = true; saveUsers(users); }
+            }
+          }
+        } catch(e) {}
+      }
+    }
+    if (!verified) { showPendingApprovalScreen(); return; }
+  }
   enterApp();
   pushRegistration();
 }
@@ -12623,8 +12676,62 @@ async function doRegister() {
     el.textContent = result.error; el.style.display = 'block';
     return;
   }
-  enterApp();
   pushRegistration();
+  if (result.user?.role === ROLES.STUDENT) {
+    showPendingApprovalScreen();
+  } else {
+    enterApp();
+  }
+}
+
+function showPendingApprovalScreen() {
+  document.getElementById('auth-screen')?.remove();
+  let el = document.getElementById('pending-approval-screen');
+  if (el) { el.style.display = 'flex'; return; }
+  el = document.createElement('div');
+  el.id = 'pending-approval-screen';
+  el.style.cssText = 'position:fixed;inset:0;background:var(--bg);z-index:900;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px;text-align:center';
+  el.innerHTML = `
+    <div style="font-size:56px;margin-bottom:16px">⏳</div>
+    <div style="font-size:22px;font-weight:800;margin-bottom:8px">Waiting for approval</div>
+    <div style="font-size:14px;color:var(--muted);max-width:320px;margin-bottom:32px;line-height:1.5">
+      Your account has been created. Your teacher needs to approve it before you can access the course.
+    </div>
+    <button class="btn btn-primary" onclick="checkApprovalStatus()" style="margin-bottom:12px">Check approval status</button>
+    <button class="btn btn-ghost" onclick="authLogout()" style="width:auto;color:var(--muted);font-size:13px">Log out</button>
+    <div id="pending-check-msg" style="margin-top:16px;font-size:13px;color:var(--muted)"></div>
+  `;
+  document.body.appendChild(el);
+}
+
+async function checkApprovalStatus() {
+  const msgEl = document.getElementById('pending-check-msg');
+  if (msgEl) msgEl.textContent = 'Checking…';
+  const base = getSyncEndpoint();
+  const wt = localStorage.getItem('crypto_course_write_token');
+  if (!base || !wt || !currentUser) {
+    if (msgEl) msgEl.textContent = 'Cannot check — sync not configured. Ask your teacher to approve you.';
+    return;
+  }
+  try {
+    const r = await fetchWithTimeout(`${base}/${encodeURIComponent(currentUser.sub)}`, {
+      headers: { 'Authorization': 'Bearer ' + wt }
+    }, 6000);
+    if (r.ok) {
+      const data = await r.json();
+      if (data.emailVerified) {
+        const users = loadUsers();
+        const idx = users.findIndex(u => u.id === currentUser.sub);
+        if (idx >= 0) { users[idx].emailVerified = true; saveUsers(users); }
+        document.getElementById('pending-approval-screen')?.remove();
+        enterApp();
+        return;
+      }
+    }
+    if (msgEl) msgEl.textContent = 'Not approved yet — check back later.';
+  } catch(e) {
+    if (msgEl) msgEl.textContent = 'Could not reach server — check your connection.';
+  }
 }
 
 function continueAsGuest() {

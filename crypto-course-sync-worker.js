@@ -59,9 +59,28 @@ export default {
         const out = [];
         for (const k of list.keys) {
           const rec = await env.SYNC.get(k.name, 'json');
-          if (rec) out.push({ userId: k.name.split(':').slice(2).join(':'), name: rec.name || '', role: rec.role || 'student', registeredAt: rec.registeredAt || null, updatedAt: rec.updatedAt || null, payload: rec.payload || null });
+          if (rec) out.push({ userId: k.name.split(':').slice(2).join(':'), name: rec.name || '', role: rec.role || 'student', emailVerified: rec.emailVerified || false, registeredAt: rec.registeredAt || null, updatedAt: rec.updatedAt || null, payload: rec.payload || null });
         }
         return json({ cohort: code, count: out.length, students: out }, 200, cors);
+      }
+
+      // Approval route:  PUT /approve/{userId}  (teacher token auth)
+      const approveMatch = url.pathname.match(/^\/approve\/([^/]+)\/?$/);
+      if (approveMatch && request.method === 'PUT') {
+        const userId = decodeURIComponent(approveMatch[1]);
+        const approved = isTeacher(bearer(request), cohorts);
+        if (!approved) return json({ error: 'unauthorized' }, 401, cors);
+        // Find the student's record across all cohorts
+        const list = await env.SYNC.list({ prefix: 'student:' });
+        for (const k of list.keys) {
+          if (k.name.endsWith(':' + userId)) {
+            const rec = (await env.SYNC.get(k.name, 'json')) || {};
+            rec.emailVerified = true;
+            await env.SYNC.put(k.name, JSON.stringify(rec), { expirationTtl: RETENTION_DAYS * 86400 });
+            return json({ ok: true }, 200, cors);
+          }
+        }
+        return json({ error: 'student not found' }, 404, cors);
       }
 
       // Registration route:  PUT /register/{userId}
@@ -144,7 +163,7 @@ export default {
         if (request.method === 'GET') {
           const rec = await env.SYNC.get(key, 'json');
           if (!rec) return new Response(null, { status: 204, headers: cors });
-          return json(rec.payload, 200, cors);
+          return json({ ...(rec.payload || {}), emailVerified: rec.emailVerified || false }, 200, cors);
         }
 
         if (request.method === 'PUT') {
@@ -195,6 +214,11 @@ function bearer(request) {
 
 function parseCohorts(env) {
   try { return JSON.parse(env.COHORTS_JSON || '{}'); } catch { return {}; }
+}
+
+function isTeacher(token, cohorts) {
+  if (!token) return false;
+  return Object.values(cohorts).some(c => c.teacher && c.teacher === token);
 }
 
 function cohortForWriteToken(token, cohorts) {
