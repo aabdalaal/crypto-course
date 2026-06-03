@@ -12631,6 +12631,7 @@ async function doLogin() {
   }
   // Check approval for students
   if (result.user?.role === ROLES.STUDENT) {
+    await bootstrapSyncConfig();
     const users = loadUsers();
     const me = users.find(u => u.id === result.user.sub);
     let verified = me?.emailVerified;
@@ -12677,8 +12678,8 @@ async function doRegister() {
     return;
   }
   if (result.user?.role === ROLES.STUDENT) {
-    // Show semester enrollment first — enrollment saves the write token,
-    // which is needed before we can push registration to the server.
+    // Bootstrap sync config now (normally runs inside enterApp, but pending students never reach it)
+    await bootstrapSyncConfig();
     showEnrollSemesterSheet(true);
   } else {
     enterApp();
