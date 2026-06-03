@@ -11547,6 +11547,19 @@ async function triggerSync() {
   }
 }
 
+// Push minimal registration record so teacher can see the student before any progress is synced.
+function pushRegistration() {
+  const userId = currentUser?.sub;
+  const base = getSyncEndpoint();
+  const wt = localStorage.getItem('crypto_course_write_token');
+  if (!userId || !base || !wt) return;
+  fetchWithTimeout(`${base}/register/${encodeURIComponent(userId)}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + wt },
+    body: JSON.stringify({ name: currentUser.name || '', role: currentUser.role || 'student' }),
+  }, 6000).catch(() => {});
+}
+
 // Render cohort student list into the analytics panel.
 async function loadCohortPanel() {
   const input = document.getElementById('cohort-code-input');
@@ -11569,13 +11582,15 @@ async function loadCohortPanel() {
       const modsDone = Object.values((p.quizOutcomes || {}).moduleProgress || {}).filter(v => v >= 1).length;
       const ageH = s.updatedAt ? Math.round((Date.now() - new Date(s.updatedAt)) / 3600000) : null;
       const syncLabel = ageH === null ? 'never synced' : ageH < 1 ? 'just now' : ageH < 24 ? ageH + 'h ago' : Math.round(ageH / 24) + 'd ago';
-      const initials = (s.userId || '?').substring(0, 2).toUpperCase();
+      const displayName = s.name || s.userId;
+      const initials = displayName.split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase() || '?';
+      const notSynced = !s.updatedAt && s.registeredAt;
       return `
         <div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border)">
-          <div style="width:32px;height:32px;border-radius:50%;background:var(--primary-l);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:var(--primary);flex-shrink:0">${initials}</div>
+          <div style="width:32px;height:32px;border-radius:50%;background:${notSynced ? 'var(--border)' : 'var(--primary-l)'};display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:${notSynced ? 'var(--muted)' : 'var(--primary)'};flex-shrink:0">${initials}</div>
           <div style="flex:1;min-width:0">
-            <div style="font-size:13px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${s.userId}</div>
-            <div style="font-size:11px;color:var(--muted)">${modsDone}/${allMods.length} modules · ${syncLabel}</div>
+            <div style="font-size:13px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${displayName}</div>
+            <div style="font-size:11px;color:var(--muted)">${notSynced ? 'Registered · no progress synced yet' : modsDone + '/' + allMods.length + ' modules · ' + syncLabel}</div>
           </div>
           <div style="text-align:right;flex-shrink:0">
             <div style="font-size:14px;font-weight:800;color:var(--primary)">${p.xpDelta || 0} XP</div>
@@ -12577,6 +12592,7 @@ async function doLogin() {
     return;
   }
   enterApp();
+  pushRegistration();
 }
 
 async function doRegister() {
@@ -12596,6 +12612,7 @@ async function doRegister() {
     return;
   }
   enterApp();
+  pushRegistration();
 }
 
 function continueAsGuest() {

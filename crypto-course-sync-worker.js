@@ -59,9 +59,32 @@ export default {
         const out = [];
         for (const k of list.keys) {
           const rec = await env.SYNC.get(k.name, 'json');
-          if (rec) out.push({ userId: k.name.split(':').slice(2).join(':'), updatedAt: rec.updatedAt, payload: rec.payload });
+          if (rec) out.push({ userId: k.name.split(':').slice(2).join(':'), name: rec.name || '', role: rec.role || 'student', registeredAt: rec.registeredAt || null, updatedAt: rec.updatedAt || null, payload: rec.payload || null });
         }
         return json({ cohort: code, count: out.length, students: out }, 200, cors);
+      }
+
+      // Registration route:  PUT /register/{userId}
+      // Stores name + role in the KV record without overwriting progress payload.
+      const registerMatch = url.pathname.match(/^\/register\/([^/]+)\/?$/);
+      if (registerMatch && request.method === 'PUT') {
+        const userId = decodeURIComponent(registerMatch[1]);
+        const cohort = cohortForWriteToken(bearer(request), cohorts);
+        if (!cohort) return json({ error: 'unauthorized' }, 401, cors);
+        const raw = await request.text();
+        if (raw.length > 512) return json({ error: 'payload too large' }, 413, cors);
+        let body;
+        try { body = JSON.parse(raw); } catch { return json({ error: 'invalid JSON' }, 400, cors); }
+        const key = `student:${cohort}:${userId}`;
+        const existing = (await env.SYNC.get(key, 'json')) || {};
+        const updated = {
+          ...existing,
+          name: String(body.name || '').substring(0, 100),
+          role: String(body.role || 'student'),
+          registeredAt: existing.registeredAt || new Date().toISOString(),
+        };
+        await env.SYNC.put(key, JSON.stringify(updated), { expirationTtl: RETENTION_DAYS * 86400 });
+        return json({ ok: true }, 200, cors);
       }
 
       // Semester routes:  GET/PUT /semester/{code}
