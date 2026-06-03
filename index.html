@@ -18643,6 +18643,17 @@ function saveSemester() {
   });
   saveSemesters(all);
 
+  // Push to sync worker so students can enrol cross-device
+  const newSem = all[0];
+  const base = getSyncEndpoint();
+  if (base && newSem.writeToken) {
+    fetchWithTimeout(`${base}/semester/${encodeURIComponent(newSem.code)}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + newSem.writeToken },
+      body: JSON.stringify({ id: newSem.id, name: newSem.name, startDate: newSem.startDate, endDate: newSem.endDate, writeToken: newSem.writeToken }),
+    }, 8000).catch(() => {});
+  }
+
   document.getElementById('semester-overlay')?.remove();
   renderAdmin('dashboard');
   showToast('📅 Semester created');
@@ -18800,12 +18811,34 @@ function showEnrollSemesterSheet(auto) {
   document.body.appendChild(overlay);
 }
 
-function enrollByCode() {
+async function enrollByCode() {
   const code = (document.getElementById('enroll-code-input')?.value || '').trim().toUpperCase();
   const errEl = document.getElementById('enroll-code-err');
-  const sem = loadSemesters().find(s => s.code === code);
+  if (errEl) errEl.style.display = 'none';
+
+  let sem = loadSemesters().find(s => s.code === code);
+
+  // Not found locally — try fetching from the sync worker
   if (!sem) {
-    if (errEl) { errEl.textContent = 'Code not found — check with your teacher.'; errEl.style.display = 'block'; }
+    const base = getSyncEndpoint();
+    if (base) {
+      try {
+        const r = await fetchWithTimeout(`${base}/semester/${encodeURIComponent(code)}`, {}, 6000);
+        if (r.ok) {
+          const remote = await r.json();
+          const all = loadSemesters();
+          if (!all.find(s => s.id === remote.id)) {
+            all.push({ id: remote.id, name: remote.name, startDate: remote.startDate, endDate: remote.endDate, code: remote.code, writeToken: remote.writeToken, enrolledStudents: [] });
+            saveSemesters(all);
+          }
+          sem = loadSemesters().find(s => s.code === code);
+        }
+      } catch (e) {}
+    }
+  }
+
+  if (!sem) {
+    if (errEl) { errEl.textContent = 'Code not found — check your code or ask your teacher.'; errEl.style.display = 'block'; }
     return;
   }
   enrollInSemester(sem.id);

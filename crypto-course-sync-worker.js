@@ -64,6 +64,41 @@ export default {
         return json({ cohort: code, count: out.length, students: out }, 200, cors);
       }
 
+      // Semester routes:  GET/PUT /semester/{code}
+      // PUT (write token auth) — teacher pushes semester metadata so students can enrol cross-device
+      // GET (no auth)          — student fetches by join code; response includes writeToken so sync works immediately
+      const semesterMatch = url.pathname.match(/^\/semester\/([^/]+)\/?$/);
+      if (semesterMatch) {
+        const code = decodeURIComponent(semesterMatch[1]).toUpperCase();
+        const key = `semester:${code}`;
+
+        if (request.method === 'GET') {
+          const rec = await env.SYNC.get(key, 'json');
+          if (!rec) return new Response(null, { status: 204, headers: cors });
+          return json(rec, 200, cors);
+        }
+
+        if (request.method === 'PUT') {
+          const cohort = cohortForWriteToken(bearer(request), cohorts);
+          if (!cohort) return json({ error: 'unauthorized' }, 401, cors);
+          const raw = await request.text();
+          if (raw.length > 2048) return json({ error: 'payload too large' }, 413, cors);
+          let body;
+          try { body = JSON.parse(raw); } catch { return json({ error: 'invalid JSON' }, 400, cors); }
+          const clean = {
+            id:         String(body.id        || ''),
+            name:       String(body.name      || ''),
+            startDate:  String(body.startDate || ''),
+            endDate:    String(body.endDate   || ''),
+            code,
+            cohort,
+            writeToken: String(body.writeToken || ''),
+          };
+          await env.SYNC.put(key, JSON.stringify(clean), { expirationTtl: RETENTION_DAYS * 86400 });
+          return json({ ok: true }, 200, cors);
+        }
+      }
+
       // Per-student routes:  /{userId}
       const userMatch = url.pathname.match(/^\/([^/]+)\/?$/);
       if (userMatch) {
