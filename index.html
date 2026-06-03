@@ -13269,7 +13269,7 @@ function renderAdmin(activeTab, assignFilter) {
     ${activeTab === 'dashboard' ? `<!-- Stats row -->
     ${renderAtRiskPanel()}
     <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:24px">
-      <div style="background:var(--primary-l);border-radius:var(--radius-sm);padding:16px;text-align:center" onclick="updateDashStudentCount()" style="cursor:pointer">
+      <div style="background:var(--primary-l);border-radius:var(--radius-sm);padding:16px;text-align:center;cursor:pointer" onclick="updateDashStudentCount()">
         <div style="font-size:28px;font-weight:800;color:var(--primary)" id="dash-student-count">…</div>
         <div style="font-size:11px;font-weight:700;color:var(--primary);text-transform:uppercase;letter-spacing:0.05em">Students</div>
       </div>
@@ -13495,7 +13495,7 @@ async function updateDashStudentCount() {
   const el = document.getElementById('dash-student-count');
   if (!el) return;
   const base = getSyncEndpoint();
-  if (!base) { el.textContent = students.length || 0; return; }
+  if (!base) { el.textContent = '–'; return; }
   try {
     const r = await fetchWithTimeout(`${base}/semesters`, {}, 6000);
     if (r.ok) {
