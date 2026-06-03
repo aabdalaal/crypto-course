@@ -13492,23 +13492,32 @@ function renderAdmin(activeTab, assignFilter) {
 }
 
 async function updateDashStudentCount() {
-  const el = document.getElementById('dash-student-count');
-  if (!el) return;
   const base = getSyncEndpoint();
   const tt = localStorage.getItem('crypto_course_teacher_token');
-  if (!base || !tt) { el.textContent = '–'; return; }
-  // Use the first active semester to get a unique student count
-  const activeSem = loadSemesters().find(s => getSemesterStatus(s) !== 'ended' && s.writeToken);
-  if (!activeSem) { el.textContent = '–'; return; }
-  try {
-    const r = await fetchWithTimeout(`${base}/students/${encodeURIComponent(activeSem.code)}`, {
-      headers: { 'Authorization': 'Bearer ' + tt }
-    }, 6000);
-    if (r.ok) {
-      const data = await r.json();
-      el.textContent = data.count ?? 0;
-    }
-  } catch(e) { el.textContent = '–'; }
+  if (!base || !tt) {
+    const el = document.getElementById('dash-student-count');
+    if (el) el.textContent = '–';
+    return;
+  }
+  const activeSems = loadSemesters().filter(s => getSemesterStatus(s) !== 'ended' && s.writeToken);
+  let totalCount = 0;
+  for (const sem of activeSems) {
+    try {
+      const r = await fetchWithTimeout(`${base}/students/${encodeURIComponent(sem.code)}`, {
+        headers: { 'Authorization': 'Bearer ' + tt }
+      }, 6000);
+      if (r.ok) {
+        const data = await r.json();
+        const count = data.count ?? 0;
+        totalCount += count;
+        // Update the semester card enrolled count badge
+        const countEl = document.getElementById('sem-enrolled-count-' + sem.id);
+        if (countEl) countEl.textContent = count + ' enrolled';
+      }
+    } catch(e) {}
+  }
+  const el = document.getElementById('dash-student-count');
+  if (el) el.textContent = totalCount;
 }
 
 // ============================================================
