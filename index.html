@@ -18923,7 +18923,7 @@ async function toggleSemesterStudents(semId, code) {
     return;
   }
   try {
-    const r = await fetchWithTimeout(`${base}/cohort/${encodeURIComponent(code)}`, {
+    const r = await fetchWithTimeout(`${base}/students/${encodeURIComponent(code)}`, {
       headers: { 'Authorization': 'Bearer ' + tt }
     }, 8000);
     if (!r.ok) { el.innerHTML = '<div style="padding:12px;font-size:12px;color:var(--danger)">Could not load students (' + r.status + ')</div>'; return; }

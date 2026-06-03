@@ -156,6 +156,24 @@ export default {
         }
       }
 
+      // Student list by semester code:  GET /students/{semCode}  (teacher token auth)
+      // Looks up the semester's cohort internally — teacher only needs the semester code.
+      const studentsMatch = url.pathname.match(/^\/students\/([^/]+)\/?$/);
+      if (studentsMatch && request.method === 'GET') {
+        if (!isTeacher(bearer(request), cohorts)) return json({ error: 'unauthorized' }, 401, cors);
+        const semCode = decodeURIComponent(studentsMatch[1]).toUpperCase();
+        const semRec = await env.SYNC.get(`semester:${semCode}`, 'json');
+        if (!semRec) return json({ error: 'semester not found' }, 404, cors);
+        const cohort = semRec.cohort;
+        const list = await env.SYNC.list({ prefix: `student:${cohort}:` });
+        const out = [];
+        for (const k of list.keys) {
+          const rec = await env.SYNC.get(k.name, 'json');
+          if (rec) out.push({ userId: k.name.split(':').slice(2).join(':'), name: rec.name || '', role: rec.role || 'student', emailVerified: rec.emailVerified || false, registeredAt: rec.registeredAt || null, updatedAt: rec.updatedAt || null, payload: rec.payload || null });
+        }
+        return json({ semCode, cohort, count: out.length, students: out }, 200, cors);
+      }
+
       // Per-student routes:  /{userId}
       const userMatch = url.pathname.match(/^\/([^/]+)\/?$/);
       if (userMatch) {
