@@ -11379,7 +11379,19 @@ function setTextSize(size) {
 function getSyncEndpoint() {
   const override = localStorage.getItem('crypto_course_sync_url');
   if (override) return override.replace(/\/$/, '');
-  return null; // local-only unless an explicit sync URL is configured
+  return null;
+}
+
+// Fetch sync-config.json once and cache the syncUrl in localStorage.
+// Silent — never blocks the app.
+async function bootstrapSyncConfig() {
+  if (localStorage.getItem('crypto_course_sync_url')) return; // already configured
+  try {
+    const r = await fetch('/sync-config.json');
+    if (!r.ok) return;
+    const cfg = await r.json();
+    if (cfg.syncUrl) localStorage.setItem('crypto_course_sync_url', cfg.syncUrl.replace(/\/$/, ''));
+  } catch (e) {}
 }
 
 // Merge remote (server) state into local state.
@@ -12679,6 +12691,9 @@ function seedDefaultFlowcharts() {
 
 async function enterApp() {
   window._sessionStart = Date.now();
+
+  // Cache sync URL from sync-config.json if not already configured
+  await bootstrapSyncConfig();
 
   // Load this user's personal progress (isolated per userId)
   const userState = loadUserState();
@@ -18882,7 +18897,7 @@ function showEnrollSemesterSheet(auto) {
       <div style="margin-top:20px;padding-top:16px;border-top:1px solid var(--border)">
         <div style="font-size:12px;font-weight:700;color:var(--muted);margin-bottom:10px;text-transform:uppercase;letter-spacing:0.05em">Have a join code instead?</div>
         <div style="display:flex;gap:8px">
-          <input id="enroll-code-input" type="text" placeholder="Code, or code@sync-url"
+          <input id="enroll-code-input" type="text" placeholder="Enter join code (e.g. FJNWLA)"
             style="flex:1;padding:10px 12px;border:2px solid var(--border);border-radius:10px;font-size:13px;font-family:var(--mono);background:var(--bg);color:var(--text)">
           <button class="btn btn-secondary btn-sm" onclick="enrollByCode()" style="width:auto;flex-shrink:0">Join</button>
         </div>
@@ -18902,13 +18917,12 @@ async function enrollByCode() {
   const errEl = document.getElementById('enroll-code-err');
   if (errEl) errEl.style.display = 'none';
 
-  // Accept "CODE@SYNC_URL" — teacher shares the combined string so students get sync configured automatically
-  let code, syncUrl;
+  // Accept plain "CODE" or legacy "CODE@SYNC_URL" format
+  let code;
   const atIdx = raw.indexOf('@');
   if (atIdx > 0 && raw.substring(atIdx + 1).startsWith('http')) {
-    code    = raw.substring(0, atIdx).toUpperCase();
-    syncUrl = raw.substring(atIdx + 1).trim().replace(/\/$/, '');
-    localStorage.setItem('crypto_course_sync_url', syncUrl);
+    code = raw.substring(0, atIdx).toUpperCase();
+    localStorage.setItem('crypto_course_sync_url', raw.substring(atIdx + 1).trim().replace(/\/$/, ''));
   } else {
     code = raw.toUpperCase();
   }
