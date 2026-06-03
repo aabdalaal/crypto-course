@@ -12676,11 +12676,20 @@ async function doRegister() {
     el.textContent = result.error; el.style.display = 'block';
     return;
   }
-  pushRegistration();
   if (result.user?.role === ROLES.STUDENT) {
-    showPendingApprovalScreen();
+    // Show semester enrollment first — enrollment saves the write token,
+    // which is needed before we can push registration to the server.
+    showEnrollSemesterSheet(true);
   } else {
     enterApp();
+  }
+}
+
+function onSkipSemesterEnrollment() {
+  document.getElementById('enroll-sem-overlay')?.remove();
+  const me = loadUsers().find(u => u.id === currentUser?.sub);
+  if (currentUser?.role === ROLES.STUDENT && me && !me.emailVerified) {
+    showPendingApprovalScreen();
   }
 }
 
@@ -12698,6 +12707,7 @@ function showPendingApprovalScreen() {
       Your account has been created. Your teacher needs to approve it before you can access the course.
     </div>
     <button class="btn btn-primary" onclick="checkApprovalStatus()" style="margin-bottom:12px">Check approval status</button>
+    <button class="btn btn-secondary" onclick="showEnrollSemesterSheet(false)" style="margin-bottom:12px">Join a Semester</button>
     <button class="btn btn-ghost" onclick="authLogout()" style="width:auto;color:var(--muted);font-size:13px">Log out</button>
     <div id="pending-check-msg" style="margin-top:16px;font-size:13px;color:var(--muted)"></div>
   `;
@@ -18965,6 +18975,15 @@ function enrollInSemester(semId) {
   renderSemesterProfile();
   renderSemesterHomeInfo();
   showToast('📅 Enrolled in ' + sem.name);
+
+  // If student is pending approval, push registration now (write token just became available)
+  // then show the pending screen instead of entering the app.
+  const _me = loadUsers().find(u => u.id === currentUser?.sub);
+  if (currentUser?.role === ROLES.STUDENT && _me && !_me.emailVerified) {
+    pushRegistration();
+    showPendingApprovalScreen();
+    return;
+  }
 }
 
 // Checks on login — always prompt unenrolled students (sheet fetches semesters from server)
@@ -18990,7 +19009,7 @@ async function showEnrollSemesterSheet(auto) {
       </div>
       <div id="enroll-code-err" style="color:var(--danger);font-size:12px;margin-top:8px;display:none"></div>
       ${auto
-        ? `<button class="btn btn-ghost" onclick="document.getElementById('enroll-sem-overlay').remove()" style="margin-top:16px;width:100%;color:var(--muted)">Skip for now</button>`
+        ? `<button class="btn btn-ghost" onclick="onSkipSemesterEnrollment()" style="margin-top:16px;width:100%;color:var(--muted)">Skip for now</button>`
         : `<button class="btn btn-ghost" onclick="document.getElementById('enroll-sem-overlay').remove()" style="margin-top:16px;width:100%">Cancel</button>`}
     </div>`;
   document.body.appendChild(overlay);
