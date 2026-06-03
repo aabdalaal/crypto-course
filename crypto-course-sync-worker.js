@@ -254,7 +254,7 @@ function corsHeaders(origin, env) {
   const allow = allowed.includes(origin) ? origin : (allowed[0] || '*');
   return {
     'Access-Control-Allow-Origin': allow,
-    'Access-Control-Allow-Methods': 'GET, PUT, OPTIONS',
+    'Access-Control-Allow-Methods': 'GET, PUT, DELETE, OPTIONS',
     'Access-Control-Allow-Headers': 'Authorization, Content-Type',
     'Access-Control-Max-Age': '86400',
     'Vary': 'Origin',
