@@ -13058,6 +13058,9 @@ function renderAdmin(activeTab, assignFilter) {
                       <span style="font-size:10px;font-weight:700;color:var(--primary);white-space:nowrap">📋 Share with students:</span>
                       <code style="font-size:10px;color:var(--navy-text);word-break:break-all;flex:1">${sem.code}@${getSyncEndpoint()}</code>
                       <button onclick="navigator.clipboard.writeText('${sem.code}@${getSyncEndpoint()}')" style="border:none;background:var(--primary);color:#fff;border-radius:4px;padding:2px 8px;font-size:10px;cursor:pointer;flex-shrink:0">Copy</button>
+                    </div>
+                    <div style="margin-top:4px;display:flex;gap:6px">
+                      <button onclick="pushSemesterToWorker('${sem.id}')" style="border:none;background:var(--secondary-l);color:var(--secondary-d);border-radius:4px;padding:3px 10px;font-size:10px;font-weight:700;cursor:pointer">↑ Push to server</button>
                     </div>` : ''}
                   </div>
                   <button onclick="deleteSemester('${sem.id}')" style="border:none;background:none;font-size:18px;cursor:pointer;color:var(--muted);padding:0 4px;flex-shrink:0" title="Delete">×</button>
@@ -18663,6 +18666,22 @@ function saveSemester() {
   document.getElementById('semester-overlay')?.remove();
   renderAdmin('dashboard');
   showToast('📅 Semester created');
+}
+
+async function pushSemesterToWorker(id) {
+  const sem = loadSemesters().find(s => s.id === id);
+  const base = getSyncEndpoint();
+  if (!sem || !base || !sem.writeToken) { showToast('Sync URL or write token missing'); return; }
+  try {
+    const r = await fetchWithTimeout(`${base}/semester/${encodeURIComponent(sem.code)}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + sem.writeToken },
+      body: JSON.stringify({ id: sem.id, name: sem.name, startDate: sem.startDate, endDate: sem.endDate, writeToken: sem.writeToken }),
+    }, 8000);
+    showToast(r.ok ? '✓ Semester pushed to server' : 'Push failed (' + r.status + ')');
+  } catch (e) {
+    showToast('Push failed — check your connection');
+  }
 }
 
 function deleteSemester(id) {
