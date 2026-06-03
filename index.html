@@ -13495,13 +13495,18 @@ async function updateDashStudentCount() {
   const el = document.getElementById('dash-student-count');
   if (!el) return;
   const base = getSyncEndpoint();
-  if (!base) { el.textContent = '–'; return; }
+  const tt = localStorage.getItem('crypto_course_teacher_token');
+  if (!base || !tt) { el.textContent = '–'; return; }
+  // Use the first active semester to get a unique student count
+  const activeSem = loadSemesters().find(s => getSemesterStatus(s) !== 'ended' && s.writeToken);
+  if (!activeSem) { el.textContent = '–'; return; }
   try {
-    const r = await fetchWithTimeout(`${base}/semesters`, {}, 6000);
+    const r = await fetchWithTimeout(`${base}/students/${encodeURIComponent(activeSem.code)}`, {
+      headers: { 'Authorization': 'Bearer ' + tt }
+    }, 6000);
     if (r.ok) {
       const data = await r.json();
-      const total = (data.semesters || []).reduce((s, sem) => s + (sem.enrolledCount || 0), 0);
-      el.textContent = total;
+      el.textContent = data.count ?? 0;
     }
   } catch(e) { el.textContent = '–'; }
 }
