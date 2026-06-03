@@ -13269,8 +13269,8 @@ function renderAdmin(activeTab, assignFilter) {
     ${activeTab === 'dashboard' ? `<!-- Stats row -->
     ${renderAtRiskPanel()}
     <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:24px">
-      <div style="background:var(--primary-l);border-radius:var(--radius-sm);padding:16px;text-align:center">
-        <div style="font-size:28px;font-weight:800;color:var(--primary)">${students.length}</div>
+      <div style="background:var(--primary-l);border-radius:var(--radius-sm);padding:16px;text-align:center" onclick="updateDashStudentCount()" style="cursor:pointer">
+        <div style="font-size:28px;font-weight:800;color:var(--primary)" id="dash-student-count">…</div>
         <div style="font-size:11px;font-weight:700;color:var(--primary);text-transform:uppercase;letter-spacing:0.05em">Students</div>
       </div>
       <div style="background:var(--secondary-l);border-radius:var(--radius-sm);padding:16px;text-align:center">
@@ -13486,6 +13486,24 @@ function renderAdmin(activeTab, assignFilter) {
     const activeBtn = document.getElementById('admin-tab-' + activeTab);
     if (activeBtn) activeBtn.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
   }, 50);
+
+  // Auto-load server student count when dashboard tab is shown
+  if (activeTab === 'dashboard') updateDashStudentCount();
+}
+
+async function updateDashStudentCount() {
+  const el = document.getElementById('dash-student-count');
+  if (!el) return;
+  const base = getSyncEndpoint();
+  if (!base) { el.textContent = students.length || 0; return; }
+  try {
+    const r = await fetchWithTimeout(`${base}/semesters`, {}, 6000);
+    if (r.ok) {
+      const data = await r.json();
+      const total = (data.semesters || []).reduce((s, sem) => s + (sem.enrolledCount || 0), 0);
+      el.textContent = total;
+    }
+  } catch(e) { el.textContent = '–'; }
 }
 
 // ============================================================
