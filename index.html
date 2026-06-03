@@ -18860,73 +18860,112 @@ function enrollInSemester(semId) {
   showToast('📅 Enrolled in ' + sem.name);
 }
 
-// Checks on login — prompts unenrolled students if semesters exist
+// Checks on login — always prompt unenrolled students (sheet fetches semesters from server)
 function checkSemesterEnrollment() {
   if (!isStudentView()) return;
-  if (state.semesterId) return;                           // already enrolled
-  const available = loadSemesters().filter(s => getSemesterStatus(s) !== 'ended');
-  if (available.length === 0) return;                     // nothing to join
-  showEnrollSemesterSheet(true);                          // true = launched automatically
+  if (state.semesterId) return;
+  showEnrollSemesterSheet(true);
 }
 
-// Full-screen enrollment modal: shows semester list + code fallback
-function showEnrollSemesterSheet(auto) {
+// Full-screen enrollment modal: fetches semesters from server, shows inline code entry
+async function showEnrollSemesterSheet(auto) {
   document.getElementById('enroll-sem-overlay')?.remove();
 
-  const semesters = loadSemesters().filter(s => getSemesterStatus(s) !== 'ended');
-
   const overlay = document.createElement('div');
-  overlay.id = 'enroll-sem-overlay'; applyModalAttrs(overlay, 'Choose Your Semester');
+  overlay.id = 'enroll-sem-overlay'; applyModalAttrs(overlay, 'Join Your Semester');
   overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:500;display:flex;align-items:flex-end;justify-content:center';
-
-  const semCards = semesters.length === 0
-    ? `<div style="text-align:center;padding:32px 0;color:var(--muted)">
-        <div style="font-size:40px;margin-bottom:10px">📅</div>
-        <div style="font-size:14px;font-weight:700">No open semesters</div>
-        <div style="font-size:13px;margin-top:6px">Your teacher hasn't set up a semester yet. Check back later.</div>
-       </div>`
-    : semesters.map(s => {
-        const st = getSemesterStatus(s);
-        const tagCls = st === 'active' ? 'tag-green' : 'tag-blue';
-        const enrolled = (s.enrolledStudents || []).length;
-        return `
-          <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:16px;margin-bottom:10px;display:flex;align-items:center;gap:14px">
-            <div style="width:44px;height:44px;border-radius:var(--radius-xs);background:var(--primary-l);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0">📅</div>
-            <div style="flex:1;min-width:0">
-              <div style="display:flex;align-items:center;gap:6px;margin-bottom:2px">
-                <div style="font-size:14px;font-weight:800">${s.name}</div>
-                <span class="tag ${tagCls}" style="font-size:10px">${st}</span>
-              </div>
-              <div style="font-size:12px;color:var(--muted)">${s.startDate} → ${s.endDate} · ${enrolled} enrolled</div>
-            </div>
-            <button class="btn btn-primary btn-sm" onclick="enrollInSemester('${s.id}')" style="width:auto;flex-shrink:0">Enroll</button>
-          </div>`;
-      }).join('');
-
   overlay.innerHTML = `
     <div style="background:var(--bg);border-radius:20px 20px 0 0;padding:28px 20px 40px;width:100%;max-width:500px;max-height:92vh;overflow-y:auto">
-      <div style="font-size:20px;font-weight:800;margin-bottom:4px">📅 Choose Your Semester</div>
-      <div style="font-size:13px;color:var(--muted);margin-bottom:20px">${auto ? 'Select the semester you are enrolled in to get started.' : 'Select a semester to join.'}</div>
-
-      ${semCards}
-
-      <!-- Code fallback -->
-      <div style="margin-top:20px;padding-top:16px;border-top:1px solid var(--border)">
-        <div style="font-size:12px;font-weight:700;color:var(--muted);margin-bottom:10px;text-transform:uppercase;letter-spacing:0.05em">Have a join code instead?</div>
-        <div style="display:flex;gap:8px">
-          <input id="enroll-code-input" type="text" placeholder="Enter join code (e.g. FJNWLA)"
-            style="flex:1;padding:10px 12px;border:2px solid var(--border);border-radius:10px;font-size:13px;font-family:var(--mono);background:var(--bg);color:var(--text)">
-          <button class="btn btn-secondary btn-sm" onclick="enrollByCode()" style="width:auto;flex-shrink:0">Join</button>
-        </div>
-        <div id="enroll-code-err" style="color:var(--danger);font-size:12px;margin-top:6px;display:none"></div>
+      <div style="font-size:20px;font-weight:800;margin-bottom:4px">📅 Join Your Semester</div>
+      <div style="font-size:13px;color:var(--muted);margin-bottom:20px">Select your semester and enter the code your teacher gave you.</div>
+      <div id="sem-list-body" style="min-height:60px;display:flex;align-items:center;justify-content:center">
+        <div style="color:var(--muted);font-size:13px">Loading…</div>
       </div>
-
+      <div id="enroll-code-err" style="color:var(--danger);font-size:12px;margin-top:8px;display:none"></div>
       ${auto
         ? `<button class="btn btn-ghost" onclick="document.getElementById('enroll-sem-overlay').remove()" style="margin-top:16px;width:100%;color:var(--muted)">Skip for now</button>`
         : `<button class="btn btn-ghost" onclick="document.getElementById('enroll-sem-overlay').remove()" style="margin-top:16px;width:100%">Cancel</button>`}
-    </div>
-  `;
+    </div>`;
   document.body.appendChild(overlay);
+
+  // Fetch from server + merge with local
+  const localSems = loadSemesters().filter(s => getSemesterStatus(s) !== 'ended');
+  let serverSems = [];
+  const base = getSyncEndpoint();
+  if (base) {
+    try {
+      const r = await fetchWithTimeout(`${base}/semesters`, {}, 6000);
+      if (r.ok) serverSems = ((await r.json()).semesters || []).filter(s => getSemesterStatus(s) !== 'ended');
+    } catch(e) {}
+  }
+  const seenCodes = new Set(serverSems.map(s => s.code));
+  const merged = [...serverSems, ...localSems.filter(s => !seenCodes.has(s.code))];
+
+  const listEl = document.getElementById('sem-list-body');
+  if (!listEl) return;
+
+  if (merged.length === 0) {
+    listEl.innerHTML = `
+      <div style="text-align:center;padding:24px 0;color:var(--muted)">
+        <div style="font-size:36px;margin-bottom:8px">📅</div>
+        <div style="font-size:14px;font-weight:700">No open semesters</div>
+        <div style="font-size:13px;margin-top:6px">Your teacher hasn't set up a semester yet.</div>
+      </div>`;
+    return;
+  }
+
+  listEl.style.cssText = 'display:block';
+  listEl.innerHTML = merged.map(s => {
+    const st = getSemesterStatus(s);
+    const tagCls = st === 'active' ? 'tag-green' : 'tag-blue';
+    const iid = 'sc_' + s.code;
+    return `
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:14px;margin-bottom:10px">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+          <div style="font-size:22px">📅</div>
+          <div>
+            <div style="font-size:14px;font-weight:800">${s.name} <span class="tag ${tagCls}" style="font-size:10px">${st}</span></div>
+            <div style="font-size:12px;color:var(--muted)">${s.startDate} → ${s.endDate}</div>
+          </div>
+        </div>
+        <div style="display:flex;gap:8px">
+          <input id="${iid}" type="text" maxlength="12" placeholder="Enter join code"
+            style="flex:1;padding:9px 12px;border:2px solid var(--border);border-radius:8px;font-size:15px;font-family:var(--mono);text-transform:uppercase;background:var(--bg);color:var(--text);letter-spacing:0.1em"
+            oninput="this.value=this.value.toUpperCase()">
+          <button class="btn btn-primary btn-sm" onclick="joinSemesterWithCode('${s.code}','${iid}')" style="width:auto;flex-shrink:0">Join</button>
+        </div>
+      </div>`;
+  }).join('');
+}
+
+async function joinSemesterWithCode(semCode, inputId) {
+  const entered = (document.getElementById(inputId)?.value || '').trim().toUpperCase();
+  const errEl = document.getElementById('enroll-code-err');
+  if (errEl) errEl.style.display = 'none';
+  if (!entered) { if (errEl) { errEl.textContent = 'Enter the join code first.'; errEl.style.display = 'block'; } return; }
+  if (entered !== semCode.toUpperCase()) { if (errEl) { errEl.textContent = 'Wrong code — check with your teacher and try again.'; errEl.style.display = 'block'; } return; }
+
+  // Fetch full semester record (includes write token)
+  let sem = loadSemesters().find(s => s.code === semCode);
+  if (!sem) {
+    const base = getSyncEndpoint();
+    if (base) {
+      try {
+        const r = await fetchWithTimeout(`${base}/semester/${encodeURIComponent(semCode)}`, {}, 6000);
+        if (r.ok) {
+          const remote = await r.json();
+          const all = loadSemesters();
+          if (!all.find(s => s.id === remote.id)) {
+            all.push({ id: remote.id, name: remote.name, startDate: remote.startDate, endDate: remote.endDate, code: remote.code, writeToken: remote.writeToken, enrolledStudents: [] });
+            saveSemesters(all);
+          }
+          sem = loadSemesters().find(s => s.code === semCode);
+        }
+      } catch(e) {}
+    }
+  }
+  if (!sem) { if (errEl) { errEl.textContent = 'Could not connect to server — check your connection.'; errEl.style.display = 'block'; } return; }
+  enrollInSemester(sem.id);
 }
 
 async function enrollByCode() {

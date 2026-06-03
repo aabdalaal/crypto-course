@@ -87,6 +87,17 @@ export default {
         return json({ ok: true }, 200, cors);
       }
 
+      // List all semesters (public — used by students to browse before enrolling)
+      if (url.pathname === '/semesters' && request.method === 'GET') {
+        const list = await env.SYNC.list({ prefix: 'semester:' });
+        const out = [];
+        for (const k of list.keys) {
+          const rec = await env.SYNC.get(k.name, 'json');
+          if (rec) out.push({ code: rec.code, name: rec.name, startDate: rec.startDate, endDate: rec.endDate });
+        }
+        return json({ semesters: out }, 200, cors);
+      }
+
       // Semester routes:  GET/PUT /semester/{code}
       // PUT (write token auth) — teacher pushes semester metadata so students can enrol cross-device
       // GET (no auth)          — student fetches by join code; response includes writeToken so sync works immediately
