@@ -11502,6 +11502,45 @@ async function triggerSync() {
   }
 }
 
+// Render cohort student list into the analytics panel.
+async function loadCohortPanel() {
+  const input = document.getElementById('cohort-code-input');
+  const resultsEl = document.getElementById('cohort-results');
+  if (!input || !resultsEl) return;
+  const code = input.value.trim().toUpperCase();
+  if (!code) return;
+  localStorage.setItem('crypto_course_last_cohort', code);
+  resultsEl.innerHTML = '<div style="text-align:center;padding:16px;color:var(--muted)">Loading…</div>';
+  const students = await fetchCohort(code);
+  if (!students || students.length === 0) {
+    resultsEl.innerHTML = '<div style="text-align:center;padding:16px;color:var(--muted);font-size:13px">No students found. Check the cohort code and that your teacher token is set.</div>';
+    return;
+  }
+  const allMods = getAllModules();
+  resultsEl.innerHTML = `
+    <div style="font-size:12px;font-weight:700;color:var(--muted);margin-bottom:8px">${students.length} student${students.length !== 1 ? 's' : ''} · ${new Date().toLocaleTimeString()}</div>
+    ${students.map(s => {
+      const p = s.payload || {};
+      const modsDone = Object.values((p.quizOutcomes || {}).moduleProgress || {}).filter(v => v >= 1).length;
+      const ageH = s.updatedAt ? Math.round((Date.now() - new Date(s.updatedAt)) / 3600000) : null;
+      const syncLabel = ageH === null ? 'never synced' : ageH < 1 ? 'just now' : ageH < 24 ? ageH + 'h ago' : Math.round(ageH / 24) + 'd ago';
+      const initials = (s.userId || '?').substring(0, 2).toUpperCase();
+      return `
+        <div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border)">
+          <div style="width:32px;height:32px;border-radius:50%;background:var(--primary-l);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:var(--primary);flex-shrink:0">${initials}</div>
+          <div style="flex:1;min-width:0">
+            <div style="font-size:13px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${s.userId}</div>
+            <div style="font-size:11px;color:var(--muted)">${modsDone}/${allMods.length} modules · ${syncLabel}</div>
+          </div>
+          <div style="text-align:right;flex-shrink:0">
+            <div style="font-size:14px;font-weight:800;color:var(--primary)">${p.xpDelta || 0} XP</div>
+            <div style="font-size:11px;color:var(--muted)">🔥 ${p.streak || 0}</div>
+          </div>
+        </div>`;
+    }).join('')}
+  `;
+}
+
 // Fetch all students in a cohort — teacher dashboard use only.
 async function fetchCohort(code) {
   const base = getSyncEndpoint();
@@ -18554,13 +18593,18 @@ function showSemesterComposerSheet() {
             style="width:100%;padding:12px 14px;border:2px solid var(--border);border-radius:10px;font-size:14px;font-family:var(--font);box-sizing:border-box;background:var(--bg);color:var(--text)">
         </div>
       </div>
-      <div style="margin-bottom:24px">
+      <div style="margin-bottom:14px">
         <label class="form-label">Join Code <span style="color:var(--muted);font-weight:400;text-transform:none">(auto-generated — you can change it)</span></label>
         <div style="display:flex;gap:8px">
           <input id="sem-code" type="text" maxlength="12" placeholder="e.g. FALL25" value="${genSemesterCode()}"
             style="flex:1;padding:12px 14px;border:2px solid var(--border);border-radius:10px;font-size:14px;font-family:var(--mono);text-transform:uppercase;box-sizing:border-box;background:var(--bg);color:var(--text)">
           <button onclick="document.getElementById('sem-code').value='${genSemesterCode()}'" class="btn btn-sm btn-secondary" style="width:auto;flex-shrink:0">↺ New</button>
         </div>
+      </div>
+      <div style="margin-bottom:24px">
+        <label class="form-label">Sync Write Token <span style="color:var(--muted);font-weight:400;text-transform:none">(optional — paste the cohort write token to enable sync for enrolled students)</span></label>
+        <input id="sem-write-token" type="text" placeholder="w_…"
+          style="width:100%;padding:12px 14px;border:2px solid var(--border);border-radius:10px;font-size:13px;font-family:var(--mono);box-sizing:border-box;background:var(--bg);color:var(--text)">
       </div>
 
       <button class="btn btn-primary" onclick="saveSemester()">Create Semester</button>
@@ -18585,12 +18629,14 @@ function saveSemester() {
   const all = loadSemesters();
   if (all.some(s => s.code === code)) { showToast('That code is already in use — choose another'); return; }
 
+  const writeToken = (document.getElementById('sem-write-token')?.value || '').trim();
   all.unshift({
     id: 'sem_' + Date.now(),
     name,
     startDate: start,
     endDate: end,
     code,
+    writeToken: writeToken || undefined,
     createdBy: currentUser.sub,
     createdAt: new Date().toISOString(),
     enrolledStudents: [],
@@ -18675,6 +18721,8 @@ function enrollInSemester(semId) {
     all[idx].enrolledStudents.push(currentUser.sub);
   }
   saveSemesters(all);
+
+  if (sem.writeToken) localStorage.setItem('crypto_course_write_token', sem.writeToken);
 
   document.getElementById('enroll-sem-overlay')?.remove();
   renderSemesterProfile();
@@ -19880,6 +19928,28 @@ function renderAnalyticsTab() {
         </div>
       </div>`;
     })()}
+
+    <!-- Cohort sync panel (requires sync URL + teacher token) -->
+    ${getSyncEndpoint() ? `
+    <div class="section-card" style="margin-top:12px">
+      <div class="section-card-header" style="justify-content:space-between">
+        <span>🔗 Cohort Sync</span>
+        <span style="font-size:11px;color:var(--muted);font-weight:600">remote progress</span>
+      </div>
+      <div style="padding:12px 16px">
+        <div style="display:flex;gap:8px;margin-bottom:12px">
+          <input id="cohort-code-input" type="text" maxlength="20" placeholder="Cohort code e.g. WMIN2026"
+            value="${localStorage.getItem('crypto_course_last_cohort') || ''}"
+            style="flex:1;padding:10px 12px;border:2px solid var(--border);border-radius:10px;font-size:13px;font-family:var(--mono);text-transform:uppercase;background:var(--bg);color:var(--text)"
+            oninput="this.value=this.value.toUpperCase()">
+          <button class="btn btn-primary btn-sm" onclick="loadCohortPanel()" style="width:auto;flex-shrink:0">Load</button>
+        </div>
+        <div id="cohort-results" style="font-size:13px;color:var(--muted);text-align:center;padding:8px 0">Enter a cohort code to load student progress.</div>
+      </div>
+    </div>` : `
+    <div style="margin-top:12px;padding:14px 16px;background:var(--bg);border-radius:var(--radius-sm);border:1px dashed var(--border);font-size:12px;color:var(--muted);text-align:center">
+      🔗 Cohort sync not configured — set <strong>crypto_course_sync_url</strong> and <strong>crypto_course_teacher_token</strong> in localStorage to enable.
+    </div>`}
   `;
 }
 
