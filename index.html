@@ -20148,7 +20148,33 @@ function renderAnalyticsTab() {
     return daysOver >= 7;
   });
 
+  // Cohort students from active semesters
+  const activeSemesters = loadSemesters().filter(s => getSemesterStatus(s) !== 'ended' && s.writeToken);
+
   return `
+    <!-- Cohort Students -->
+    ${activeSemesters.length > 0 ? `
+    <div class="section-card" style="margin-bottom:16px">
+      <div class="section-card-header">👥 Cohort Students</div>
+      ${activeSemesters.map(sem => `
+        <div style="border-bottom:1px solid var(--border)">
+          <div style="display:flex;align-items:center;gap:10px;padding:10px 16px">
+            <div style="flex:1;min-width:0">
+              <div style="font-size:13px;font-weight:700">${sem.name}</div>
+              <div style="font-size:11px;color:var(--muted)">${sem.startDate} → ${sem.endDate} · Code: ${sem.code}</div>
+            </div>
+            <button onclick="toggleSemesterStudents('${sem.id}','${sem.code}')"
+              style="border:none;background:var(--primary-l);color:var(--primary);border-radius:100px;padding:4px 14px;font-size:12px;font-weight:700;cursor:pointer;flex-shrink:0">
+              👥 <span id="sem-enrolled-count-${sem.id}">${(sem.enrolledStudents||[]).length} enrolled</span> ▾
+            </button>
+          </div>
+          <div id="sem-students-${sem.id}" style="display:none;border-top:1px solid var(--border)"></div>
+        </div>`).join('')}
+    </div>` : `
+    <div style="padding:14px 16px;background:var(--bg);border-radius:var(--radius-sm);border:1px dashed var(--border);font-size:12px;color:var(--muted);margin-bottom:16px">
+      No active semesters with sync — create one in Dashboard to see cohort students here.
+    </div>`}
+
     <!-- KPI row -->
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:20px">
       ${[
@@ -20403,10 +20429,6 @@ function renderAnalyticsTab() {
       </div>`;
     })()}
 
-    <!-- Student list moved to Dashboard semester card (tap 👥 enrolled) -->
-    <div style="margin-top:12px;padding:12px 16px;background:var(--primary-l);border-radius:var(--radius-sm);font-size:12px;color:var(--primary);font-weight:600;text-align:center">
-      👥 To view and approve students, go to <strong>Dashboard</strong> and tap the enrolled count on your semester card.
-    </div>
   `;
 }
 
