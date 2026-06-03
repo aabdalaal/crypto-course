@@ -14807,6 +14807,8 @@ async function pushContentToServer() {
 }
 
 async function pullContentFromServer() {
+  // Only available on local dev server — skip on GitHub Pages and other static hosts
+  if (!window.location.hostname.match(/^(localhost|127\.|0\.0\.0\.0)/)) return false;
   try {
     const res = await fetch(_serverBase() + '/api/content');
     if (res.status === 204) return false; // nothing published yet
