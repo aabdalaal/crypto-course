@@ -11387,7 +11387,7 @@ function getSyncEndpoint() {
 async function bootstrapSyncConfig() {
   if (localStorage.getItem('crypto_course_sync_url')) return; // already configured
   try {
-    const r = await fetch('/sync-config.json');
+    const r = await fetch('sync-config.json');
     if (!r.ok) return;
     const cfg = await r.json();
     if (cfg.syncUrl) localStorage.setItem('crypto_course_sync_url', cfg.syncUrl.replace(/\/$/, ''));
