@@ -13244,7 +13244,8 @@ function renderAdmin(activeTab, assignFilter) {
                     </div>
                     <div style="font-size:12px;color:var(--muted);margin-bottom:4px">${sem.startDate} → ${sem.endDate}</div>
                     <div style="display:flex;align-items:center;gap:10px;font-size:12px;flex-wrap:wrap">
-                      <span style="color:var(--text2)">👥 ${enrolled} enrolled</span>
+                      <span style="color:var(--text2)" id="sem-enrolled-${sem.id}">👥 ${enrolled} enrolled</span>
+                      <button onclick="refreshSemEnrolled('${sem.id}','${sem.code}')" style="border:none;background:none;font-size:11px;color:var(--primary);cursor:pointer;padding:0;font-weight:700">↻ Refresh</button>
                       <span style="color:var(--muted)">Code: <strong style="font-family:var(--mono);color:var(--primary);letter-spacing:0.05em">${sem.code}</strong></span>
                     </div>
                     ${sem.writeToken ? `
@@ -18893,6 +18894,21 @@ async function pushSemesterToWorker(id) {
   } catch (e) {
     showToast('Push failed — check your connection');
   }
+}
+
+async function refreshSemEnrolled(semId, semCode) {
+  const el = document.getElementById('sem-enrolled-' + semId);
+  if (el) el.textContent = '👥 …';
+  const base = getSyncEndpoint();
+  if (!base) { if (el) el.textContent = '👥 (offline)'; return; }
+  try {
+    const r = await fetchWithTimeout(`${base}/semesters`, {}, 6000);
+    if (r.ok) {
+      const data = await r.json();
+      const sem = (data.semesters || []).find(s => s.code === semCode);
+      if (el) el.textContent = '👥 ' + (sem ? sem.enrolledCount : 0) + ' enrolled';
+    }
+  } catch(e) { if (el) el.textContent = '👥 (error)'; }
 }
 
 function deleteSemester(id) {

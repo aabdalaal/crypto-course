@@ -112,7 +112,11 @@ export default {
         const out = [];
         for (const k of list.keys) {
           const rec = await env.SYNC.get(k.name, 'json');
-          if (rec) out.push({ code: rec.code, name: rec.name, startDate: rec.startDate, endDate: rec.endDate });
+          if (!rec) continue;
+          const studentList = rec.cohort
+            ? await env.SYNC.list({ prefix: `student:${rec.cohort}:` })
+            : { keys: [] };
+          out.push({ code: rec.code, name: rec.name, startDate: rec.startDate, endDate: rec.endDate, enrolledCount: studentList.keys.length });
         }
         return json({ semesters: out }, 200, cors);
       }
