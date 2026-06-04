@@ -12291,34 +12291,45 @@ function parseBulkInput(text) {
 function showBulkInviteModal() {
   const existing = document.getElementById('bulk-invite-overlay');
   if (existing) existing.remove();
+
+  const activeSems = loadSemesters().filter(s => getSemesterStatus(s) !== 'ended' && s.writeToken);
+
   const ov = document.createElement('div');
   ov.id = 'bulk-invite-overlay'; applyModalAttrs(ov, 'Bulk Invite Students');
   ov.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:600;display:flex;align-items:flex-end;justify-content:center';
   ov.innerHTML = `
-    <div style="background:white;border-radius:20px 20px 0 0;padding:28px 24px 48px;width:100%;max-width:480px;max-height:90vh;overflow-y:auto">
+    <div style="background:var(--bg);border-radius:20px 20px 0 0;padding:28px 24px 48px;width:100%;max-width:480px;max-height:90vh;overflow-y:auto">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
         <div style="font-size:18px;font-weight:800">📨 Bulk Invite Students</div>
         <button onclick="document.getElementById('bulk-invite-overlay').remove()" style="background:none;border:none;font-size:22px;cursor:pointer;color:var(--muted)">✕</button>
       </div>
-      <div style="font-size:13px;color:var(--muted);margin-bottom:20px">Accounts are created immediately with a temporary password. Share the credentials sheet with your students — they will be prompted to set a new password on first login.</div>
+      <div style="font-size:13px;color:var(--muted);margin-bottom:20px">Generate personalised invite links — students tap the link, register, and are automatically enrolled in the semester.</div>
+
+      <!-- Semester selector -->
+      <div style="margin-bottom:16px">
+        <label class="lab-label">Semester <span style="color:var(--danger)">*</span></label>
+        ${activeSems.length === 0
+          ? `<div style="padding:10px 12px;background:var(--danger-l);border-radius:var(--radius-xs);font-size:12px;color:var(--danger);font-weight:600">No active semesters with sync token. Create one in Dashboard first.</div>`
+          : `<select id="bulk-invite-sem" class="lab-input" style="padding:10px 12px" onchange="previewBulkInvite()">
+               ${activeSems.map(s => `<option value="${s.id}">${s.name} (${s.code})</option>`).join('')}
+             </select>`}
+      </div>
 
       <div style="margin-bottom:8px">
-        <label class="lab-label">Paste emails — one per line</label>
+        <label class="lab-label">Students — one per line</label>
         <div style="font-size:11px;color:var(--muted);margin-bottom:6px;line-height:1.6">
-          Accepted formats:<br>
-          <code style="background:var(--bg);padding:1px 5px;border-radius:3px">student@uni.edu</code>
+          Accepted formats:&nbsp;
+          <code style="background:var(--surface);padding:1px 5px;border-radius:3px">student@uni.edu</code>
           &nbsp;·&nbsp;
-          <code style="background:var(--bg);padding:1px 5px;border-radius:3px">Alice Smith, alice@uni.edu</code>
-          &nbsp;·&nbsp;
-          <code style="background:var(--bg);padding:1px 5px;border-radius:3px">Alice &lt;alice@uni.edu&gt;</code>
+          <code style="background:var(--surface);padding:1px 5px;border-radius:3px">Alice Smith, alice@uni.edu</code>
         </div>
-        <textarea id="bulk-invite-input" class="lab-input" rows="8"
+        <textarea id="bulk-invite-input" class="lab-input" rows="7"
           placeholder="alice@uni.edu&#10;Bob Jones, bob@uni.edu&#10;carol@uni.edu"
           style="font-family:var(--mono);font-size:13px"
           oninput="previewBulkInvite()"></textarea>
       </div>
 
-      <div style="margin-bottom:8px">
+      <div style="margin-bottom:12px">
         <label class="lab-label">Or upload a CSV file</label>
         <input type="file" id="bulk-invite-file" accept=".csv,.txt" style="width:100%;font-size:13px;color:var(--text2)"
           onchange="loadBulkInviteFile(this)">
@@ -12326,7 +12337,7 @@ function showBulkInviteModal() {
 
       <div id="bulk-invite-preview" style="margin-bottom:16px"></div>
 
-      <button class="btn btn-primary" id="bulk-invite-btn" onclick="processBulkInvite()" disabled style="opacity:0.4">Create Accounts</button>
+      <button class="btn btn-primary" id="bulk-invite-btn" onclick="processBulkInvite()" disabled style="opacity:0.4">Generate Invites</button>
       <button class="btn btn-ghost" onclick="document.getElementById('bulk-invite-overlay').remove()" style="margin-top:8px;width:100%">Cancel</button>
     </div>`;
   document.body.appendChild(ov);
@@ -12393,25 +12404,45 @@ function processBulkInvite() {
   const parsed = parseBulkInput(text);
   const users = loadUsers();
   const existingEmails = new Set(users.map(u => u.email));
+
+  const semId = document.getElementById('bulk-invite-sem')?.value;
+  const semesters = loadSemesters();
+  const sem = semesters.find(s => s.id === semId);
+
+  const appBase = window.location.href.split('?')[0].replace(/\/$/, '');
   const results = [];
 
   parsed.filter(p => !existingEmails.has(p.email)).forEach(p => {
     const tempPass = genTempPassword();
     const user = {
-      id: 'u-' + Date.now() + '-' + Math.random().toString(36).slice(2,6),
+      id: 'u-' + Date.now() + '-' + Math.random().toString(36).slice(2, 6),
       email: p.email,
       name: p.name,
       password: tempPass,
       role: ROLES.STUDENT,
+      emailVerified: false,
       mustChangePassword: true,
       invitedAt: new Date().toISOString(),
-      invitedBy: currentUser?.name || 'Admin'
+      invitedBy: currentUser?.name || 'Admin',
     };
     users.push(user);
-    results.push({ name: p.name, email: p.email, tempPass });
+
+    // Auto-enrol in selected semester (local record)
+    if (sem) {
+      if (!sem.enrolledStudents) sem.enrolledStudents = [];
+      if (!sem.enrolledStudents.includes(user.id)) sem.enrolledStudents.push(user.id);
+    }
+
+    // Build personalised invite link: opens app, pre-fills login + auto-joins semester
+    const params = new URLSearchParams({ email: p.email, join: sem?.code || '' });
+    if (p.name !== p.email) params.set('name', p.name);
+    const inviteLink = `${appBase}?${params.toString()}`;
+
+    results.push({ name: p.name, email: p.email, tempPass, inviteLink, semName: sem?.name || '' });
   });
 
   saveUsers(users);
+  saveSemesters(semesters);
   document.getElementById('bulk-invite-overlay').remove();
   showBulkInviteResults(results);
   renderAdmin('dashboard');
@@ -12422,33 +12453,34 @@ function showBulkInviteResults(results) {
   ov.id = 'bulk-results-overlay'; applyModalAttrs(ov, 'Invite Results');
   ov.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:600;display:flex;align-items:flex-end;justify-content:center';
   ov.innerHTML = `
-    <div style="background:white;border-radius:20px 20px 0 0;padding:28px 24px 48px;width:100%;max-width:480px;max-height:88vh;overflow-y:auto">
+    <div style="background:var(--bg);border-radius:20px 20px 0 0;padding:28px 24px 48px;width:100%;max-width:480px;max-height:88vh;overflow-y:auto">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
         <div>
-          <div style="font-size:18px;font-weight:800">✅ ${results.length} Account${results.length!==1?'s':''} Created</div>
-          <div style="font-size:12px;color:var(--muted);margin-top:2px">Share these credentials with your students</div>
+          <div style="font-size:18px;font-weight:800">✅ ${results.length} Invite${results.length!==1?'s':''} Ready</div>
+          <div style="font-size:12px;color:var(--muted);margin-top:2px">${results[0]?.semName ? 'Enrolled in: ' + results[0].semName : 'Share with your students'}</div>
         </div>
         <button onclick="document.getElementById('bulk-results-overlay').remove()" style="background:none;border:none;font-size:22px;cursor:pointer;color:var(--muted)">✕</button>
       </div>
 
-      <div style="background:var(--accent-l);border-left:3px solid var(--accent);border-radius:var(--radius-xs);padding:10px 14px;font-size:12px;color:var(--accent-d);margin-bottom:16px;font-weight:600">
-        Students will be prompted to set a new password on their first login.
+      <div style="background:var(--primary-l);border-left:3px solid var(--primary);border-radius:var(--radius-xs);padding:10px 14px;font-size:12px;color:var(--navy-text);margin-bottom:16px;font-weight:600">
+        Students tap their invite link → register → automatically enrolled. Accounts await teacher approval.
       </div>
 
       <div style="border:1px solid var(--border);border-radius:var(--radius-sm);overflow:hidden;margin-bottom:16px">
-        <div style="display:grid;grid-template-columns:1fr 1fr 1fr auto;gap:0;background:var(--bg);padding:8px 14px;border-bottom:1px solid var(--border)">
-          <span style="font-size:11px;font-weight:800;color:var(--muted)">NAME</span>
-          <span style="font-size:11px;font-weight:800;color:var(--muted)">EMAIL</span>
-          <span style="font-size:11px;font-weight:800;color:var(--muted)">TEMP PASSWORD</span>
-          <span></span>
-        </div>
-        <div style="max-height:260px;overflow-y:auto" id="bulk-results-rows">
-          ${results.map((r,i) => `
-            <div style="display:grid;grid-template-columns:1fr 1fr 1fr auto;align-items:center;gap:0;padding:10px 14px;border-bottom:1px solid var(--border)">
-              <div style="font-size:13px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding-right:8px">${r.name}</div>
-              <div style="font-size:12px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding-right:8px">${r.email}</div>
-              <div style="font-family:var(--mono);font-size:13px;font-weight:700;color:var(--primary)">${r.tempPass}</div>
-              <button onclick="copyRowCredentials(${i})" title="Copy" style="background:none;border:none;cursor:pointer;font-size:16px;color:var(--muted);padding:2px 4px">⎘</button>
+        <div style="max-height:320px;overflow-y:auto" id="bulk-results-rows">
+          ${results.map((r, i) => `
+            <div style="padding:12px 14px;border-bottom:1px solid var(--border)">
+              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+                <div>
+                  <div style="font-size:13px;font-weight:800">${r.name}</div>
+                  <div style="font-size:11px;color:var(--muted)">${r.email} · Temp: <span style="font-family:var(--mono);color:var(--primary);font-weight:700">${r.tempPass}</span></div>
+                </div>
+                <button onclick="copyRowCredentials(${i})" title="Copy credentials" style="background:var(--bg);border:1px solid var(--border);border-radius:6px;cursor:pointer;font-size:12px;padding:4px 8px;color:var(--text2)">⎘ Copy</button>
+              </div>
+              <div style="display:flex;align-items:center;gap:8px;background:var(--surface);border-radius:6px;padding:6px 10px">
+                <div style="font-size:10px;color:var(--muted);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-family:var(--mono)">${r.inviteLink}</div>
+                <button onclick="navigator.clipboard.writeText('${r.inviteLink.replace(/'/g, "\\'")}')" style="border:none;background:var(--primary);color:#fff;border-radius:4px;padding:3px 8px;font-size:10px;cursor:pointer;flex-shrink:0">Copy link</button>
+              </div>
             </div>`).join('')}
         </div>
       </div>
@@ -12477,9 +12509,8 @@ function copyRowCredentials(index) {
 
 function downloadInviteCSV() {
   const results = window._bulkInviteResults || [];
-  const header = 'Name,Email,Temporary Password,Login URL';
-  const loginUrl = window.location.href.split('?')[0];
-  const rows = results.map(r => `"${r.name}","${r.email}","${r.tempPass}","${loginUrl}"`);
+  const header = 'Name,Email,Temporary Password,Invite Link';
+  const rows = results.map(r => `"${r.name}","${r.email}","${r.tempPass}","${r.inviteLink || ''}"`);
   const csv = [header, ...rows].join('\n');
   const blob = new Blob([csv], { type: 'text/csv' });
   const a = document.createElement('a');
@@ -12772,8 +12803,14 @@ async function doRegister() {
     return;
   }
   if (result.user?.role === ROLES.STUDENT) {
-    // Bootstrap sync config now (normally runs inside enterApp, but pending students never reach it)
     await bootstrapSyncConfig();
+    // If came from an invite link, auto-join that semester
+    const inviteJoin = sessionStorage.getItem('_invite_join');
+    if (inviteJoin) {
+      sessionStorage.removeItem('_invite_join');
+      await joinSemesterWithCode(inviteJoin.toUpperCase(), null);
+      if (state.semesterId) return; // enrolled — pending screen shown by enrollInSemester
+    }
     showEnrollSemesterSheet(true);
   } else {
     enterApp();
@@ -19245,7 +19282,10 @@ async function showEnrollSemesterSheet(auto) {
 }
 
 async function joinSemesterWithCode(semCode, inputId) {
-  const entered = (document.getElementById(inputId)?.value || '').trim().toUpperCase();
+  // inputId is null when called programmatically (invite link flow)
+  const entered = inputId
+    ? (document.getElementById(inputId)?.value || '').trim().toUpperCase()
+    : semCode.toUpperCase();
   const errEl = document.getElementById('enroll-code-err');
   if (errEl) errEl.style.display = 'none';
   if (!entered) { if (errEl) { errEl.textContent = 'Enter the join code first.'; errEl.style.display = 'block'; } return; }
@@ -22395,12 +22435,30 @@ document.addEventListener('DOMContentLoaded', () => {
     if (typeof mermaid !== 'undefined') {
       mermaid.initialize({ startOnLoad: false, theme: 'neutral', securityLevel: 'loose', fontFamily: 'inherit' });
     }
+    // Handle invite URL params: ?email=...&name=...&join=...
+    const _urlParams = new URLSearchParams(window.location.search);
+    const _inviteEmail = _urlParams.get('email');
+    const _inviteName  = _urlParams.get('name');
+    const _inviteJoin  = _urlParams.get('join');
+
     const loggedIn = initAuth();
     if (loggedIn) {
       enterApp();
     } else {
-      showAuthScreen('login');
+      showAuthScreen(_inviteEmail ? 'register' : 'login');
+      if (_inviteEmail) {
+        setTimeout(() => {
+          const emailEl = document.getElementById('auth-email');
+          const nameEl  = document.getElementById('auth-name');
+          if (emailEl) emailEl.value = _inviteEmail;
+          if (nameEl && _inviteName) nameEl.value = _inviteName;
+        }, 80);
+      }
+      // Store the invite join code so it's used after registration
+      if (_inviteJoin) sessionStorage.setItem('_invite_join', _inviteJoin);
     }
+    // Clean up URL without reload
+    if (_inviteEmail || _inviteJoin) history.replaceState({}, '', window.location.pathname);
     // Hide splash only after app or auth screen is ready
     document.getElementById('screen-splash').style.display = 'none';
   } catch(e) {
