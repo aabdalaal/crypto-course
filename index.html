@@ -13727,14 +13727,17 @@ function loadAssignments() {
 }
 function saveAssignments(a) { localStorage.setItem(ASSIGN_KEY, JSON.stringify(a)); }
 
-function showAssignModal(studentId, studentName) {
+async function showAssignModal(studentId, studentName) {
   const overlay = document.createElement('div');
   overlay.id = 'assign-overlay'; applyModalAttrs(overlay, 'New Assignment');
   overlay.style.cssText = `position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:400;display:flex;align-items:flex-end;justify-content:center`;
-  const students = loadUsers().filter(u => u.role === ROLES.STUDENT);
+
+  // Start with local students; fetch server students asynchronously
+  const localStudents = loadUsers().filter(u => u.role === ROLES.STUDENT)
+    .map(u => ({ id: u.id, name: u.name, email: u.email }));
 
   overlay.innerHTML = `
-    <div style="background:white;border-radius:20px 20px 0 0;padding:28px 24px 44px;width:100%;max-width:430px;max-height:88vh;overflow-y:auto">
+    <div style="background:var(--bg);border-radius:20px 20px 0 0;padding:28px 24px 44px;width:100%;max-width:430px;max-height:88vh;overflow-y:auto">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">
         <div>
           <div style="font-size:18px;font-weight:800">➕ New Assignment</div>
@@ -13755,8 +13758,7 @@ function showAssignModal(studentId, studentName) {
       <div style="margin-bottom:14px">
         <label class="lab-label">Student</label>
         <select id="assign-student" class="lab-input" style="padding:12px 14px">
-          ${students.map(s => `<option value="${s.id}" data-name="${s.name}" ${s.id === studentId ? 'selected' : ''}>${s.name} (${s.email})</option>`).join('')}
-          ${students.length === 0 ? '<option>No students registered</option>' : ''}
+          <option disabled>Loading students…</option>
         </select>
       </div>
 
@@ -13793,6 +13795,40 @@ function showAssignModal(studentId, studentName) {
     </div>
   `;
   document.body.appendChild(overlay);
+
+  // Fetch server students and populate dropdown
+  const sel = document.getElementById('assign-student');
+  const base = getSyncEndpoint();
+  const tt = localStorage.getItem('crypto_course_teacher_token');
+  const activeSem = loadSemesters().find(s => getSemesterStatus(s) !== 'ended' && s.writeToken);
+
+  let allStudents = [...localStudents];
+  if (base && tt && activeSem) {
+    try {
+      const r = await fetchWithTimeout(`${base}/students/${encodeURIComponent(activeSem.code)}`, {
+        headers: { 'Authorization': 'Bearer ' + tt }
+      }, 6000);
+      if (r.ok) {
+        const data = await r.json();
+        (data.students || []).forEach(s => {
+          if (!allStudents.find(ls => ls.id === s.userId)) {
+            allStudents.push({ id: s.userId, name: s.name || s.userId, email: '' });
+          }
+        });
+      }
+    } catch(e) {}
+  }
+
+  if (sel) {
+    if (allStudents.length === 0) {
+      sel.innerHTML = '<option value="">No students found</option>';
+    } else {
+      sel.innerHTML = allStudents.map(s =>
+        `<option value="${s.id}" data-name="${s.name}" ${s.id === studentId ? 'selected' : ''}>${s.name}${s.email ? ' (' + s.email + ')' : ''}</option>`
+      ).join('');
+    }
+    if (studentId) sel.value = studentId;
+  }
 }
 
 function assignToStudent(studentId, studentName) {
