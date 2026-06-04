@@ -1,119 +1,228 @@
 # MEMORY.md — Crypto-Course App
 
-This file tracks evolving decisions, active work, known issues, and context that builds up during development. Update it as things change. It is read alongside CLAUDE.md — don't duplicate what's already there.
+Human-readable project record. Running log of what has been built, what decisions were made, and what comes next. Update this as the project evolves.
 
 ---
 
-## Current State
+## Project Identity
 
-- **Single file:** `index.html` (~15,500 lines)
-- **Companion files needed:** `sw.js` (service worker) and `manifest.json` (PWA manifest) — these do not yet exist in the repo; PWA/offline features will silently fail without them
-- **Auth:** Simulated only — tokens are unsigned base64, passwords are plaintext in localStorage. Not production-ready.
-- **Sync:** `triggerSync()` is a stub — logs to console only, no real HTTP call
-- **AI pipeline:** `processAIJob()` calls `api.anthropic.com` directly from the browser — CORS will block this in most deployments; needs a proxy
+**Crypto-Course** is an offline-first, mobile-first cryptography education platform for learners in resource-constrained and conflict-affected environments (Gaza, Lebanon, Ukraine, and similar contexts). It is the implementation artefact of two University of Westminster research papers:
 
----
+- **Paper 2** — *Designing for the Digital Exclusion Nexus*: technology selection framework
+- **Paper 3** — *Pedagogical Design of a Gamified Offline-First Cryptography Learning Platform*: 14 Pedagogical Requirements (PR1–PR14)
 
-## Active Development Context
-
-_Update this section when starting a new work session._
-
-- No active branch or PR tracked here yet
-- No pending migrations
-- No open bugs logged here yet
+**Target device:** Low-end Android (2GB RAM, dual-core, 720p). No assumed connectivity, no assumed instructor presence.
 
 ---
 
-## Decisions Log
+## Current State (end of DBR Cycle 1)
 
-Record significant design decisions here so they don't have to be re-debated.
+| Item | State |
+|------|-------|
+| `index.html` | ~21,712 lines, ~1.27 MB. Single-file SPA + PWA. |
+| `sw.js` | Present. Cache-first strategy for HTML; network-first for fonts. |
+| `manifest.json` | Present. Name: CryptoCourse, theme: #0F172A. |
+| Backtick audit | CLEAN — 1,586 backticks total (even). Zero raw backticks inside template literal bodies. |
+| DBR cycle | Cycle 1 complete. Cycle 2 (field pilot) is next empirical phase. |
 
-### Why a single HTML file instead of a proper build system
-**Decision:** Keep everything in one `.html` file for the current prototype phase.  
-**Rationale:** Target deployment contexts include offline USB distribution, WhatsApp file sharing, and situations where learners cannot install dependencies. A single file with zero build step satisfies R14 (single-server operation) and R15 (file-based backup) and can be shared as-is. React+Node.js+SQLite (the Paper 2 recommended stack) is the target for the production version.  
-**Do not refactor to a multi-file build** without confirming the deployment model has changed.
+---
+
+## PR Compliance Status
+
+### PR1 — Completion-time logging (Done)
+
+- `openModule()` records `lessonState.startTime = Date.now()`
+- First-completion duration stored in `state.moduleTimes[moduleId]`
+- Visible in admin Research tab with per-module bar charts
+- Formal acceptance: mean completion ≤20 min across ≥20 participants (Cycle 2)
+
+### PR2 — Difficulty taxonomy and scaffolding (Done — by design inspection)
+
+- All 14 modules carry a `level` field: Introductory / Foundational / Intermediate / Advanced
+- Concept-boxes and worked examples present at every stage
+- Strict ascending sequence enforced by sequential unlock
+
+### PR3 — NASA-TLX instrument (Done)
+
+- `NASA_TLX_DIMS` array: 6 dimensions (md, pd, td, perf, ef, fr)
+- `showNasaTLX(moduleId)` triggered after module completion when `state.researchMode = true`
+- Responses stored in `state.nasaTLX[moduleId][]` with timestamp
+- Aggregate view in admin Research tab
+- Formal acceptance: NASA-TLX score ≤50/100 (Cycle 2 field testing)
+
+### PR4 — Three-component feedback (Done)
+
+- All 125 MODULES quiz questions: `why` + `concept` fields present
+- All 37 DAILY_MCQ_BANK questions: `explanation` + `concept` fields present
+- `concept` field added to all 37 MCQ bank entries this cycle
+- MCQ feedback renderer shows answer state → explanation → Revisit link after submission
+
+### PR5 — Memory ≤300 MB, load ≤3 s (Done — instrument in place)
+
+- Research tab has `measurePR5()` panel with live performance metrics
+- Formal acceptance requires Chrome DevTools on reference Android device (Cycle 2)
+
+### PR6 — Spaced repetition depth (Done)
+
+- All 14 modules: pool depth 6–8 questions (target ≥3)
+- Cross-revisit deduplication: 14-day pool excludes 7-day question via `state.spacedRevisits[modId].lastQuestionText`
+- `buildRevisitPool()` and `startRevisitQuiz()` handle the full flow
+
+### PR7 — WCAG 2.1 AA (Done for Cycle 1 items)
+
+Changes made this cycle:
+- `--muted` colour darkened: #94A3B8 → #64748B (now 4.76:1 on white)
+- `.cp-decoded-output.correct` changed to `--secondary-d` (#059669)
+- `.tag-amber` uses `--accent-d` (7.09:1) — already compliant
+- 3 `outline:none` focus rules replaced with `box-shadow` focus rings
+- Global `:focus-visible` rule added (3px solid `--primary`)
+- Dark-bg focus ring override for `.home-hero` and `#bottom-nav`
+- Lesson progress bar: `role="progressbar"` + `aria-valuenow` added; updated programmatically on stage advance
+
+Remaining (Cycle 2 / external): TalkBack manual testing with native Arabic-speaker.
+
+### PR8 — Web Crypto API labs (Done — by design inspection)
+
+All 10 lab types use Web Crypto API exclusively. Zero server calls during lab execution. Hard constraint — do not modify without re-verifying offline operation.
+
+### PR9 — Streak and freeze mechanics (Done — test runner in place)
+
+- `state.freezeTokens` default 3; 1 token auto-awarded per 7 days
+- Confirmation sheet before token use
+- Research tab `runPR9PR10Tests()` for integration verification
+- Hard constraint: connectivity failure must never reduce learner standing
+
+### PR10 — State persistence and restoration (Done — test runner in place)
+
+- `saveState()` called after every XP award, quiz answer, lab completion, and nav event
+- `loadUserState()` restores exact position on relaunch
+- Research tab `runPR9PR10Tests()` covers both PR9 and PR10
+
+### PR11 — Arabic RTL interface (Done for Cycle 1 items)
+
+Changes made this cycle:
+- Comprehensive `[dir="rtl"]` CSS block (55 lines): border-left/right mirrors for 9 components, margin mirrors, quiz option text-align, toggle slider, list indentation, nav badge
+- Arabic font stack declared on `[dir="rtl"]` body
+- `setLanguage()` calls `navigate(currentScreen)` for full re-render
+- 5 new i18n keys in both `en` and `ar`: `welcome_new`, `both_done_tomorrow`, `course_progress`, `tag_available` / `complete` / `continue` / `assigned` / `skipped`
+- `renderHome` uses `t()` for greeting, challenge, course progress
+- `renderModules` status tags use `t()`
+
+Remaining: native Arabic-speaker review (Cycle 2).
+
+### PR12 — Diagnostic entry assessment (Done)
+
+- Auto-triggers for new `ROLES.STUDENT` learners via `enterApp()`
+- `state.diagnosticScore` persists score (0–100)
+- `state.bypassedModules = [0, 1]` set by `applyBypassAndStart()` when score ≥70%
+- `applyBypassAndStart()` replaces the earlier direct `startAtModule(2)` call
+- Both `seqLocked` and `isLocked` respect `_bypassedSet`
+- Score chip rendered in result screen
+- Wording: "Introduction to Cryptography and Classical Cryptography bypassed"
+- xAPI payload includes `diagnosticScore` and `bypassedModules`
+- Sync merge: `diagnosticScore = max`, `bypassedModules = union`
+
+### PR13 — Sync payload ≤6 fields (Done)
+
+- `triggerSync()` payload hardcoded to exactly 6 fields: `xpDelta`, `streak`, `badgeTimestamps`, `quizOutcomes`, `labCompletions`, `sessionDuration`
+- PR13 payload inspector in Research tab shows live payload for verification
+- No free-text, device ID, or geolocation permitted — hard constraint
+
+### PR14 — Content updates ≤500 MB (Done — by design inspection)
+
+- Content registry (`CONTENT_REGISTRY_KEY`) enables incremental module updates
+- No full-file replacement required for content-only changes
+
+---
+
+## Design Decisions Log
+
+### Why a single HTML file
+
+Target deployment includes offline USB distribution, WhatsApp file sharing, and contexts where learners cannot install dependencies. A single file with zero build step satisfies R14 (single-server operation) and R15 (file-based backup) and can be shared as-is. React+Node.js+SQLite (Paper 2 top-ranked stack, 4.66/5.0) is the target for a future production version. **Do not refactor to multi-file** without confirming the deployment model has changed.
 
 ### Why localStorage instead of IndexedDB
-**Decision:** `localStorage` is used as an "IndexedDB proxy" (noted in the code comment).  
-**Rationale:** `localStorage` is synchronous and universally available on the low-end Android devices in scope. IndexedDB is async and adds complexity that isn't justified in the single-file prototype. The code comments explicitly acknowledge this trade-off.  
-**Implication:** All storage calls are synchronous; don't introduce async storage patterns without migrating all state management.
+
+`localStorage` is synchronous and universally available on the low-end Android devices in scope. IndexedDB adds async complexity not justified in a single-file prototype. All storage calls are synchronous — do not introduce async storage patterns without migrating all state management.
 
 ### Why passwords are stored in plaintext
-**Decision:** Plaintext passwords in `localStorage` for the demo.  
-**Rationale:** This is a client-side-only prototype. There is no server to hash against. The code seeds demo accounts with hardcoded passwords (`admin123`, `teach123`, `student123`).  
-**Never ship this to real learners** without a server-side auth system with bcrypt or equivalent.
 
-### Why the leaderboard requires ≥10 group members
-**Decision:** Leaderboard is suppressed for groups smaller than 10.  
-**Rationale:** This is a **PR9/privacy requirement** grounded in the Paper 3 gamification framework. In conflict-affected contexts, being identifiable as a student (even by name initial) can be a safety risk. The threshold prevents re-identification of individuals in small groups.  
-**Do not lower this threshold** without explicit sign-off from the research team.
+Client-side-only prototype. No server to hash against. Demo seeds hardcoded accounts (`admin123`, `teach123`, `student123`). Never ship to real learners without server-side auth with bcrypt or equivalent.
+
+### Why the leaderboard requires ≥10 members
+
+PR9/privacy requirement from Paper 3 gamification framework. In conflict-affected contexts, being identifiable as a student can be a safety risk. The threshold prevents re-identification in small groups. Do not lower without explicit research team sign-off.
 
 ### Why freeze tokens are awarded at 1 per 7 days
-**Decision:** Exactly 1 freeze token auto-awarded every 7 days.  
-**Rationale:** Documented power and connectivity outage frequency in conflict zones is approximately weekly (Burde et al., 2019; cited in Paper 3). The 7-day interval is calibrated to this, not chosen arbitrarily. Changing it requires updating the PR9 compliance claim.
+
+Documented power and connectivity outage frequency in conflict zones is approximately weekly (Burde et al., 2019; cited in Paper 3). The 7-day interval is calibrated to this, not chosen arbitrarily. Changing it requires updating the PR9 compliance claim.
 
 ### Why the diagnostic bypass threshold is 70%
-**Decision:** Learners scoring ≥70% on the 10-item diagnostic can skip Introductory modules.  
-**Rationale:** 70% is the mastery learning bypass threshold (Bloom, 1968) — sufficient competence to proceed without foundational instruction. It is deliberately lower than the mastery threshold (80–90%) to reduce barriers for learners with computing backgrounds. Defined in PR12. Do not change without updating the PR12 specification.
+
+Mastery learning bypass threshold (Bloom, 1968): sufficient competence to proceed without foundational instruction. Deliberately lower than the mastery threshold (80–90%) to reduce barriers for learners with computing backgrounds. Defined in PR12. Do not change without updating the PR12 specification.
 
 ### Why the sync payload is capped at 6 fields
-**Decision:** `triggerSync()` transmits only: XP delta, streak, badge timestamps, quiz outcome flags, lab completions, session duration.  
-**Rationale:** PR13 data minimisation requirement. In conflict settings, metadata about study activity can be sensitive. No free-text, device ID, geolocation, or behavioural sequences are ever transmitted. This is a hard constraint — do not add fields to the sync payload without reviewing PR13.
+
+PR13 data minimisation requirement. In conflict settings, metadata about study activity can be sensitive. No free-text, device ID, geolocation, or behavioural sequences are ever transmitted. Do not add fields to the sync payload without reviewing PR13.
 
 ### Why AI jobs call the Anthropic API directly from the browser
-**Decision:** Current implementation calls `api.anthropic.com` from the client.  
-**Rationale:** Prototype only. This will be blocked by CORS in most real deployments and exposes the API key. The intent is that a thin server-side proxy will be added before any real deployment. The `buildAIPrompt()` function is the right place to adjust prompt templates.
+
+Prototype convenience only. Will be blocked by CORS in most real deployments and exposes the API key. A thin server-side proxy is required before any real deployment. `buildAIPrompt()` is the right place to adjust prompt templates.
 
 ---
 
-## Known Issues / Tech Debt
+## YouTube Channel
+
+**56 scripts complete** (.docx files in outputs directory). 4 videos per module × 14 modules:
+1. Concept Introduction
+2. Worked Example
+3. Lab Walkthrough
+4. Quiz Review
+
+Production not yet started. Next step: production tracker Excel workbook.
+
+---
+
+## The Secret Channel
+
+12-episode cryptography drama.
+- Tagline: *"You cannot love someone you cannot verify."*
+- Characters: Alice, Bob, Eve, Mallory
+- EP0 pilot + EP1–EP11
+
+**Production workbook complete:** `The_Secret_Channel_Series_Final_VO.xlsx`
+- 67 shots, ~200 Veo 3.1 clip prompts, 4 Motion Graphics shots, 49 timed voiceover lines
+
+Production not yet started. Next step: EP0 clip generation in Google Flow.
+
+---
+
+## Known Issues and Tech Debt
 
 | Issue | Severity | Notes |
 |-------|----------|-------|
-| `sw.js` and `manifest.json` missing | High | PWA install and offline caching will not work until these are created |
 | API key exposed in AI pipeline | High | Needs server-side proxy before any real deployment |
-| Plaintext passwords | High | Demo only — needs server-side auth for production |
+| Plaintext passwords in localStorage | High | Demo only — needs server-side auth for production |
 | Unsigned JWT tokens | Medium | base64 payload only; no HMAC signing |
-| QR codes on certificates are fake | Low | Procedural SVG, not real QR; verify URL is decorative |
-| `triggerSync()` is a stub | Medium | Logs to console; no real HTTP POST |
-| localStorage has ~5MB quota | Medium | Heavy xAPI logs or large content registry could hit the limit on some devices |
-| Dynamic groups are not auto-rebuilt | Low | `rebuildDynamicGroup()` must be called manually; no scheduled trigger |
+| QR codes on certificates are decorative | Low | Procedural SVG, not real QR codes |
+| `triggerSync()` is simulated | Medium | Logs to console; no real HTTP POST |
+| localStorage ~5 MB quota | Medium | Heavy xAPI logs or large content registry could hit limit on some devices |
+| Dynamic groups not auto-rebuilt | Low | `rebuildDynamicGroup()` must be called manually; no scheduled trigger |
 
 ---
 
-## Feature Flags / Incomplete Features
+## Open Content Expansions (not started)
 
-| Feature | Status | Notes |
-|---------|--------|-------|
-| PWA offline | Partial | App works offline; service worker registration is in the HTML but `sw.js` is missing |
-| AI content pipeline | Prototype | Functional in browser but needs CORS proxy; Arabic translation supports PR11 |
-| Spaced repetition (Phase 3) | Implemented | `spacedRevisits` in state; cards shown on Home screen |
-| Adaptive difficulty (Phase 4) | Implemented | `computeAdaptiveTier()` reads last 5 quiz results |
-| xAPI export | Implemented | Admin panel → xAPI Export tab |
-| Semester system | Implemented | Admin creates semesters; students join via code |
-| Dynamic groups | Implemented | Rule-based group membership via `rebuildDynamicGroup()` |
-| Certificate QR verification | Stub | URL is decorative; no real verification endpoint |
-| Real server sync | Not started | `triggerSync()` is console-only |
+- Peggy (prover) and Victor (verifier) characters in Zero-Knowledge proof modules (Module 10)
+- Additional DAILY_MCQ_BANK entries for Modules 11–13 (currently 2 each; all other modules have 3+)
 
 ---
 
-## PR Compliance Checklist
+## What Comes Next (Cycle 2)
 
-Use this when reviewing changes to verify nothing has broken a formal requirement.
-
-- [ ] **PR3** — Does every module still follow the 7-stage template?
-- [ ] **PR4** — Does every quiz question still have `why` and `concept` fields?
-- [ ] **PR8** — Does every lab still use only Web Crypto API with zero network calls?
-- [ ] **PR9** — Can any code path reduce XP/streak/badges due to a connectivity event?
-- [ ] **PR10** — Is `saveState()` still called after every user interaction?
-- [ ] **PR13** — Does the sync payload still contain only the 6 permitted fields?
-
----
-
-## File Notes
-
-- **`index.html`** — The whole app. Sections are separated by `// ============` comment blocks. Use these as landmarks when navigating.
-- **`sw.js`** — Needs to be created. Should cache the HTML file and all Google Fonts requests. Use a cache-first strategy for the HTML and a network-first strategy for fonts.
-- **`manifest.json`** — Needs to be created. App name: `CryptoCourse`, theme colour: `#0F172A`, background: `#0F172A`, display: `standalone`, icons needed at 192×192 and 512×512.
-- **`Paper2_*.docx`** — Technology selection framework. Read this before changing the architecture.
-- **`Paper3v2_Improved.docx`** — Pedagogical requirements PR1–PR14. Read this before changing any learning flow, gamification mechanic, or accessibility feature.
+1. Field pilot with target-population learners
+2. TalkBack manual testing with native Arabic speaker
+3. Formal NASA-TLX data collection (PR3 acceptance)
+4. Chrome DevTools performance measurement on reference Android device (PR5 acceptance)
+5. EP0 clip generation for The Secret Channel
+6. YouTube production tracker workbook
