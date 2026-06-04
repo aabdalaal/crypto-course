@@ -1865,6 +1865,8 @@ body.high-contrast {
         <div class="profile-avatar" id="profile-avatar">A</div>
         <div class="profile-name" id="profile-name">Learner</div>
         <div class="profile-type-chip" id="profile-type">Registered User</div>
+        <div id="profile-hero-email" style="font-size:12px;color:rgba(255,255,255,0.6);margin-top:6px"></div>
+        <div id="profile-hero-meta" style="font-size:12px;color:rgba(255,255,255,0.45);margin-top:3px;min-height:16px"></div>
       </div>
 
       <!-- Quick stats strip — populated by renderProfile() -->
@@ -1879,6 +1881,12 @@ body.high-contrast {
         <div class="progress-track" style="height:8px;border-radius:4px">
           <div class="progress-fill green" id="profile-completion-bar" style="width:0%;border-radius:4px"></div>
         </div>
+      </div>
+
+      <!-- Badges strip — students only, hidden until populated -->
+      <div id="profile-badges-card" style="display:none;padding:0 20px 16px">
+        <div style="font-size:13px;font-weight:800;color:var(--text);margin-bottom:10px">🏅 Earned Badges</div>
+        <div id="profile-badges-body" style="display:flex;flex-wrap:wrap;gap:10px"></div>
       </div>
 
       <div class="profile-body">
@@ -2037,14 +2045,6 @@ body.high-contrast {
           </div>
         </div>
 
-        <!-- Diagnostic -->
-        <div class="section-card">
-          <div class="section-card-header" data-i18n="diagnostic_header">🔬 Diagnostic Assessment</div>
-          <div class="section-card-body" id="profile-diagnostic-body">
-            <div style="font-size:14px;color:var(--text2);margin-bottom:14px" data-i18n="diagnostic_desc">Take a 10-question diagnostic to find your starting level. Score ≥ 70% to unlock the Foundational bypass.</div>
-            <button class="btn btn-primary" onclick="startDiagnostic()" data-i18n="take_diagnostic_btn">Take Diagnostic (10 Questions)</button>
-          </div>
-        </div>
 
       </div>
     </div>
@@ -11146,22 +11146,37 @@ function renderProfile() {
 
   const isStudent = currentUser?.role === ROLES.STUDENT;
 
-  // Diagnostic card: students take it, teachers/admins edit it
-  const diagBody = document.getElementById('profile-diagnostic-body');
-  if (diagBody) {
-    if (isStudent) {
-      diagBody.innerHTML = `
-        <div style="font-size:14px;color:var(--text2);margin-bottom:14px">${t('diagnostic_desc')}</div>
-        <button class="btn btn-primary" onclick="startDiagnostic()">${t('take_diagnostic_btn')}</button>`;
+  // Hero — email + meta line
+  const heroEmail = document.getElementById('profile-hero-email');
+  if (heroEmail) heroEmail.textContent = currentUser?.email || '';
+  const heroMeta = document.getElementById('profile-hero-meta');
+  if (heroMeta) {
+    const metaParts = [];
+    if (state.semesterId) {
+      const sems = JSON.parse(localStorage.getItem('crypto_course_semesters') || '[]');
+      const sem = sems.find(s => s.id === state.semesterId);
+      if (sem) metaParts.push('📅 ' + sem.name);
+    }
+    if (isStudent && state.diagnosticDone && state.diagnosticScore !== null) {
+      metaParts.push('🔬 Diagnostic: ' + state.diagnosticScore + '%');
+    }
+    heroMeta.textContent = metaParts.join(' · ');
+  }
+
+  // Badges strip (students only)
+  const badgesCard = document.getElementById('profile-badges-card');
+  const badgesBody = document.getElementById('profile-badges-body');
+  if (badgesCard && badgesBody) {
+    const earned = getAllBadges().filter(b => (state.badges || []).includes(b.id));
+    if (isStudent && earned.length > 0) {
+      badgesCard.style.display = '';
+      badgesBody.innerHTML = earned.map(b => `
+        <div style="display:flex;flex-direction:column;align-items:center;gap:4px;width:60px">
+          <div style="width:44px;height:44px;background:var(--primary-l);border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:22px">${b.icon}</div>
+          <div style="font-size:10px;font-weight:700;color:var(--text2);text-align:center;line-height:1.3">${b.name}</div>
+        </div>`).join('');
     } else {
-      const qCount = loadDiagnosticQuestions().length;
-      const isCustom = !!localStorage.getItem(DIAG_QUESTIONS_KEY);
-      diagBody.innerHTML = `
-        <div style="font-size:14px;color:var(--text2);margin-bottom:14px">
-          ${qCount} questions · pass threshold 70%
-          ${isCustom ? '<span style="font-size:11px;font-weight:700;background:#FEF3C7;color:#92400E;border-radius:100px;padding:2px 8px;margin-left:6px">Custom</span>' : ''}
-        </div>
-        <button class="btn btn-primary" onclick="openDiagnosticEditor()">✏️ Edit Questions</button>`;
+      badgesCard.style.display = 'none';
     }
   }
 
@@ -13311,12 +13326,8 @@ function getAtRiskStudents() {
     const s = loadStudentState(u.id);
     const moduleProgress = s.moduleProgress || {};
 
-    // Signal 1: never logged in
-    if (!lastTs) {
-      reasons.push({ label: 'Never active', color: 'var(--muted)', bg: 'var(--surface2)', severity: 1 });
-    }
-    // Signal 2: inactive 7+ days
-    else if (daysSince >= 7) {
+    // Signal 2: inactive 7+ days (must have been active at some point)
+    if (lastTs && daysSince >= 7) {
       reasons.push({ label: `Inactive ${daysSince}d`, color: 'var(--danger)', bg: 'var(--danger-l)', severity: 3 });
     }
     // Signal 3: inactive 3–6 days
@@ -13340,6 +13351,11 @@ function getAtRiskStudents() {
         reasons.push({ label: `Due soon, ${Math.round(pct)}% done`, color: 'var(--accent-d)', bg: 'var(--accent-l)', severity: 2 });
       }
     });
+
+    // Add "Never active" as context only when another signal already exists
+    if (!lastTs && reasons.length > 0) {
+      reasons.unshift({ label: 'Never active', color: 'var(--muted)', bg: 'var(--surface2)', severity: 1 });
+    }
 
     if (reasons.length > 0) {
       const maxSeverity = Math.max(...reasons.map(r => r.severity));
@@ -13410,7 +13426,7 @@ function renderAdmin(activeTab, assignFilter) {
     <!-- Admin Tab Bar -->
     <div class="admin-tab-scroll">
       <div style="display:inline-flex;border-radius:12px;background:var(--bg);padding:4px;gap:2px;min-width:max-content;width:100%">
-        ${[['dashboard','📊','Dashboard'],['analytics','📈','Analytics'],['groups','👥','Groups'],['badges','🏅','Badges'],['content','📚','Content'],['ai','🤖','AI'],['cipherpulse','🗞️','Cipher'],['research','🔬','Research']].map(([t,icon,label]) =>
+        ${[['dashboard','📊','Dashboard'],['analytics','📈','Analytics'],['groups','👥','Groups'],['students','👤','Students'],['badges','🏅','Badges'],['content','📚','Content'],['ai','🤖','AI'],['cipherpulse','🗞️','Cipher'],['research','🔬','Research']].map(([t,icon,label]) =>
           `<button id="admin-tab-${t}" onclick="renderAdmin('${t}')" style="flex:1;padding:9px 6px;border:none;border-radius:9px;font-weight:700;font-size:11px;cursor:pointer;font-family:var(--font);transition:all 0.2s;white-space:nowrap;background:${activeTab===t?'white':'transparent'};color:${activeTab===t?'var(--text)':'var(--muted)'};box-shadow:${activeTab===t?'0 1px 4px rgba(0,0,0,0.08)':'none'}"><span style="display:block;font-size:16px;line-height:1.2;margin-bottom:2px">${icon}</span>${label}</button>`
         ).join('')}
       </div>
@@ -13624,6 +13640,7 @@ function renderAdmin(activeTab, assignFilter) {
     ` : ''}
 
     ${activeTab === 'groups' ? renderGroupsTab() : ''}
+    ${activeTab === 'students' ? renderStudentsTab() : ''}
     ${activeTab === 'analytics' ? renderAnalyticsTab() : ''}
     ${activeTab === 'badges' ? renderBadgesAdminTab() : ''}
     ${activeTab === 'cipherpulse' ? renderCipherPulseAdmin() : ''}
@@ -13639,6 +13656,7 @@ function renderAdmin(activeTab, assignFilter) {
   // Auto-load server student count when dashboard tab is shown
   if (activeTab === 'dashboard') updateDashStudentCount();
   if (activeTab === 'groups') refreshSemesterGroupCounts();
+  if (activeTab === 'students') refreshStudentsTab();
 }
 
 async function updateDashStudentCount() {
@@ -19542,6 +19560,194 @@ function leaveSemester() {
 
 const GROUPS_KEY = 'crypto_course_groups';
 
+// ============================================================
+// STUDENTS TAB
+// ============================================================
+
+function renderStudentsTab() {
+  const semesters = loadSemesters();
+  const semOptions = semesters.map(s =>
+    `<option value="${s.id}">${_escHtml(s.name)}</option>`
+  ).join('');
+  return `
+    <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:16px">
+      <select id="students-sem-select" onchange="refreshStudentsTab()"
+        style="flex:1;min-width:140px;padding:8px 10px;border:1.5px solid var(--border);border-radius:var(--radius-xs);font-family:var(--font);font-size:13px;background:var(--surface);color:var(--text)">
+        <option value="">— All students —</option>
+        ${semOptions}
+      </select>
+      <button class="btn btn-sm btn-primary" style="width:auto" onclick="exportStudentsCSV()">⬇ Export CSV</button>
+      <button class="btn btn-sm" style="width:auto;background:var(--primary-l);color:var(--primary)" onclick="copyStudentEmails()">📧 Copy Emails</button>
+    </div>
+    <div id="students-tab-list" style="min-height:80px;display:flex;align-items:center;justify-content:center">
+      <div style="color:var(--muted);font-size:13px">Loading…</div>
+    </div>`;
+}
+
+async function refreshStudentsTab() {
+  const listEl = document.getElementById('students-tab-list');
+  if (!listEl) return;
+  listEl.innerHTML = '<div style="color:var(--muted);font-size:13px;padding:24px;text-align:center">Loading…</div>';
+
+  const semId = document.getElementById('students-sem-select')?.value || '';
+  const semesters = loadSemesters();
+  const sem = semId ? semesters.find(s => s.id === semId) : null;
+  const allMods = getAllModules();
+
+  // Local students
+  let localStudents = loadUsers().filter(u => u.role === ROLES.STUDENT);
+  if (sem) {
+    localStudents = localStudents.filter(u => {
+      const s = loadStudentState(u.id);
+      return s.semesterId === semId;
+    });
+  }
+
+  // Server students for semester
+  let serverStudents = [];
+  if (sem?.code) {
+    serverStudents = await getSemesterGroupStudents(sem.code);
+  }
+
+  // Merge: add server students not already in local list
+  const merged = [...localStudents];
+  serverStudents.forEach(ss => {
+    if (!merged.find(u => u.id === ss.id)) merged.push(ss);
+  });
+
+  if (merged.length === 0) {
+    listEl.style.cssText = 'display:block';
+    listEl.innerHTML = `<div style="text-align:center;padding:32px;color:var(--muted)">
+      <div style="font-size:36px;margin-bottom:8px">👤</div>
+      <div style="font-weight:700">${sem ? 'No students enrolled in this semester yet.' : 'No students registered.'}</div>
+    </div>`;
+    return;
+  }
+
+  // Build last-activity map from xAPI log
+  const xapiLog = getXAPILog();
+  const lastActivity = {};
+  xapiLog.forEach(e => {
+    const email = e.actor?.email;
+    if (!email) return;
+    const ts = new Date(e.timestamp);
+    if (!lastActivity[email] || ts > lastActivity[email]) lastActivity[email] = ts;
+  });
+
+  const now = new Date();
+  const rows = merged.map(u => {
+    const s = loadStudentState(u.id);
+    const xp = s.xp || 0;
+    const lv = getLevel(xp);
+    const modsCompleted = Object.values(s.moduleProgress || {}).filter(v => v >= 1).length;
+    const labsCompleted = s.labsCompleted || 0;
+    const perfectPct = s.quizzesCompleted > 0
+      ? Math.round(((s.perfectQuizzes || 0) / s.quizzesCompleted) * 100) : null;
+    const lastTs = lastActivity[u.email] || null;
+    const daysSince = lastTs ? Math.floor((now - lastTs) / 86400000) : null;
+    const lastLabel = daysSince === null ? '–' : daysSince === 0 ? 'Today' : daysSince === 1 ? 'Yesterday' : daysSince + 'd ago';
+    const atRisk = daysSince !== null && daysSince >= 7;
+    const initials = (u.name || '?').split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase();
+    const diagLine = s.diagnosticDone && s.diagnosticScore !== null
+      ? `<span style="font-size:10px;font-weight:700;background:var(--primary-l);color:var(--primary);padding:1px 6px;border-radius:100px">🔬 ${s.diagnosticScore}%</span>`
+      : '';
+    const localU = loadUsers().find(x => x.id === u.id);
+    const profileBtn = localU
+      ? `<button onclick="showStudentProfile('${localU.id}')" class="btn btn-sm" style="background:var(--primary-l);color:var(--primary);width:auto;padding:5px 10px;font-size:11px;flex-shrink:0">📊</button>`
+      : '';
+    return `
+      <div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--border)">
+        <div style="width:36px;height:36px;border-radius:50%;background:${atRisk ? 'var(--danger-l)' : 'var(--primary-l)'};display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;color:${atRisk ? 'var(--danger)' : 'var(--primary)'};flex-shrink:0">${initials}</div>
+        <div style="flex:1;min-width:0">
+          <div style="display:flex;align-items:center;gap:6px;margin-bottom:2px">
+            <div style="font-size:13px;font-weight:800;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${_escHtml(u.name || u.id)}</div>
+            ${diagLine}
+            ${atRisk ? '<span style="font-size:10px;font-weight:700;background:var(--danger-l);color:var(--danger);padding:1px 6px;border-radius:100px;flex-shrink:0">⚠ Inactive</span>' : ''}
+          </div>
+          <div style="font-size:11px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${_escHtml(u.email || '–')}</div>
+          <div style="display:flex;gap:10px;margin-top:4px;flex-wrap:wrap">
+            <span style="font-size:11px;font-weight:700;color:var(--primary)">⚡${xp} XP · LV${lv.num}</span>
+            <span style="font-size:11px;color:var(--text2)">📚 ${modsCompleted}/${allMods.length}</span>
+            <span style="font-size:11px;color:var(--text2)">⚗️ ${labsCompleted}</span>
+            ${perfectPct !== null ? `<span style="font-size:11px;color:var(--text2)">🎯 ${perfectPct}%</span>` : ''}
+            <span style="font-size:11px;color:var(--muted)">🕐 ${lastLabel}</span>
+          </div>
+        </div>
+        ${profileBtn}
+      </div>`;
+  }).join('');
+
+  const atRiskCount = merged.filter(u => {
+    const lastTs = lastActivity[loadUsers().find(x => x.id === u.id)?.email || ''] || null;
+    return lastTs && Math.floor((now - lastTs) / 86400000) >= 7;
+  }).length;
+
+  listEl.style.cssText = 'display:block';
+  listEl.innerHTML = `
+    <div style="font-size:12px;font-weight:700;color:var(--muted);margin-bottom:8px">
+      ${merged.length} student${merged.length !== 1 ? 's' : ''}
+      ${sem ? ' · ' + _escHtml(sem.name) : ''}
+      ${atRiskCount > 0 ? ` · <span style="color:var(--danger)">${atRiskCount} at-risk</span>` : ''}
+    </div>
+    ${rows}`;
+}
+
+function exportStudentsCSV() {
+  const semId = document.getElementById('students-sem-select')?.value || '';
+  const semesters = loadSemesters();
+  const sem = semId ? semesters.find(s => s.id === semId) : null;
+  const allMods = getAllModules();
+  const xapiLog = getXAPILog();
+  const lastActivity = {};
+  xapiLog.forEach(e => {
+    const email = e.actor?.email;
+    if (!email) return;
+    const ts = new Date(e.timestamp);
+    if (!lastActivity[email] || ts > lastActivity[email]) lastActivity[email] = ts;
+  });
+
+  let students = loadUsers().filter(u => u.role === ROLES.STUDENT);
+  if (sem) students = students.filter(u => { const s = loadStudentState(u.id); return s.semesterId === semId; });
+
+  const headers = ['Name','Email','Semester','XP','Level','Modules Completed','Labs','Quiz Accuracy %','Streak','Diagnostic Score','Last Active'];
+  const rows = students.map(u => {
+    const s = loadStudentState(u.id);
+    const semName = sem ? sem.name : (semesters.find(x => x.id === s.semesterId)?.name || '');
+    const lv = getLevel(s.xp || 0);
+    const modsCompleted = Object.values(s.moduleProgress || {}).filter(v => v >= 1).length;
+    const perfectPct = s.quizzesCompleted > 0 ? Math.round(((s.perfectQuizzes || 0) / s.quizzesCompleted) * 100) : '';
+    const lastTs = lastActivity[u.email];
+    const lastLabel = lastTs ? lastTs.toLocaleDateString('en-GB') : '';
+    return [u.name, u.email, semName, s.xp || 0, lv.name, modsCompleted, s.labsCompleted || 0, perfectPct, s.streak || 0, s.diagnosticScore ?? '', lastLabel]
+      .map(v => `"${String(v).replace(/"/g, '""')}"`).join(',');
+  });
+
+  const csv = [headers.join(','), ...rows].join('\r\n');
+  const blob = new Blob([csv], { type: 'text/csv' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `students${sem ? '-' + sem.name.replace(/\s+/g, '_') : ''}-${new Date().toISOString().slice(0,10)}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+  showToast(`✓ Exported ${students.length} students`);
+}
+
+function copyStudentEmails() {
+  const semId = document.getElementById('students-sem-select')?.value || '';
+  const semesters = loadSemesters();
+  const sem = semId ? semesters.find(s => s.id === semId) : null;
+
+  let students = loadUsers().filter(u => u.role === ROLES.STUDENT && u.email);
+  if (sem) students = students.filter(u => { const s = loadStudentState(u.id); return s.semesterId === semId; });
+
+  const emails = students.map(u => u.email).join(', ');
+  if (!emails) { showToast('No email addresses found'); return; }
+  navigator.clipboard.writeText(emails)
+    .then(() => showToast(`✓ Copied ${students.length} email address${students.length !== 1 ? 'es' : ''}`))
+    .catch(() => showToast('Could not access clipboard'));
+}
+
 async function refreshSemesterGroupCounts() {
   const base = getSyncEndpoint();
   const tt = localStorage.getItem('crypto_course_teacher_token');
@@ -19832,16 +20038,25 @@ async function viewGroup(groupId) {
   if (subtitleEl) subtitleEl.textContent = `${group.type} group · ${members.length} member${members.length !== 1 ? 's' : ''}`;
   if (membersEl) {
     membersEl.style.cssText = 'display:block';
+    const localUsers = loadUsers();
     membersEl.innerHTML = members.length === 0
       ? '<div style="text-align:center;padding:24px;color:var(--muted)">No members yet.</div>'
-      : members.map(m => `
+      : members.map(m => {
+          const lu = localUsers.find(u => u.id === m.id || (m.email && u.email === m.email));
+          const profileBtn = lu
+            ? `<button onclick="document.getElementById('view-group-overlay').remove();showStudentProfile('${lu.id}')"
+                style="margin-left:auto;background:var(--primary-l);border:none;color:var(--primary);font-size:11px;font-weight:700;padding:5px 10px;border-radius:var(--radius-xs);cursor:pointer;flex-shrink:0">📊 Profile</button>`
+            : '';
+          return `
           <div style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--border)">
             <div style="width:32px;height:32px;border-radius:50%;background:var(--primary-l);display:flex;align-items:center;justify-content:center;font-weight:800;color:var(--primary);font-size:13px;flex-shrink:0">${(m.name||'?')[0].toUpperCase()}</div>
-            <div>
+            <div style="flex:1;min-width:0">
               <div style="font-size:13px;font-weight:700">${m.name || m.id}</div>
               ${m.email ? `<div style="font-size:11px;color:var(--muted)">${m.email}</div>` : ''}
             </div>
-          </div>`).join('');
+            ${profileBtn}
+          </div>`;
+        }).join('');
   }
 }
 
@@ -21019,7 +21234,24 @@ function renderResearchTab() {
       <button class="btn btn-primary" style="margin-top:10px;font-size:13px;padding:10px 18px" onclick="runPR9PR10Tests()">▶ Run Tests</button>
     </div>`;
 
-  return rmToggle + pr1Section + pr3Section + pr13Section + pr5Section + pr9pr10Section;
+  const diagQs = loadDiagnosticQuestions();
+  const diagIsCustom = !!localStorage.getItem(DIAG_QUESTIONS_KEY);
+  const diagSection = `
+    <div style="margin-bottom:28px">
+      <div style="font-size:15px;font-weight:800;color:var(--text);margin-bottom:4px">🔬 Diagnostic Assessment — PR12</div>
+      <div style="font-size:12px;color:var(--muted);margin-bottom:14px">Entry assessment (≤10 items). Score ≥ 70% bypasses Introductory modules. Edit questions to align with your cohort's prior knowledge.</div>
+      <div style="background:var(--bg);border:1px solid var(--border);border-radius:var(--radius-sm);padding:12px 16px;margin-bottom:12px;display:flex;align-items:center;gap:12px">
+        <div style="font-size:28px;font-weight:800;color:var(--primary)">${diagQs.length}</div>
+        <div>
+          <div style="font-size:13px;font-weight:700">Questions active</div>
+          <div style="font-size:12px;color:var(--muted)">Pass threshold: ≥${Math.ceil(diagQs.length * 0.7)} correct (70%)</div>
+        </div>
+        ${diagIsCustom ? '<span style="margin-left:auto;font-size:11px;font-weight:700;background:#FEF3C7;color:#92400E;border-radius:100px;padding:3px 10px">Custom</span>' : '<span style="margin-left:auto;font-size:11px;font-weight:700;background:#F0FDF4;color:#166534;border-radius:100px;padding:3px 10px">Default</span>'}
+      </div>
+      <button class="btn btn-primary" style="font-size:13px;padding:10px 18px" onclick="openDiagnosticEditor()">✏️ Edit Questions</button>
+    </div>`;
+
+  return rmToggle + diagSection + pr1Section + pr3Section + pr13Section + pr5Section + pr9pr10Section;
 }
 
 function toggleResearchMode() {
