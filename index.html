@@ -13526,6 +13526,7 @@ function renderAdmin(activeTab, assignFilter) {
 
   // Auto-load server student count when dashboard tab is shown
   if (activeTab === 'dashboard') updateDashStudentCount();
+  if (activeTab === 'groups') refreshSemesterGroupCounts();
 }
 
 async function updateDashStudentCount() {
@@ -19050,6 +19051,14 @@ async function saveSemester() {
     if (idx >= 0) { updated[idx].syncPushed = r.ok; saveSemesters(updated); }
     document.getElementById('semester-overlay')?.remove();
     renderAdmin('dashboard');
+    if (r.ok) {
+      // Auto-create a semester group so teachers can assign to the whole cohort
+      const groups = loadGroups();
+      if (!groups.find(g => g.semCode === newSem.code)) {
+        groups.unshift({ id: 'grp_sem_' + newSem.id, name: newSem.name, type: 'semester', semCode: newSem.code, semId: newSem.id, createdAt: new Date().toISOString() });
+        saveGroups(groups);
+      }
+    }
     showToast(r.ok ? '✓ Semester live — share code: ' + newSem.code : '⚠ Semester saved but push failed (' + r.status + ') — check tokens in Profile');
   } catch (e) {
     document.getElementById('semester-overlay')?.remove();
@@ -19421,6 +19430,43 @@ function leaveSemester() {
 
 const GROUPS_KEY = 'crypto_course_groups';
 
+async function refreshSemesterGroupCounts() {
+  const base = getSyncEndpoint();
+  const tt = localStorage.getItem('crypto_course_teacher_token');
+  if (!base || !tt) return;
+  const groups = loadGroups().filter(g => g.type === 'semester');
+  for (const g of groups) {
+    if (!g.semCode) continue;
+    try {
+      const r = await fetchWithTimeout(`${base}/students/${encodeURIComponent(g.semCode)}`, {
+        headers: { 'Authorization': 'Bearer ' + tt }
+      }, 6000);
+      if (r.ok) {
+        const data = await r.json();
+        const el = document.getElementById('grp-count-' + g.id);
+        if (el) el.textContent = data.count ?? 0;
+      }
+    } catch(e) {}
+  }
+}
+
+// Fetch server students for a semester group (used by viewGroup and assignToGroup)
+async function getSemesterGroupStudents(semCode) {
+  const base = getSyncEndpoint();
+  const tt = localStorage.getItem('crypto_course_teacher_token');
+  if (!base || !tt) return [];
+  try {
+    const r = await fetchWithTimeout(`${base}/students/${encodeURIComponent(semCode)}`, {
+      headers: { 'Authorization': 'Bearer ' + tt }
+    }, 6000);
+    if (r.ok) {
+      const data = await r.json();
+      return (data.students || []).map(s => ({ id: s.userId, name: s.name || s.userId, email: '' }));
+    }
+  } catch(e) {}
+  return [];
+}
+
 function loadGroups() {
   try { return JSON.parse(localStorage.getItem(GROUPS_KEY) || '[]'); } catch(e) { return []; }
 }
@@ -19444,7 +19490,6 @@ function rebuildDynamicGroup(group) {
 
 function renderGroupsTab() {
   const groups = loadGroups();
-  const users  = loadUsers().filter(u => u.role === ROLES.STUDENT);
 
   return `
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
@@ -19459,28 +19504,31 @@ function renderGroupsTab() {
       <div style="text-align:center;padding:32px;color:var(--muted);background:var(--bg);border-radius:var(--radius-sm)">
         <div style="font-size:40px;margin-bottom:10px">👥</div>
         <div style="font-size:14px;font-weight:700">No groups yet</div>
-        <div style="font-size:13px;margin-top:4px">Create a static group (manual list) or a dynamic group (auto-matches by country, department, or email).</div>
+        <div style="font-size:13px;margin-top:4px">Semester groups are created automatically when you create a semester. You can also create static or dynamic groups manually.</div>
       </div>` :
       groups.map(g => {
-        const memberCount = g.type === 'dynamic'
-          ? rebuildDynamicGroup(g).length
-          : (g.members || []).length;
+        const isSemester = g.type === 'semester';
+        const memberCount = isSemester ? '…' : g.type === 'dynamic' ? rebuildDynamicGroup(g).length : (g.members || []).length;
+        const tagCls = isSemester ? 'tag-green' : g.type === 'dynamic' ? 'tag-purple' : 'tag-blue';
+        const icon = isSemester ? '🎓' : g.type === 'dynamic' ? '⚙️' : '📋';
+        const bgColor = isSemester ? 'var(--secondary-l)' : g.type === 'dynamic' ? 'var(--purple-l)' : 'var(--primary-l)';
         return `
-        <div style="background:white;border:1px solid var(--border);border-radius:var(--radius-sm);padding:14px;margin-bottom:10px">
+        <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:14px;margin-bottom:10px">
           <div style="display:flex;align-items:center;gap:12px">
-            <div style="width:40px;height:40px;border-radius:var(--radius-xs);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;background:${g.type==='dynamic'?'var(--purple-l)':'var(--primary-l)'}">
-              ${g.type === 'dynamic' ? '⚙️' : '📋'}
+            <div style="width:40px;height:40px;border-radius:var(--radius-xs);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;background:${bgColor}">
+              ${icon}
             </div>
             <div style="flex:1;min-width:0">
               <div style="font-size:14px;font-weight:800">${g.name}</div>
               <div style="font-size:12px;color:var(--muted);margin-top:2px">
-                <span class="tag ${g.type==='dynamic'?'tag-purple':'tag-blue'}" style="font-size:10px">${g.type}</span>
-                &nbsp;${memberCount} member${memberCount!==1?'s':''}
+                <span class="tag ${tagCls}" style="font-size:10px">${isSemester ? 'semester' : g.type}</span>
+                &nbsp;<span id="grp-count-${g.id}">${memberCount}</span> member${memberCount!==1?'s':''}
+                ${isSemester ? ' · <span style="color:var(--secondary-d);font-weight:700">Code: ' + (g.semCode||'') + '</span>' : ''}
                 ${g.type==='dynamic' ? ' · auto-evaluated' : ''}
               </div>
             </div>
             <div style="display:flex;gap:6px;flex-shrink:0">
-              <button class="btn btn-sm" onclick="assignToGroup('${g.id}','${g.name.replace(/'/g, "&apos;")}',${memberCount})"
+              <button class="btn btn-sm" onclick="assignToGroup('${g.id}','${g.name.replace(/'/g, "&apos;")}',0)"
                 style="background:var(--secondary-l);color:var(--secondary-d);width:auto;padding:6px 10px;font-size:11px">
                 Assign
               </button>
@@ -19634,45 +19682,55 @@ function saveGroup(type) {
   showXPToast(0, `Group "${name}" created (${group.members.length} members)`);
 }
 
-function viewGroup(groupId) {
+async function viewGroup(groupId) {
   const groups = loadGroups();
   const group  = groups.find(g => g.id === groupId);
   if (!group) return;
-
-  // Rebuild dynamic group membership on view
-  const members = group.type === 'dynamic'
-    ? rebuildDynamicGroup(group)
-    : (group.members || []);
 
   const ov = document.createElement('div');
   ov.id = 'view-group-overlay';
   ov.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:500;display:flex;align-items:flex-end;justify-content:center';
   ov.innerHTML = `
-    <div style="background:white;border-radius:20px 20px 0 0;padding:24px 20px 44px;width:100%;max-width:430px;max-height:75vh;overflow-y:auto">
+    <div style="background:var(--bg);border-radius:20px 20px 0 0;padding:24px 20px 44px;width:100%;max-width:430px;max-height:75vh;overflow-y:auto">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">
         <div>
-          <div style="font-size:18px;font-weight:800">${group.name}</div>
-          <div style="font-size:12px;color:var(--muted)">${group.type} group · ${members.length} members</div>
+          <div style="font-size:18px;font-weight:800">${group.type === 'semester' ? '🎓 ' : ''}${group.name}</div>
+          <div style="font-size:12px;color:var(--muted)" id="vg-subtitle">Loading…</div>
         </div>
         <button onclick="document.getElementById('view-group-overlay').remove()" style="background:none;border:none;font-size:22px;cursor:pointer;color:var(--muted)">✕</button>
       </div>
-      ${group.type === 'dynamic' ? `
-        <div style="margin-bottom:16px;padding:10px 12px;background:var(--purple-l);border-radius:var(--radius-xs);font-size:12px;color:var(--purple)">
-          ⚙️ Dynamic — membership auto-calculated from rules. ${members.length} users currently match.
-          <button onclick="rebuildAndSaveGroup('${groupId}')" style="background:var(--purple);color:white;border:none;border-radius:6px;padding:4px 10px;font-size:11px;cursor:pointer;margin-left:8px;font-family:var(--font)">Rebuild</button>
-        </div>` : ''}
-      ${members.length === 0
-        ? '<div style="text-align:center;padding:24px;color:var(--muted)">No members match current rules.</div>'
-        : members.map(m => `
-            <div style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--border)">
-              <div style="width:32px;height:32px;border-radius:50%;background:var(--primary-l);display:flex;align-items:center;justify-content:center;font-weight:800;color:var(--primary);font-size:13px;flex-shrink:0">${m.name[0]}</div>
-              <div>
-                <div style="font-size:13px;font-weight:700">${m.name}</div>
-                <div style="font-size:11px;color:var(--muted)">${m.email}</div>
-              </div>
-            </div>`).join('')}
+      <div id="vg-members" style="min-height:60px;display:flex;align-items:center;justify-content:center">
+        <div style="color:var(--muted);font-size:13px">Loading members…</div>
+      </div>
     </div>`;
   document.body.appendChild(ov);
+
+  // Fetch members
+  let members = [];
+  if (group.type === 'semester' && group.semCode) {
+    members = await getSemesterGroupStudents(group.semCode);
+  } else if (group.type === 'dynamic') {
+    members = rebuildDynamicGroup(group);
+  } else {
+    members = group.members || [];
+  }
+
+  const subtitleEl = document.getElementById('vg-subtitle');
+  const membersEl  = document.getElementById('vg-members');
+  if (subtitleEl) subtitleEl.textContent = `${group.type} group · ${members.length} member${members.length !== 1 ? 's' : ''}`;
+  if (membersEl) {
+    membersEl.style.cssText = 'display:block';
+    membersEl.innerHTML = members.length === 0
+      ? '<div style="text-align:center;padding:24px;color:var(--muted)">No members yet.</div>'
+      : members.map(m => `
+          <div style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--border)">
+            <div style="width:32px;height:32px;border-radius:50%;background:var(--primary-l);display:flex;align-items:center;justify-content:center;font-weight:800;color:var(--primary);font-size:13px;flex-shrink:0">${(m.name||'?')[0].toUpperCase()}</div>
+            <div>
+              <div style="font-size:13px;font-weight:700">${m.name || m.id}</div>
+              ${m.email ? `<div style="font-size:11px;color:var(--muted)">${m.email}</div>` : ''}
+            </div>
+          </div>`).join('');
+  }
 }
 
 function rebuildAndSaveGroup(groupId) {
@@ -19736,12 +19794,17 @@ function showGroupAssignPicker() {
   document.body.appendChild(ov);
 }
 
-function assignToGroup(groupId, groupName, memberCount) {
+async function assignToGroup(groupId, groupName, memberCount) {
   const groups = loadGroups();
   const group  = groups.find(g => g.id === groupId);
   if (!group) return;
-  const members = group.type === 'dynamic' ? rebuildDynamicGroup(group) : (group.members || []);
-  if (members.length === 0) { alert('This group has no members. Add students or check your rules.'); return; }
+  let members = [];
+  if (group.type === 'semester' && group.semCode) {
+    members = await getSemesterGroupStudents(group.semCode);
+  } else {
+    members = group.type === 'dynamic' ? rebuildDynamicGroup(group) : (group.members || []);
+  }
+  if (members.length === 0) { showToast('No students in this group yet.'); return; }
 
   const ov = document.createElement('div');
   ov.id = 'assign-group-overlay';
@@ -19790,11 +19853,16 @@ function assignToGroup(groupId, groupName, memberCount) {
   document.body.appendChild(ov);
 }
 
-function createGroupAssignment(groupId) {
+async function createGroupAssignment(groupId) {
   const groups = loadGroups();
   const group  = groups.find(g => g.id === groupId);
   if (!group) return;
-  const members   = group.type === 'dynamic' ? rebuildDynamicGroup(group) : (group.members || []);
+  let members;
+  if (group.type === 'semester' && group.semCode) {
+    members = await getSemesterGroupStudents(group.semCode);
+  } else {
+    members = group.type === 'dynamic' ? rebuildDynamicGroup(group) : (group.members || []);
+  }
   const moduleId  = parseInt(document.getElementById('gasgn-module').value);
   const dueDate   = document.getElementById('gasgn-due').value;
   const reminder  = parseInt(document.getElementById('gasgn-reminder').value);
