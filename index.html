@@ -19633,9 +19633,16 @@ async function refreshStudentsTab() {
   let localStudents = loadUsers().filter(u => u.role === ROLES.STUDENT);
   if (sem) localStudents = localStudents.filter(u => loadStudentState(u.id).semesterId === semId);
 
-  // Server students for the selected semester
+  // Server students — all semesters when no filter, otherwise just the selected one
   let serverStudents = [];
-  if (sem?.code) serverStudents = await getSemesterGroupStudents(sem.code);
+  if (!sem) {
+    for (const s of semesters.filter(x => x.code)) {
+      const ss = await getSemesterGroupStudents(s.code);
+      ss.forEach(r => { if (!serverStudents.find(e => e.id === r.id)) serverStudents.push(r); });
+    }
+  } else if (sem.code) {
+    serverStudents = await getSemesterGroupStudents(sem.code);
+  }
 
   // Merge: add server-only students (not already in local DB)
   const merged = [...localStudents];
