@@ -11673,11 +11673,11 @@ function showStudentActionSheet(semId, semCode, studentJson) {
       <div style="font-size:16px;font-weight:800;margin-bottom:4px">${s.name}</div>
       <div style="font-size:12px;color:var(--muted);margin-bottom:20px">${s.userId}</div>
       <div style="display:flex;flex-direction:column;gap:8px">
-        ${s.pending ? `<button class="btn btn-primary" onclick="manageStudent('approve','${s.userId}','${semId}','${semCode}')">✓ Approve account</button>` : ''}
+        <button class="btn btn-primary" onclick="document.getElementById('student-action-sheet').remove();showStudentProfile('${s.userId}')">📊 View Full Profile</button>
+        ${s.pending ? `<button class="btn btn-secondary" onclick="manageStudent('approve','${s.userId}','${semId}','${semCode}')">✓ Approve account</button>` : ''}
         ${s.suspended
-          ? `<button class="btn btn-secondary" onclick="manageStudent('unsuspend','${s.userId}','${semId}','${semCode}')">▶ Unsuspend</button>`
+          ? `<button class="btn" style="background:var(--secondary-l);color:var(--secondary-d)" onclick="manageStudent('unsuspend','${s.userId}','${semId}','${semCode}')">▶ Unsuspend</button>`
           : `<button class="btn" style="background:var(--accent-l);color:var(--accent-d)" onclick="manageStudent('suspend','${s.userId}','${semId}','${semCode}')">⏸ Suspend</button>`}
-        <button class="btn" style="background:var(--bg);border:1px solid var(--border);color:var(--text2)" onclick="showEditStudentName('${s.userId}','${s.name}','${semId}','${semCode}')">✏️ Edit name</button>
         <button class="btn" style="background:var(--danger-l);color:var(--danger)" onclick="manageStudent('delete','${s.userId}','${semId}','${semCode}')">🗑 Remove from cohort</button>
       </div>
       <button class="btn btn-ghost" onclick="document.getElementById('student-action-sheet').remove()" style="margin-top:8px;color:var(--muted)">Cancel</button>
@@ -19274,59 +19274,67 @@ async function toggleSemesterStudents(semId, code) {
   const el = document.getElementById('sem-students-' + semId);
   if (!el) return;
   if (el.style.display === 'block') { el.style.display = 'none'; return; }
-
   el.style.display = 'block';
   el.innerHTML = '<div style="padding:14px;text-align:center;color:var(--muted);font-size:13px">Loading…</div>';
 
+  const allMods = getAllModules();
+
+  // 1. Local students whose state has this semesterId
+  const localUsers = loadUsers().filter(u => u.role === ROLES.STUDENT);
+  const localMatched = localUsers.filter(u => loadStudentState(u.id).semesterId === semId);
+  const merged = localMatched.map(u => {
+    const s = loadStudentState(u.id);
+    return { id: u.id, name: u.name || u.id, email: u.email || '', xp: s.xp || 0, modsCompleted: Object.values(s.moduleProgress || {}).filter(v => v >= 1).length, pending: !u.emailVerified, suspended: !!u.suspended, isLocal: true };
+  });
+
+  // 2. Server students — merged in, avoiding duplicates
   const base = getSyncEndpoint();
   const tt = localStorage.getItem('crypto_course_teacher_token');
-  if (!base || !tt) {
-    el.innerHTML = '<div style="padding:12px;font-size:12px;color:var(--muted)">Set teacher token in Profile → Sync & Data to view students.</div>';
+  if (base && tt) {
+    try {
+      const r = await fetchWithTimeout(`${base}/students/${encodeURIComponent(code)}`, { headers: { 'Authorization': 'Bearer ' + tt } }, 8000);
+      if (r.ok) {
+        const data = await r.json();
+        (data.students || []).forEach(s => {
+          if (merged.find(m => m.id === s.userId)) return; // already in local list
+          const p = s.payload || {};
+          const serverState = { xp: p.xpDelta ?? 0, streak: p.streak ?? 0, badges: p.badgeTimestamps ?? [], labsCompleted: p.labCompletions?.count ?? 0, moduleProgress: p.quizOutcomes?.moduleProgress ?? {}, quizzesCompleted: p.quizOutcomes?.quizzesCompleted ?? 0, perfectQuizzes: p.quizOutcomes?.perfectQuizzes ?? 0, lessonsCompleted: p.quizOutcomes?.lessonsCompleted ?? 0, diagnosticDone: p.quizOutcomes?.diagnosticDone ?? false, diagnosticScore: p.quizOutcomes?.diagnosticScore ?? null };
+          const cleanName = n => (!n || n === 'undefined' || n === 'null') ? '' : n;
+          const name = cleanName(s.name) || s.userId;
+          _studentStateOverrides[s.userId] = { user: { id: s.userId, name, email: '' }, state: serverState };
+          merged.push({ id: s.userId, name, email: '', xp: serverState.xp, modsCompleted: Object.values(serverState.moduleProgress).filter(v => v >= 1).length, pending: s.emailVerified === false, suspended: s.suspended === true, isLocal: false });
+        });
+      }
+    } catch(e) {}
+  }
+
+  const countEl = document.getElementById('sem-enrolled-count-' + semId);
+  if (countEl) countEl.textContent = merged.length + ' enrolled';
+
+  if (merged.length === 0) {
+    el.innerHTML = '<div style="padding:16px;text-align:center;color:var(--muted);font-size:13px">No students yet — share the join code with your class.</div>';
     return;
   }
-  try {
-    const r = await fetchWithTimeout(`${base}/students/${encodeURIComponent(code)}`, {
-      headers: { 'Authorization': 'Bearer ' + tt }
-    }, 8000);
-    if (!r.ok) { el.innerHTML = '<div style="padding:12px;font-size:12px;color:var(--danger)">Could not load students (' + r.status + ')</div>'; return; }
-    const data = await r.json();
-    const students = data.students || [];
 
-    const countEl = document.getElementById('sem-enrolled-count-' + semId);
-    if (countEl) countEl.textContent = students.length + ' enrolled';
-
-    if (students.length === 0) {
-      el.innerHTML = '<div style="padding:16px;text-align:center;color:var(--muted);font-size:13px">No students yet — share the code with your class.</div>';
-      return;
-    }
-    const allMods = getAllModules();
-    el.innerHTML = students.map(s => {
-      const p = s.payload || {};
-      const modsDone = Object.values((p.quizOutcomes || {}).moduleProgress || {}).filter(v => v >= 1).length;
-      const pending = s.emailVerified === false;
-      const suspended = s.suspended === true;
-      const displayName = s.name || s.userId;
-      const initials = displayName.split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase() || '?';
-      const avatarBg = suspended ? 'var(--danger-l)' : pending ? 'var(--accent-l)' : 'var(--primary-l)';
-      const avatarColor = suspended ? 'var(--danger)' : pending ? 'var(--accent-d)' : 'var(--primary)';
-      const badge = suspended
-        ? '<span style="font-size:10px;font-weight:700;background:var(--danger-l);color:var(--danger);padding:1px 6px;border-radius:100px;margin-left:4px">Suspended</span>'
-        : pending
-          ? '<span style="font-size:10px;font-weight:700;background:var(--accent-l);color:var(--accent-d);padding:1px 6px;border-radius:100px;margin-left:4px">Pending</span>'
-          : '';
-      const studentJson = encodeURIComponent(JSON.stringify({ userId: s.userId, name: displayName, pending, suspended }));
-      return `
-        <div onclick="showStudentActionSheet('${semId}','${code}',decodeURIComponent('${studentJson}'))"
-          style="display:flex;align-items:center;gap:10px;padding:10px 12px;border-bottom:1px solid var(--border);cursor:pointer;active:background:var(--bg)">
-          <div style="width:34px;height:34px;border-radius:50%;background:${avatarBg};display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:${avatarColor};flex-shrink:0">${initials}</div>
-          <div style="flex:1;min-width:0">
-            <div style="font-size:13px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${displayName}${badge}</div>
-            <div style="font-size:11px;color:var(--muted)">${modsDone}/${allMods.length} modules${(!pending && !suspended) ? ' · ' + (p.xpDelta || 0) + ' XP' : ''}</div>
-          </div>
-          <div style="color:var(--muted);font-size:16px">›</div>
-        </div>`;
-    }).join('') + `<div style="padding:8px 12px;text-align:right"><button onclick="toggleSemesterStudents('${semId}','${code}')" style="border:none;background:none;color:var(--muted);font-size:11px;cursor:pointer">▲ Hide</button></div>`;
-  } catch(e) { el.innerHTML = '<div style="padding:12px;font-size:12px;color:var(--muted)">Could not connect — check your connection.</div>'; }
+  el.innerHTML = merged.map(m => {
+    const initials = m.name.split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase() || '?';
+    const avatarBg = m.suspended ? 'var(--danger-l)' : m.pending ? 'var(--accent-l)' : 'var(--primary-l)';
+    const avatarColor = m.suspended ? 'var(--danger)' : m.pending ? 'var(--accent-d)' : 'var(--primary)';
+    const badge = m.suspended
+      ? '<span style="font-size:10px;font-weight:700;background:var(--danger-l);color:var(--danger);padding:1px 6px;border-radius:100px;margin-left:4px">Suspended</span>'
+      : m.pending ? '<span style="font-size:10px;font-weight:700;background:var(--accent-l);color:var(--accent-d);padding:1px 6px;border-radius:100px;margin-left:4px">Pending</span>'
+      : '';
+    return `
+      <div onclick="showStudentProfile('${m.id}')"
+        style="display:flex;align-items:center;gap:10px;padding:10px 12px;border-bottom:1px solid var(--border);cursor:pointer">
+        <div style="width:34px;height:34px;border-radius:50%;background:${avatarBg};display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:${avatarColor};flex-shrink:0">${initials}</div>
+        <div style="flex:1;min-width:0">
+          <div style="font-size:13px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${_escHtml(m.name)}${badge}</div>
+          <div style="font-size:11px;color:var(--muted)">${m.modsCompleted}/${allMods.length} modules · ${m.xp} XP</div>
+        </div>
+        <div style="color:var(--muted);font-size:16px">›</div>
+      </div>`;
+  }).join('') + `<div style="padding:8px 12px;text-align:right"><button onclick="toggleSemesterStudents('${semId}','${code}')" style="border:none;background:none;color:var(--muted);font-size:11px;cursor:pointer">▲ Hide</button></div>`;
 }
 
 async function refreshSemEnrolled(semId, semCode) {
