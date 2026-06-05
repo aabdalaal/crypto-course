@@ -19296,13 +19296,17 @@ async function toggleSemesterStudents(semId, code) {
       if (r.ok) {
         const data = await r.json();
         (data.students || []).forEach(s => {
+          // If this userId belongs to a local non-student (teacher/admin), skip entirely
+          const localRecord = localUsers.find(u => u.id === s.userId);
+          if (localRecord && localRecord.role !== ROLES.STUDENT) return;
           if (merged.find(m => m.id === s.userId)) return; // already in local list
           const p = s.payload || {};
           const serverState = { xp: p.xpDelta ?? 0, streak: p.streak ?? 0, badges: p.badgeTimestamps ?? [], labsCompleted: p.labCompletions?.count ?? 0, moduleProgress: p.quizOutcomes?.moduleProgress ?? {}, quizzesCompleted: p.quizOutcomes?.quizzesCompleted ?? 0, perfectQuizzes: p.quizOutcomes?.perfectQuizzes ?? 0, lessonsCompleted: p.quizOutcomes?.lessonsCompleted ?? 0, diagnosticDone: p.quizOutcomes?.diagnosticDone ?? false, diagnosticScore: p.quizOutcomes?.diagnosticScore ?? null };
           const cleanName = n => (!n || n === 'undefined' || n === 'null') ? '' : n;
-          const name = cleanName(s.name) || s.userId;
-          _studentStateOverrides[s.userId] = { user: { id: s.userId, name, email: '' }, state: serverState };
-          merged.push({ id: s.userId, name, email: '', xp: serverState.xp, modsCompleted: Object.values(serverState.moduleProgress).filter(v => v >= 1).length, pending: s.emailVerified === false, suspended: s.suspended === true, isLocal: false });
+          // Prefer local name if user exists locally (avoids "Nabil" vs "Nabil2" split)
+          const name = localRecord?.name || cleanName(s.name) || s.userId;
+          _studentStateOverrides[s.userId] = { user: { id: s.userId, name, email: localRecord?.email || '' }, state: serverState };
+          merged.push({ id: s.userId, name, email: localRecord?.email || '', xp: serverState.xp, modsCompleted: Object.values(serverState.moduleProgress).filter(v => v >= 1).length, pending: s.emailVerified === false, suspended: s.suspended === true, isLocal: false });
         });
       }
     } catch(e) {}
@@ -19675,10 +19679,18 @@ async function refreshStudentsTab() {
     serverStudents = await getSemesterGroupStudents(sem.code);
   }
 
-  // Merge: add server-only students (not already in local DB)
+  // Merge: add server-only students (not already in local DB, and not a teacher/admin locally)
+  const localUserMap = Object.fromEntries(loadUsers().map(u => [u.id, u]));
   const merged = [...localStudents];
   serverStudents.forEach(ss => {
-    if (!merged.find(u => u.id === ss.id)) merged.push(ss);
+    const localRecord = localUserMap[ss.id];
+    if (localRecord) {
+      // Known locally — only add if they're a student and not already in the list
+      if (localRecord.role === ROLES.STUDENT && !merged.find(u => u.id === ss.id)) merged.push(localRecord);
+    } else {
+      // Genuinely server-only — add as-is
+      if (!merged.find(u => u.id === ss.id)) merged.push(ss);
+    }
   });
 
   if (merged.length === 0) {
