@@ -19794,62 +19794,73 @@ function copyStudentEmails() {
 function showAssignSemesterSheet(userId, userName) {
   document.getElementById('assign-sem-sheet')?.remove();
   const semesters = loadSemesters();
+  const localUser = loadUsers().find(u => u.id === userId);
   const studentState = _studentStateOverrides[userId]?.state || loadStudentState(userId);
   const currentSemId = studentState.semesterId || '';
   const currentSem = semesters.find(s => s.id === currentSemId);
-  const isServerOnly = !loadUsers().find(u => u.id === userId);
+  const isServerOnly = !localUser;
+  const displayName = (userName === userId || !userName) ? '' : userName;
 
   const el = document.createElement('div');
   el.id = 'assign-sem-sheet';
   el.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:600;display:flex;align-items:flex-end;justify-content:center';
   el.innerHTML = `
-    <div style="background:var(--bg);border-radius:20px 20px 0 0;padding:24px 20px 44px;width:100%;max-width:430px">
-      <div style="font-size:16px;font-weight:800;margin-bottom:4px">🎓 Assign to Semester</div>
-      <div style="font-size:13px;color:var(--muted);margin-bottom:20px">${_escHtml(userName)}</div>
+    <div style="background:var(--bg);border-radius:20px 20px 0 0;padding:24px 20px 44px;width:100%;max-width:430px;max-height:88vh;overflow-y:auto">
+      <div style="font-size:16px;font-weight:800;margin-bottom:20px">✏️ Edit Student</div>
       ${isServerOnly ? `
         <div style="font-size:12px;background:var(--accent-l);color:var(--accent-d);border-radius:var(--radius-xs);padding:10px 12px;margin-bottom:16px;line-height:1.5">
-          ⚠ This student is registered on another device. Semester changes will only take effect on their device when they next log in.
+          ⚠ Server-registered student. Name changes apply locally on this device only.
         </div>` : ''}
-      <div style="margin-bottom:6px;font-size:12px;font-weight:700;color:var(--text2)">
-        Current: ${currentSem ? _escHtml(currentSem.name) : '—'}
-      </div>
-      <label style="display:block;font-size:12px;font-weight:700;color:var(--text2);margin-bottom:6px">Assign to</label>
+      <label style="display:block;font-size:12px;font-weight:700;color:var(--text2);margin-bottom:6px">Full Name</label>
+      <input id="edit-stu-name" class="lab-input" placeholder="Student name"
+        value="${_escHtml(displayName || (localUser?.name || ''))}" style="margin-bottom:16px">
+      <label style="display:block;font-size:12px;font-weight:700;color:var(--text2);margin-bottom:6px">
+        Semester <span style="font-weight:500;color:var(--muted)">(current: ${currentSem ? _escHtml(currentSem.name) : '—'})</span>
+      </label>
       <select id="assign-sem-select"
-        style="width:100%;padding:10px 12px;border:1.5px solid var(--border);border-radius:var(--radius-xs);font-family:var(--font);font-size:14px;background:var(--surface);color:var(--text);margin-bottom:20px">
-        <option value="">— None (remove from semester) —</option>
+        style="width:100%;padding:10px 12px;border:1.5px solid var(--border);border-radius:var(--radius-xs);font-family:var(--font);font-size:14px;background:var(--surface);color:var(--text);margin-bottom:24px">
+        <option value="">— None —</option>
         ${semesters.map(s => `<option value="${s.id}" ${s.id === currentSemId ? 'selected' : ''}>${_escHtml(s.name)}</option>`).join('')}
       </select>
       <div style="display:flex;gap:10px">
         <button class="btn btn-ghost" style="flex:1" onclick="document.getElementById('assign-sem-sheet').remove()">Cancel</button>
-        <button class="btn btn-primary" style="flex:1" onclick="teacherAssignStudentSemester('${userId}')">Save</button>
+        <button class="btn btn-primary" style="flex:1" onclick="teacherSaveStudentEdit('${userId}','${isServerOnly}')">Save</button>
       </div>
     </div>`;
   document.body.appendChild(el);
   el.addEventListener('click', e => { if (e.target === el) el.remove(); });
 }
 
-function teacherAssignStudentSemester(userId) {
+function teacherSaveStudentEdit(userId, isServerOnly) {
   const newSemId = document.getElementById('assign-sem-select')?.value || '';
+  const newName  = (document.getElementById('edit-stu-name')?.value || '').trim();
   const semesters = loadSemesters();
 
-  // Load and update student state
-  const stateKey = (typeof STATE_KEY !== 'undefined' ? STATE_KEY : 'crypto_course_state') + '_' + userId;
+  // Update name in local user DB (local students only)
+  if (isServerOnly !== 'true' && newName) {
+    const users = loadUsers();
+    const u = users.find(x => x.id === userId);
+    if (u) { u.name = newName; saveUsers(users); }
+  }
+
+  // Update name in override cache (server students — in-memory fix)
+  if (_studentStateOverrides[userId]) {
+    if (newName) _studentStateOverrides[userId].user.name = newName;
+  }
+
+  // Load and update student state (semesterId)
+  const stateKey = STATE_KEY + '_' + userId;
   let studentState = {};
   try { studentState = JSON.parse(localStorage.getItem(stateKey) || '{}') || {}; } catch(e) {}
-
   const oldSemId = studentState.semesterId || '';
   studentState.semesterId = newSemId || null;
   localStorage.setItem(stateKey, JSON.stringify(studentState));
-
-  // Also update override cache if present
   if (_studentStateOverrides[userId]) _studentStateOverrides[userId].state.semesterId = newSemId || null;
 
   // Remove from old semester's enrolledStudents
   if (oldSemId && oldSemId !== newSemId) {
     const oldIdx = semesters.findIndex(s => s.id === oldSemId);
-    if (oldIdx >= 0) {
-      semesters[oldIdx].enrolledStudents = (semesters[oldIdx].enrolledStudents || []).filter(id => id !== userId);
-    }
+    if (oldIdx >= 0) semesters[oldIdx].enrolledStudents = (semesters[oldIdx].enrolledStudents || []).filter(id => id !== userId);
   }
 
   // Add to new semester's enrolledStudents
@@ -19857,16 +19868,13 @@ function teacherAssignStudentSemester(userId) {
     const newIdx = semesters.findIndex(s => s.id === newSemId);
     if (newIdx >= 0) {
       if (!semesters[newIdx].enrolledStudents) semesters[newIdx].enrolledStudents = [];
-      if (!semesters[newIdx].enrolledStudents.includes(userId)) {
-        semesters[newIdx].enrolledStudents.push(userId);
-      }
+      if (!semesters[newIdx].enrolledStudents.includes(userId)) semesters[newIdx].enrolledStudents.push(userId);
     }
   }
   saveSemesters(semesters);
 
   document.getElementById('assign-sem-sheet')?.remove();
-  const semName = newSemId ? (semesters.find(s => s.id === newSemId)?.name || '') : 'none';
-  showToast(`✓ Assigned to ${semName || 'no semester'}`);
+  showToast('✓ Student updated');
   refreshStudentsTab();
 }
 
@@ -19901,7 +19909,8 @@ async function getSemesterGroupStudents(semCode) {
     }, 6000);
     if (r.ok) {
       const data = await r.json();
-      return (data.students || []).map(s => ({ id: s.userId, name: s.name || s.userId, email: '' }));
+      const cleanName = n => (!n || n === 'undefined' || n === 'null') ? '' : n;
+    return (data.students || []).map(s => ({ id: s.userId, name: cleanName(s.name) || s.userId, email: '' }));
     }
   } catch(e) {}
   return [];
