@@ -19280,11 +19280,12 @@ async function toggleSemesterStudents(semId, code) {
   const allMods = getAllModules();
 
   // 1. Local students whose state has this semesterId
-  const localUsers = loadUsers().filter(u => u.role === ROLES.STUDENT);
+  const allLocalUsers = loadUsers(); // full list — used for role checks
+  const localUsers = allLocalUsers.filter(u => u.role === ROLES.STUDENT);
   const localMatched = localUsers.filter(u => loadStudentState(u.id).semesterId === semId);
   const merged = localMatched.map(u => {
     const s = loadStudentState(u.id);
-    return { id: u.id, name: u.name || u.id, email: u.email || '', xp: s.xp || 0, modsCompleted: Object.values(s.moduleProgress || {}).filter(v => v >= 1).length, pending: !u.emailVerified, suspended: !!u.suspended, isLocal: true };
+    return { id: u.id, name: u.name || u.id, email: u.email || '', xp: s.xp || 0, modsCompleted: Object.values(s.moduleProgress || {}).filter(v => v >= 1).length, pending: u.emailVerified === false, suspended: !!u.suspended, isLocal: true };
   });
 
   // 2. Server students — merged in, avoiding duplicates
@@ -19297,7 +19298,7 @@ async function toggleSemesterStudents(semId, code) {
         const data = await r.json();
         (data.students || []).forEach(s => {
           // If this userId belongs to a local non-student (teacher/admin), skip entirely
-          const localRecord = localUsers.find(u => u.id === s.userId);
+          const localRecord = allLocalUsers.find(u => u.id === s.userId);
           if (localRecord && localRecord.role !== ROLES.STUDENT) return;
           if (merged.find(m => m.id === s.userId)) return; // already in local list
           const p = s.payload || {};
