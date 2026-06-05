@@ -12116,12 +12116,46 @@ function loadStudentState(userId) {
   try { return JSON.parse(localStorage.getItem(STATE_KEY + '_' + userId) || 'null') || {}; } catch(e) { return {}; }
 }
 
+// In-memory cache for server-only students fetched during the Students tab session.
+// Keyed by userId → { user: {id,name,email,...}, state: {xp,streak,...} }
+const _studentStateOverrides = {};
+
+async function fetchServerStudentState(userId) {
+  const base = getSyncEndpoint();
+  const tt = localStorage.getItem('crypto_course_teacher_token');
+  if (!base || !tt) return {};
+  try {
+    const resp = await fetchWithTimeout(`${base}/${encodeURIComponent(userId)}`, {
+      headers: { 'Authorization': 'Bearer ' + tt }
+    }, 6000);
+    if (!resp.ok || resp.status === 204) return {};
+    const p = await resp.json();
+    return {
+      xp:               p.xpDelta                        ?? 0,
+      streak:           p.streak                         ?? 0,
+      badges:           p.badgeTimestamps                ?? [],
+      labsCompleted:    p.labCompletions?.count          ?? 0,
+      labsDone:         p.labCompletions?.done           ?? {},
+      quizzesCompleted: p.quizOutcomes?.quizzesCompleted ?? 0,
+      perfectQuizzes:   p.quizOutcomes?.perfectQuizzes   ?? 0,
+      lessonsCompleted: p.quizOutcomes?.lessonsCompleted ?? 0,
+      moduleProgress:   p.quizOutcomes?.moduleProgress   ?? {},
+      quizAttempts:     p.quizOutcomes?.quizAttempts     ?? {},
+      spacedRevisits:   p.quizOutcomes?.spacedRevisits   ?? {},
+      diagnosticDone:   p.quizOutcomes?.diagnosticDone   ?? false,
+      diagnosticScore:  p.quizOutcomes?.diagnosticScore  ?? null,
+      bypassedModules:  p.quizOutcomes?.bypassedModules  ?? [],
+      moduleTimes:      p.quizOutcomes?.moduleTimes      ?? {},
+    };
+  } catch (e) { return {}; }
+}
+
 function showStudentProfile(userId) {
   const users = loadUsers();
-  const u = users.find(x => x.id === userId);
+  const u = users.find(x => x.id === userId) || _studentStateOverrides[userId]?.user;
   if (!u) return;
 
-  const s = loadStudentState(userId);
+  const s = _studentStateOverrides[userId]?.state || loadStudentState(userId);
   const allMods = getAllModules();
   const assignments = loadAssignments().filter(a => a.studentId === userId);
   const xapiLog = getXAPILog().filter(e => e.actor.email === u.email);
@@ -19593,23 +19627,17 @@ async function refreshStudentsTab() {
   const semesters = loadSemesters();
   const sem = semId ? semesters.find(s => s.id === semId) : null;
   const allMods = getAllModules();
+  const localUserIds = new Set(loadUsers().map(u => u.id));
 
   // Local students
   let localStudents = loadUsers().filter(u => u.role === ROLES.STUDENT);
-  if (sem) {
-    localStudents = localStudents.filter(u => {
-      const s = loadStudentState(u.id);
-      return s.semesterId === semId;
-    });
-  }
+  if (sem) localStudents = localStudents.filter(u => loadStudentState(u.id).semesterId === semId);
 
-  // Server students for semester
+  // Server students for the selected semester
   let serverStudents = [];
-  if (sem?.code) {
-    serverStudents = await getSemesterGroupStudents(sem.code);
-  }
+  if (sem?.code) serverStudents = await getSemesterGroupStudents(sem.code);
 
-  // Merge: add server students not already in local list
+  // Merge: add server-only students (not already in local DB)
   const merged = [...localStudents];
   serverStudents.forEach(ss => {
     if (!merged.find(u => u.id === ss.id)) merged.push(ss);
@@ -19624,6 +19652,17 @@ async function refreshStudentsTab() {
     return;
   }
 
+  // Fetch state from server for server-only students and populate override cache
+  for (const u of merged) {
+    if (!localUserIds.has(u.id)) {
+      const serverState = await fetchServerStudentState(u.id);
+      _studentStateOverrides[u.id] = { user: u, state: serverState };
+    }
+  }
+
+  // Unified state getter — local state takes precedence; falls back to server cache
+  const getState = u => _studentStateOverrides[u.id]?.state || loadStudentState(u.id);
+
   // Build last-activity map from xAPI log
   const xapiLog = getXAPILog();
   const lastActivity = {};
@@ -19635,8 +19674,10 @@ async function refreshStudentsTab() {
   });
 
   const now = new Date();
+  let atRiskCount = 0;
+
   const rows = merged.map(u => {
-    const s = loadStudentState(u.id);
+    const s = getState(u);
     const xp = s.xp || 0;
     const lv = getLevel(xp);
     const modsCompleted = Object.values(s.moduleProgress || {}).filter(v => v >= 1).length;
@@ -19647,13 +19688,10 @@ async function refreshStudentsTab() {
     const daysSince = lastTs ? Math.floor((now - lastTs) / 86400000) : null;
     const lastLabel = daysSince === null ? '–' : daysSince === 0 ? 'Today' : daysSince === 1 ? 'Yesterday' : daysSince + 'd ago';
     const atRisk = daysSince !== null && daysSince >= 7;
+    if (atRisk) atRiskCount++;
     const initials = (u.name || '?').split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase();
     const diagLine = s.diagnosticDone && s.diagnosticScore !== null
       ? `<span style="font-size:10px;font-weight:700;background:var(--primary-l);color:var(--primary);padding:1px 6px;border-radius:100px">🔬 ${s.diagnosticScore}%</span>`
-      : '';
-    const localU = loadUsers().find(x => x.id === u.id);
-    const profileBtn = localU
-      ? `<button onclick="showStudentProfile('${localU.id}')" class="btn btn-sm" style="background:var(--primary-l);color:var(--primary);width:auto;padding:5px 10px;font-size:11px;flex-shrink:0">📊</button>`
       : '';
     return `
       <div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--border)">
@@ -19673,14 +19711,12 @@ async function refreshStudentsTab() {
             <span style="font-size:11px;color:var(--muted)">🕐 ${lastLabel}</span>
           </div>
         </div>
-        ${profileBtn}
+        <div style="display:flex;flex-direction:column;gap:4px;flex-shrink:0">
+          <button onclick="showStudentProfile('${u.id}')" class="btn btn-sm" style="background:var(--primary-l);color:var(--primary);width:auto;padding:5px 10px;font-size:11px">📊</button>
+          <button onclick="showAssignSemesterSheet('${u.id}','${_escHtml(u.name || u.id).replace(/'/g,'\\\'')}')" class="btn btn-sm" style="background:var(--secondary-l);color:var(--secondary-d);width:auto;padding:5px 10px;font-size:11px">🎓</button>
+        </div>
       </div>`;
   }).join('');
-
-  const atRiskCount = merged.filter(u => {
-    const lastTs = lastActivity[loadUsers().find(x => x.id === u.id)?.email || ''] || null;
-    return lastTs && Math.floor((now - lastTs) / 86400000) >= 7;
-  }).length;
 
   listEl.style.cssText = 'display:block';
   listEl.innerHTML = `
@@ -19711,15 +19747,15 @@ function exportStudentsCSV() {
 
   const headers = ['Name','Email','Semester','XP','Level','Modules Completed','Labs','Quiz Accuracy %','Streak','Diagnostic Score','Last Active'];
   const rows = students.map(u => {
-    const s = loadStudentState(u.id);
+    const s = _studentStateOverrides[u.id]?.state || loadStudentState(u.id);
     const semName = sem ? sem.name : (semesters.find(x => x.id === s.semesterId)?.name || '');
     const lv = getLevel(s.xp || 0);
     const modsCompleted = Object.values(s.moduleProgress || {}).filter(v => v >= 1).length;
     const perfectPct = s.quizzesCompleted > 0 ? Math.round(((s.perfectQuizzes || 0) / s.quizzesCompleted) * 100) : '';
     const lastTs = lastActivity[u.email];
     const lastLabel = lastTs ? lastTs.toLocaleDateString('en-GB') : '';
-    return [u.name, u.email, semName, s.xp || 0, lv.name, modsCompleted, s.labsCompleted || 0, perfectPct, s.streak || 0, s.diagnosticScore ?? '', lastLabel]
-      .map(v => `"${String(v).replace(/"/g, '""')}"`).join(',');
+    const cells = [u.name, u.email, semName, s.xp || 0, lv.name, modsCompleted, s.labsCompleted || 0, perfectPct, s.streak || 0, s.diagnosticScore ?? '', lastLabel];
+    return cells.map(v => `"${String(v).replace(/"/g, '""')}"`).join(',');
   });
 
   const csv = [headers.join(','), ...rows].join('\r\n');
@@ -19746,6 +19782,85 @@ function copyStudentEmails() {
   navigator.clipboard.writeText(emails)
     .then(() => showToast(`✓ Copied ${students.length} email address${students.length !== 1 ? 'es' : ''}`))
     .catch(() => showToast('Could not access clipboard'));
+}
+
+function showAssignSemesterSheet(userId, userName) {
+  document.getElementById('assign-sem-sheet')?.remove();
+  const semesters = loadSemesters();
+  const studentState = _studentStateOverrides[userId]?.state || loadStudentState(userId);
+  const currentSemId = studentState.semesterId || '';
+  const currentSem = semesters.find(s => s.id === currentSemId);
+  const isServerOnly = !loadUsers().find(u => u.id === userId);
+
+  const el = document.createElement('div');
+  el.id = 'assign-sem-sheet';
+  el.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:600;display:flex;align-items:flex-end;justify-content:center';
+  el.innerHTML = `
+    <div style="background:var(--bg);border-radius:20px 20px 0 0;padding:24px 20px 44px;width:100%;max-width:430px">
+      <div style="font-size:16px;font-weight:800;margin-bottom:4px">🎓 Assign to Semester</div>
+      <div style="font-size:13px;color:var(--muted);margin-bottom:20px">${_escHtml(userName)}</div>
+      ${isServerOnly ? `
+        <div style="font-size:12px;background:var(--accent-l);color:var(--accent-d);border-radius:var(--radius-xs);padding:10px 12px;margin-bottom:16px;line-height:1.5">
+          ⚠ This student is registered on another device. Semester changes will only take effect on their device when they next log in.
+        </div>` : ''}
+      <div style="margin-bottom:6px;font-size:12px;font-weight:700;color:var(--text2)">
+        Current: ${currentSem ? _escHtml(currentSem.name) : '—'}
+      </div>
+      <label style="display:block;font-size:12px;font-weight:700;color:var(--text2);margin-bottom:6px">Assign to</label>
+      <select id="assign-sem-select"
+        style="width:100%;padding:10px 12px;border:1.5px solid var(--border);border-radius:var(--radius-xs);font-family:var(--font);font-size:14px;background:var(--surface);color:var(--text);margin-bottom:20px">
+        <option value="">— None (remove from semester) —</option>
+        ${semesters.map(s => `<option value="${s.id}" ${s.id === currentSemId ? 'selected' : ''}>${_escHtml(s.name)}</option>`).join('')}
+      </select>
+      <div style="display:flex;gap:10px">
+        <button class="btn btn-ghost" style="flex:1" onclick="document.getElementById('assign-sem-sheet').remove()">Cancel</button>
+        <button class="btn btn-primary" style="flex:1" onclick="teacherAssignStudentSemester('${userId}')">Save</button>
+      </div>
+    </div>`;
+  document.body.appendChild(el);
+  el.addEventListener('click', e => { if (e.target === el) el.remove(); });
+}
+
+function teacherAssignStudentSemester(userId) {
+  const newSemId = document.getElementById('assign-sem-select')?.value || '';
+  const semesters = loadSemesters();
+
+  // Load and update student state
+  const stateKey = (typeof STATE_KEY !== 'undefined' ? STATE_KEY : 'crypto_course_state') + '_' + userId;
+  let studentState = {};
+  try { studentState = JSON.parse(localStorage.getItem(stateKey) || '{}') || {}; } catch(e) {}
+
+  const oldSemId = studentState.semesterId || '';
+  studentState.semesterId = newSemId || null;
+  localStorage.setItem(stateKey, JSON.stringify(studentState));
+
+  // Also update override cache if present
+  if (_studentStateOverrides[userId]) _studentStateOverrides[userId].state.semesterId = newSemId || null;
+
+  // Remove from old semester's enrolledStudents
+  if (oldSemId && oldSemId !== newSemId) {
+    const oldIdx = semesters.findIndex(s => s.id === oldSemId);
+    if (oldIdx >= 0) {
+      semesters[oldIdx].enrolledStudents = (semesters[oldIdx].enrolledStudents || []).filter(id => id !== userId);
+    }
+  }
+
+  // Add to new semester's enrolledStudents
+  if (newSemId) {
+    const newIdx = semesters.findIndex(s => s.id === newSemId);
+    if (newIdx >= 0) {
+      if (!semesters[newIdx].enrolledStudents) semesters[newIdx].enrolledStudents = [];
+      if (!semesters[newIdx].enrolledStudents.includes(userId)) {
+        semesters[newIdx].enrolledStudents.push(userId);
+      }
+    }
+  }
+  saveSemesters(semesters);
+
+  document.getElementById('assign-sem-sheet')?.remove();
+  const semName = newSemId ? (semesters.find(s => s.id === newSemId)?.name || '') : 'none';
+  showToast(`✓ Assigned to ${semName || 'no semester'}`);
+  refreshStudentsTab();
 }
 
 async function refreshSemesterGroupCounts() {
