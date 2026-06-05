@@ -12318,49 +12318,56 @@ function showStudentProfile(userId) {
 
 function showEditUserModal(userId) {
   const users = loadUsers();
-  const u = users.find(x => x.id === userId);
+  const localU = users.find(x => x.id === userId);
+  const u = localU || _studentStateOverrides[userId]?.user;
   if (!u) return;
+  const isServerOnly = !localU;
   const existing = document.getElementById('edit-user-overlay');
   if (existing) existing.remove();
   const ov = document.createElement('div');
   ov.id = 'edit-user-overlay'; applyModalAttrs(ov, 'Edit Student Account');
   ov.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:600;display:flex;align-items:flex-end;justify-content:center';
-  const initials = u.name.split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase();
+  const safeName = u.name && u.name !== u.id ? u.name : '';
+  const initials = (safeName || u.id || '?').split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase();
   ov.innerHTML = `
     <div style="background:white;border-radius:20px 20px 0 0;padding:28px 24px 48px;width:100%;max-width:430px;max-height:88vh;overflow-y:auto">
-      <div style="display:flex;align-items:center;gap:14px;margin-bottom:24px">
+      <div style="display:flex;align-items:center;gap:14px;margin-bottom:${isServerOnly ? 16 : 24}px">
         <div style="width:48px;height:48px;border-radius:50%;background:var(--primary-l);display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:800;color:var(--primary);flex-shrink:0">${initials}</div>
         <div>
           <div style="font-size:18px;font-weight:800">Edit User</div>
-          <div style="font-size:12px;color:var(--muted);margin-top:1px">${u.email}</div>
+          <div style="font-size:12px;color:var(--muted);margin-top:1px">${u.email || u.id}</div>
         </div>
       </div>
+      ${isServerOnly ? `
+        <div style="font-size:12px;background:var(--accent-l);color:var(--accent-d);border-radius:var(--radius-xs);padding:10px 12px;margin-bottom:16px;line-height:1.5">
+          ⚠ Server-registered student. Saving will create a local account on this device so you can manage them fully.
+        </div>` : ''}
 
       <div style="margin-bottom:14px">
         <label class="lab-label">Full Name</label>
-        <input id="eu-name" class="lab-input" value="${u.name.replace(/"/g,'&quot;')}" placeholder="Full name">
+        <input id="eu-name" class="lab-input" value="${_escHtml(safeName)}" placeholder="Full name">
       </div>
 
       <div style="margin-bottom:14px">
-        <label class="lab-label">Email</label>
-        <input id="eu-email" class="lab-input" type="email" value="${u.email}" placeholder="email@example.com">
+        <label class="lab-label">Email${isServerOnly ? ' <span style="font-weight:500;text-transform:none">(optional for server students)</span>' : ''}</label>
+        <input id="eu-email" class="lab-input" type="email" value="${_escHtml(u.email || '')}" placeholder="email@example.com">
       </div>
 
       <div style="margin-bottom:14px">
-        <label class="lab-label">New Password <span style="font-weight:500;text-transform:none;letter-spacing:0">(leave blank to keep current)</span></label>
-        <input id="eu-password" class="lab-input" type="password" placeholder="New password…" autocomplete="new-password">
+        <label class="lab-label">Password <span style="font-weight:500;text-transform:none;letter-spacing:0">(${isServerOnly ? 'optional' : 'leave blank to keep current'})</span></label>
+        <input id="eu-password" class="lab-input" type="password" placeholder="Password…" autocomplete="new-password">
       </div>
 
       <div style="margin-bottom:24px">
         <label class="lab-label">Role</label>
         <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">
           ${['student','teacher','admin'].map(r => `
-            <label style="display:flex;flex-direction:column;align-items:center;gap:6px;padding:12px 8px;border:2px solid ${u.role===r?'var(--primary)':'var(--border)'};border-radius:var(--radius-sm);cursor:pointer;transition:border-color 0.15s" onclick="document.querySelectorAll('.eu-role-opt').forEach(el=>el.style.borderColor='var(--border)');this.style.borderColor='var(--primary)';document.getElementById('eu-role').value='${r}'">
+            <label class="eu-role-opt" style="display:flex;flex-direction:column;align-items:center;gap:6px;padding:12px 8px;border:2px solid ${(u.role||'student')===r?'var(--primary)':'var(--border)'};border-radius:var(--radius-sm);cursor:pointer;transition:border-color 0.15s" onclick="document.querySelectorAll('.eu-role-opt').forEach(el=>el.style.borderColor='var(--border)');this.style.borderColor='var(--primary)';document.getElementById('eu-role').value='${r}'">
               <span style="font-size:20px">${r==='student'?'🎓':r==='teacher'?'👨‍🏫':'🛡️'}</span>
               <span style="font-size:12px;font-weight:700;text-transform:capitalize">${r}</span>
             </label>`).join('')}
         </div>
-        <input type="hidden" id="eu-role" value="${u.role}">
+        <input type="hidden" id="eu-role" value="${u.role || 'student'}">
       </div>
 
       <div id="eu-error" style="display:none;background:var(--danger-l);color:var(--danger);padding:10px 14px;border-radius:var(--radius-xs);font-size:13px;font-weight:600;margin-bottom:16px"></div>
@@ -12368,9 +12375,9 @@ function showEditUserModal(userId) {
       <button class="btn btn-primary" onclick="saveEditUser('${userId}')">Save Changes</button>
       <button class="btn btn-ghost" onclick="document.getElementById('edit-user-overlay').remove()" style="margin-top:8px;width:100%">Cancel</button>
 
-      <div style="margin-top:20px;padding-top:16px;border-top:1px solid var(--border)">
+      ${!isServerOnly ? `<div style="margin-top:20px;padding-top:16px;border-top:1px solid var(--border)">
         <button onclick="confirmDeleteUser('${userId}')" style="background:none;border:none;color:var(--danger);font-size:13px;font-weight:700;cursor:pointer;font-family:var(--font);padding:0">🗑 Delete this user account</button>
-      </div>
+      </div>` : ''}
     </div>`;
   document.body.appendChild(ov);
 }
@@ -12382,15 +12389,31 @@ async function saveEditUser(userId) {
   const role     = document.getElementById('eu-role').value;
   const errEl    = document.getElementById('eu-error');
 
-  if (!name)  { errEl.textContent = 'Name cannot be empty.'; errEl.style.display='block'; return; }
-  if (!email) { errEl.textContent = 'Email cannot be empty.'; errEl.style.display='block'; return; }
+  if (!name) { errEl.textContent = 'Name cannot be empty.'; errEl.style.display='block'; return; }
 
   const users = loadUsers();
-  const conflict = users.find(u => u.email === email && u.id !== userId);
-  if (conflict) { errEl.textContent = 'That email is already used by another account.'; errEl.style.display='block'; return; }
+  if (email) {
+    const conflict = users.find(u => u.email === email && u.id !== userId);
+    if (conflict) { errEl.textContent = 'That email is already used by another account.'; errEl.style.display='block'; return; }
+  }
 
   const idx = users.findIndex(u => u.id === userId);
-  if (idx === -1) return;
+  if (idx === -1) {
+    // Server-only student — create a local record so they're fully manageable
+    const newUser = { id: userId, name, email: email || '', role, emailVerified: !!email };
+    if (password) {
+      const { hash, salt } = await hashPassword(password);
+      newUser.passwordHash = hash;
+      newUser.passwordSalt = salt;
+    }
+    users.push(newUser);
+    saveUsers(users);
+    if (_studentStateOverrides[userId]) _studentStateOverrides[userId].user = newUser;
+    document.getElementById('edit-user-overlay').remove();
+    showToast('✓ Local account created for student');
+    refreshStudentsTab();
+    return;
+  }
 
   users[idx].name  = name;
   users[idx].email = email;
