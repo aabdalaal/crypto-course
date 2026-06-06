@@ -12899,6 +12899,10 @@ function showAuthScreen(tab) {
           <label class="form-label">Password</label>
           <input id="auth-pass" type="password" placeholder="Min 8 characters" style="width:100%;padding:12px 14px;border:2px solid var(--border);border-radius:10px;font-size:14px;font-family:Outfit,sans-serif;outline:none;box-sizing:border-box">
         </div>
+        <div style="margin-bottom:20px">
+          <label class="form-label">Class Code <span style="color:var(--muted);font-weight:400;text-transform:none">(optional — given by your teacher)</span></label>
+          <input id="auth-sem-code" type="text" placeholder="e.g. FALL2026" style="width:100%;padding:12px 14px;border:2px solid var(--border);border-radius:10px;font-size:14px;font-family:Outfit,sans-serif;outline:none;box-sizing:border-box;text-transform:uppercase">
+        </div>
         <div id="auth-error" style="color:var(--danger);font-size:13px;margin-bottom:12px;display:none"></div>
         <button onclick="doRegister()" style="width:100%;padding:14px;background:var(--primary);color:white;border:none;border-radius:12px;font-size:15px;font-weight:800;font-family:Outfit,sans-serif;cursor:pointer">Create Account →</button>
       `}
@@ -12967,6 +12971,7 @@ async function doRegister() {
   const name = document.getElementById('auth-name').value.trim();
   const email = document.getElementById('auth-email').value.trim();
   const pass = document.getElementById('auth-pass').value;
+  const semCode = (document.getElementById('auth-sem-code')?.value || '').trim().toUpperCase();
   if (!name || !email || !pass) {
     const el = document.getElementById('auth-error');
     el.textContent = 'Please fill in all required fields'; el.style.display = 'block';
@@ -12980,11 +12985,11 @@ async function doRegister() {
   }
   if (result.user?.role === ROLES.STUDENT) {
     await bootstrapSyncConfig();
-    // If came from an invite link, auto-join that semester
-    const inviteJoin = sessionStorage.getItem('_invite_join');
-    if (inviteJoin) {
+    // Class code entered during registration takes priority over invite link
+    const joinCode = semCode || sessionStorage.getItem('_invite_join');
+    if (joinCode) {
       sessionStorage.removeItem('_invite_join');
-      await joinSemesterWithCode(inviteJoin.toUpperCase(), null);
+      await joinSemesterWithCode(joinCode.toUpperCase(), null);
       if (state.semesterId) return; // enrolled — pending screen shown by enrollInSemester
     }
     showEnrollSemesterSheet(true);
