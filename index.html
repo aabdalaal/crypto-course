@@ -19867,20 +19867,33 @@ function renderStudentsTab() {
   const semOptions = semesters.map(s =>
     `<option value="${s.id}">${_escHtml(s.name)}</option>`
   ).join('');
+  const chipStyle = (id, active) => `id="${id}" onclick="setStudentFilter('${id.replace('sflt-','')}')" style="border:1.5px solid var(--border);border-radius:100px;padding:5px 12px;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;background:${active?'var(--primary)':'var(--bg)'};color:${active?'white':'var(--text2)'};font-family:var(--font)"`;
   return `
-    <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:16px">
+    <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:10px">
       <select id="students-sem-select" onchange="refreshStudentsTab()"
         style="flex:1;min-width:140px;padding:8px 10px;border:1.5px solid var(--border);border-radius:var(--radius-xs);font-family:var(--font);font-size:13px;background:var(--surface);color:var(--text)">
         <option value="">— All students —</option>
         ${semOptions}
       </select>
-      <button class="btn btn-sm btn-primary" style="width:auto" onclick="exportStudentsCSV()">⬇ Export CSV</button>
-      <button class="btn btn-sm" style="width:auto;background:var(--primary-l);color:var(--primary)" onclick="copyStudentEmails()">📧 Copy Emails</button>
+      <button class="btn btn-sm btn-primary" style="width:auto" onclick="exportStudentsCSV()">⬇ CSV</button>
+      <button class="btn btn-sm" style="width:auto;background:var(--primary-l);color:var(--primary)" onclick="copyStudentEmails()">📧</button>
+    </div>
+    <div style="display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap">
+      <input id="students-search" type="text" placeholder="🔍 Search name or email…"
+        style="flex:1;min-width:150px;padding:8px 10px;border:1.5px solid var(--border);border-radius:var(--radius-xs);font-family:var(--font);font-size:13px;background:var(--surface);color:var(--text)"
+        oninput="filterStudentsTab()">
+      <button ${chipStyle('sflt-all', true)}>All</button>
+      <button ${chipStyle('sflt-atrisk', false)}>⚠ At-risk</button>
+      <button ${chipStyle('sflt-nosync', false)}>🔄 Unsynced</button>
+      <button ${chipStyle('sflt-overdue', false)}>📋 Overdue</button>
     </div>
     <div id="students-tab-list" style="min-height:80px;display:flex;align-items:center;justify-content:center">
       <div style="color:var(--muted);font-size:13px">Loading…</div>
     </div>`;
 }
+
+let _cachedStudentData = null;
+let _studentFilterMode = 'all';
 
 async function refreshStudentsTab() {
   const listEl = document.getElementById('students-tab-list');
@@ -19893,11 +19906,9 @@ async function refreshStudentsTab() {
   const allMods = getAllModules();
   const localUserIds = new Set(loadUsers().map(u => u.id));
 
-  // Local students
   let localStudents = loadUsers().filter(u => u.role === ROLES.STUDENT);
   if (sem) localStudents = localStudents.filter(u => loadStudentState(u.id).semesterId === semId);
 
-  // Server students — all semesters when no filter, otherwise just the selected one
   let serverStudents = [];
   if (!sem) {
     for (const s of semesters.filter(x => x.code)) {
@@ -19908,16 +19919,13 @@ async function refreshStudentsTab() {
     serverStudents = await getSemesterGroupStudents(sem.code);
   }
 
-  // Merge: add server-only students (not already in local DB, and not a teacher/admin locally)
   const localUserMap = Object.fromEntries(loadUsers().map(u => [u.id, u]));
   const merged = [...localStudents];
   serverStudents.forEach(ss => {
     const localRecord = localUserMap[ss.id];
     if (localRecord) {
-      // Known locally — only add if they're a student and not already in the list
       if (localRecord.role === ROLES.STUDENT && !merged.find(u => u.id === ss.id)) merged.push(localRecord);
     } else {
-      // Genuinely server-only — add as-is
       if (!merged.find(u => u.id === ss.id)) merged.push(ss);
     }
   });
@@ -19931,7 +19939,6 @@ async function refreshStudentsTab() {
     return;
   }
 
-  // Fetch state from server for server-only students and populate override cache
   for (const u of merged) {
     if (!localUserIds.has(u.id)) {
       const serverState = await fetchServerStudentState(u.id);
@@ -19939,10 +19946,6 @@ async function refreshStudentsTab() {
     }
   }
 
-  // Unified state getter — local state takes precedence; falls back to server cache
-  const getState = u => _studentStateOverrides[u.id]?.state || loadStudentState(u.id);
-
-  // Build last-activity map from xAPI log
   const xapiLog = getXAPILog();
   const lastActivity = {};
   xapiLog.forEach(e => {
@@ -19952,54 +19955,133 @@ async function refreshStudentsTab() {
     if (!lastActivity[email] || ts > lastActivity[email]) lastActivity[email] = ts;
   });
 
-  const now = new Date();
-  let atRiskCount = 0;
+  _cachedStudentData = { merged, allMods, sem, lastActivity, assignments: loadAssignments() };
+  _renderStudentRows();
+}
 
-  const rows = merged.map(u => {
-    const s = getState(u);
-    const xp = s.xp || 0;
-    const lv = getLevel(xp);
+function filterStudentsTab() { _renderStudentRows(); }
+
+function setStudentFilter(mode) {
+  _studentFilterMode = mode;
+  ['all', 'atrisk', 'nosync', 'overdue'].forEach(m => {
+    const btn = document.getElementById('sflt-' + m);
+    if (!btn) return;
+    const on = m === mode;
+    btn.style.background   = on ? 'var(--primary)' : 'var(--bg)';
+    btn.style.color        = on ? 'white'          : 'var(--text2)';
+    btn.style.borderColor  = on ? 'var(--primary)' : 'var(--border)';
+  });
+  _renderStudentRows();
+}
+
+function _renderStudentRows() {
+  const listEl = document.getElementById('students-tab-list');
+  if (!listEl || !_cachedStudentData) return;
+  const { merged, allMods, sem, lastActivity, assignments } = _cachedStudentData;
+  const notes    = loadTeacherNotes();
+  const search   = (document.getElementById('students-search')?.value || '').trim().toLowerCase();
+  const getState = u => _studentStateOverrides[u.id]?.state || loadStudentState(u.id);
+  const now      = new Date();
+
+  let filtered = merged;
+  if (search) filtered = filtered.filter(u =>
+    (u.name || '').toLowerCase().includes(search) || (u.email || '').toLowerCase().includes(search)
+  );
+  if (_studentFilterMode === 'atrisk') {
+    filtered = filtered.filter(u => {
+      const lastTs = lastActivity[u.email] || null;
+      const d = lastTs ? Math.floor((now - lastTs) / 86400000) : null;
+      return d !== null && d >= 7;
+    });
+  } else if (_studentFilterMode === 'nosync') {
+    filtered = filtered.filter(u => !getState(u).lastSync);
+  } else if (_studentFilterMode === 'overdue') {
+    filtered = filtered.filter(u => {
+      const s = getState(u);
+      return assignments.some(a => a.studentId === u.id && !(s.moduleProgress?.[a.moduleId] >= 1) && a.dueDate && new Date(a.dueDate) < now);
+    });
+  }
+
+  if (filtered.length === 0 && merged.length > 0) {
+    listEl.style.cssText = 'display:block';
+    listEl.innerHTML = '<div style="text-align:center;padding:24px;color:var(--muted)">No students match this filter.</div>';
+    return;
+  }
+
+  let atRiskCount = 0;
+  const rows = filtered.map(u => {
+    const s   = getState(u);
+    const xp  = s.xp || 0;
+    const lv  = getLevel(xp);
+    const streak       = s.streak || 0;
     const modsCompleted = Object.values(s.moduleProgress || {}).filter(v => v >= 1).length;
     const labsCompleted = s.labsCompleted || 0;
-    const perfectPct = s.quizzesCompleted > 0
-      ? Math.round(((s.perfectQuizzes || 0) / s.quizzesCompleted) * 100) : null;
-    const lastTs = lastActivity[u.email] || null;
+    const perfectPct    = s.quizzesCompleted > 0 ? Math.round(((s.perfectQuizzes || 0) / s.quizzesCompleted) * 100) : null;
+
+    const lastTs   = lastActivity[u.email] || null;
     const daysSince = lastTs ? Math.floor((now - lastTs) / 86400000) : null;
     const lastLabel = daysSince === null ? '–' : daysSince === 0 ? 'Today' : daysSince === 1 ? 'Yesterday' : daysSince + 'd ago';
-    const atRisk = daysSince !== null && daysSince >= 7;
-    const syncTs = s.lastSync ? new Date(s.lastSync) : null;
+    const atRisk    = daysSince !== null && daysSince >= 7;
+    if (atRisk) atRiskCount++;
+
+    const syncTs   = s.lastSync ? new Date(s.lastSync) : null;
     const syncDays = syncTs ? Math.floor((now - syncTs) / 86400000) : null;
     const syncLabel = syncTs === null ? 'Never'
       : syncDays === 0 ? 'Today ' + syncTs.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-      : syncDays === 1 ? 'Yesterday'
-      : syncDays + 'd ago';
-    if (atRisk) atRiskCount++;
-    const initials = (u.name || '?').split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase();
-    const diagLine = s.diagnosticDone && s.diagnosticScore !== null
-      ? `<span style="font-size:10px;font-weight:700;background:var(--primary-l);color:var(--primary);padding:1px 6px;border-radius:100px">🔬 ${s.diagnosticScore}%</span>`
+      : syncDays === 1 ? 'Yesterday' : syncDays + 'd ago';
+
+    const studentAssignments = assignments.filter(a => a.studentId === u.id);
+    const assignTotal   = studentAssignments.length;
+    const assignDone    = studentAssignments.filter(a => (s.moduleProgress?.[a.moduleId] || 0) >= 1).length;
+    const assignOverdue = studentAssignments.filter(a => !(s.moduleProgress?.[a.moduleId] >= 1) && a.dueDate && new Date(a.dueDate) < now).length;
+    const assignLine    = assignTotal > 0
+      ? `<span style="font-size:11px;color:${assignOverdue > 0 ? 'var(--danger)' : 'var(--text2)'}">📋 ${assignDone}/${assignTotal}${assignOverdue > 0 ? ' · ' + assignOverdue + ' overdue' : ''}</span>`
       : '';
+
+    const inProgress   = Object.entries(s.moduleProgress || {}).filter(([, v]) => v > 0 && v < 1);
+    const currentModId = inProgress.length > 0
+      ? Math.max(...inProgress.map(([id]) => parseInt(id)))
+      : (s.currentLesson?.moduleId ?? null);
+    const currentMod   = currentModId != null ? allMods.find(m => m.id === currentModId) : null;
+    const currentModLine = currentMod
+      ? `<div style="font-size:10px;color:var(--muted);margin-top:1px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">📍 ${_escHtml(currentMod.name)}</div>`
+      : '';
+
+    const note    = notes[u.id];
+    const noteDot = note ? '<span style="font-size:10px;background:var(--accent-l);color:var(--accent-d);padding:1px 5px;border-radius:100px">📝</span>' : '';
+    const diagLine = s.diagnosticDone && s.diagnosticScore !== null
+      ? `<span style="font-size:10px;font-weight:700;background:var(--primary-l);color:var(--primary);padding:1px 6px;border-radius:100px">🔬 ${s.diagnosticScore}%</span>` : '';
+    const initials     = (u.name || '?').split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase();
+    const escapedName  = _escHtml(u.name || u.id).replace(/'/g, '\\\'');
+
     return `
-      <div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--border)">
-        <div style="width:36px;height:36px;border-radius:50%;background:${atRisk ? 'var(--danger-l)' : 'var(--primary-l)'};display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;color:${atRisk ? 'var(--danger)' : 'var(--primary)'};flex-shrink:0">${initials}</div>
+      <div style="display:flex;align-items:flex-start;gap:10px;padding:12px 0;border-bottom:1px solid var(--border)">
+        <div style="width:36px;height:36px;border-radius:50%;background:${atRisk ? 'var(--danger-l)' : 'var(--primary-l)'};display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;color:${atRisk ? 'var(--danger)' : 'var(--primary)'};flex-shrink:0;margin-top:2px">${initials}</div>
         <div style="flex:1;min-width:0">
-          <div style="display:flex;align-items:center;gap:6px;margin-bottom:2px">
+          <div style="display:flex;align-items:center;gap:5px;margin-bottom:1px;flex-wrap:wrap">
             <div style="font-size:13px;font-weight:800;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${_escHtml(u.name || u.id)}</div>
-            ${diagLine}
+            ${diagLine}${noteDot}
             ${atRisk ? '<span style="font-size:10px;font-weight:700;background:var(--danger-l);color:var(--danger);padding:1px 6px;border-radius:100px;flex-shrink:0">⚠ Inactive</span>' : ''}
           </div>
           <div style="font-size:11px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${_escHtml(u.email || '–')}</div>
-          <div style="display:flex;gap:10px;margin-top:4px;flex-wrap:wrap">
+          ${currentModLine}
+          <div style="display:flex;gap:8px;margin-top:4px;flex-wrap:wrap">
             <span style="font-size:11px;font-weight:700;color:var(--primary)">⚡${xp} XP · LV${lv.num}</span>
             <span style="font-size:11px;color:var(--text2)">📚 ${modsCompleted}/${allMods.length}</span>
             <span style="font-size:11px;color:var(--text2)">⚗️ ${labsCompleted}</span>
+            ${streak > 0 ? `<span style="font-size:11px;color:var(--accent-d)">🔥 ${streak}</span>` : ''}
             ${perfectPct !== null ? `<span style="font-size:11px;color:var(--text2)">🎯 ${perfectPct}%</span>` : ''}
+          </div>
+          <div style="display:flex;gap:8px;margin-top:3px;flex-wrap:wrap">
             <span style="font-size:11px;color:var(--muted)">🕐 ${lastLabel}</span>
             <span style="font-size:11px;color:${syncTs ? 'var(--secondary-d)' : 'var(--muted)'}">🔄 ${syncLabel}</span>
+            ${assignLine}
           </div>
         </div>
         <div style="display:flex;flex-direction:column;gap:4px;flex-shrink:0">
-          <button onclick="showStudentProfile('${u.id}')" class="btn btn-sm" style="background:var(--primary-l);color:var(--primary);width:auto;padding:5px 10px;font-size:11px">📊</button>
-          <button onclick="showAssignSemesterSheet('${u.id}','${_escHtml(u.name || u.id).replace(/'/g,'\\\'')}')" class="btn btn-sm" style="background:var(--secondary-l);color:var(--secondary-d);width:auto;padding:5px 10px;font-size:11px">🎓</button>
+          <button onclick="showStudentProfile('${u.id}')" class="btn btn-sm" style="background:var(--primary-l);color:var(--primary);width:auto;padding:5px 10px;font-size:11px" title="View profile">📊</button>
+          <button onclick="showAssignSemesterSheet('${u.id}','${escapedName}')" class="btn btn-sm" style="background:var(--secondary-l);color:var(--secondary-d);width:auto;padding:5px 10px;font-size:11px" title="Assign semester">🎓</button>
+          <button onclick="showStudentNoteSheet('${u.id}','${escapedName}')" class="btn btn-sm" style="background:${note ? 'var(--accent-l)' : 'var(--bg)'};color:${note ? 'var(--accent-d)' : 'var(--muted)'};width:auto;padding:5px 10px;font-size:11px;border:1px solid var(--border)" title="Teacher note">📝</button>
         </div>
       </div>`;
   }).join('');
@@ -20007,11 +20089,66 @@ async function refreshStudentsTab() {
   listEl.style.cssText = 'display:block';
   listEl.innerHTML = `
     <div style="font-size:12px;font-weight:700;color:var(--muted);margin-bottom:8px">
-      ${merged.length} student${merged.length !== 1 ? 's' : ''}
+      ${filtered.length}${filtered.length !== merged.length ? ' of ' + merged.length : ''} student${filtered.length !== 1 ? 's' : ''}
       ${sem ? ' · ' + _escHtml(sem.name) : ''}
       ${atRiskCount > 0 ? ` · <span style="color:var(--danger)">${atRiskCount} at-risk</span>` : ''}
     </div>
     ${rows}`;
+}
+
+// ── TEACHER NOTES ─────────────────────────────────────────────────────────────
+
+const TEACHER_NOTES_KEY = 'crypto_course_teacher_notes';
+function loadTeacherNotes() {
+  try { return JSON.parse(localStorage.getItem(TEACHER_NOTES_KEY) || '{}'); } catch { return {}; }
+}
+function saveTeacherNote(userId, text) {
+  const notes = loadTeacherNotes();
+  if (text.trim()) notes[userId] = { text: text.trim().substring(0, 300), updatedAt: new Date().toISOString() };
+  else delete notes[userId];
+  localStorage.setItem(TEACHER_NOTES_KEY, JSON.stringify(notes));
+}
+
+function showStudentNoteSheet(userId, name) {
+  document.getElementById('student-note-overlay')?.remove();
+  const notes = loadTeacherNotes();
+  const existing = notes[userId]?.text || '';
+  const updatedAt = notes[userId]?.updatedAt ? ' · ' + _fmtBackupTime(notes[userId].updatedAt) : '';
+  const overlay = document.createElement('div');
+  overlay.id = 'student-note-overlay';
+  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:500;display:flex;align-items:flex-end;justify-content:center';
+  overlay.innerHTML = `
+    <div style="background:var(--bg);border-radius:20px 20px 0 0;padding:24px 20px 40px;width:100%;max-width:430px">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+        <div>
+          <div style="font-size:16px;font-weight:800">📝 Note — ${_escHtml(name)}</div>
+          ${existing ? `<div style="font-size:11px;color:var(--muted);margin-top:2px">Last edited${updatedAt}</div>` : ''}
+        </div>
+        <button onclick="document.getElementById('student-note-overlay').remove()" style="border:none;background:none;font-size:22px;cursor:pointer;color:var(--muted);line-height:1">×</button>
+      </div>
+      <textarea id="student-note-text" placeholder="Private note visible only to you…"
+        style="width:100%;height:120px;padding:10px 12px;border:1.5px solid var(--border);border-radius:10px;font-size:13px;font-family:var(--font);resize:none;box-sizing:border-box;background:var(--surface);color:var(--text)">${_escHtml(existing)}</textarea>
+      <div style="font-size:11px;color:var(--muted);margin-top:6px;margin-bottom:16px">Max 300 characters · Stored locally on this device</div>
+      <div style="display:flex;gap:8px">
+        <button class="btn btn-primary" onclick="saveStudentNote('${userId}')" style="flex:1">Save Note</button>
+        ${existing ? '<button class="btn btn-secondary" onclick="saveStudentNote(\'' + userId + '\',true)" style="width:auto;color:var(--danger);border-color:var(--danger)">Delete</button>' : ''}
+      </div>
+    </div>`;
+  document.body.appendChild(overlay);
+  overlay.addEventListener('click', e => { if (e.target === overlay) overlay.remove(); });
+  setTimeout(() => document.getElementById('student-note-text')?.focus(), 100);
+}
+
+function saveStudentNote(userId, del) {
+  if (del) {
+    saveTeacherNote(userId, '');
+  } else {
+    const text = document.getElementById('student-note-text')?.value || '';
+    saveTeacherNote(userId, text);
+  }
+  document.getElementById('student-note-overlay')?.remove();
+  showToast(del ? '✓ Note deleted' : '✓ Note saved');
+  _renderStudentRows();
 }
 
 function exportStudentsCSV() {
