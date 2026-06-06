@@ -11581,6 +11581,19 @@ async function pullSync() {
 // Push local state to the sync server (PR13: 6-field payload categories).
 // ── ADMIN BACKUP (Option A — local file, Option B — cloud) ──────────────────
 
+function _fmtBackupTime(iso) {
+  if (!iso) return 'Never';
+  const d = new Date(iso);
+  const now = new Date();
+  const isToday = d.toDateString() === now.toDateString();
+  const yesterday = new Date(now); yesterday.setDate(now.getDate() - 1);
+  const isYesterday = d.toDateString() === yesterday.toDateString();
+  const time = d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  if (isToday)     return 'Today at ' + time;
+  if (isYesterday) return 'Yesterday at ' + time;
+  return d.toLocaleDateString([], { day: 'numeric', month: 'short', year: 'numeric' }) + ', ' + time;
+}
+
 const _ADMIN_BACKUP_STORES = [
   { key: 'crypto_course_users',            field: 'users' },
   { key: 'crypto_course_semesters',        field: 'semesters' },
@@ -11638,6 +11651,10 @@ function exportAdminBackup() {
   a.download = 'crypto-course-backup-' + new Date().toISOString().slice(0, 10) + '.json';
   a.click();
   URL.revokeObjectURL(url);
+  const ts = new Date().toISOString();
+  localStorage.setItem('crypto_course_local_backup_ts', ts);
+  const el = document.getElementById('local-backup-ts');
+  if (el) el.textContent = 'Last export: ' + _fmtBackupTime(ts);
   showToast('✓ Backup exported');
 }
 
@@ -11682,8 +11699,12 @@ async function pushAdminBackup() {
       body: JSON.stringify(payload),
     }, 10000);
     if (!resp.ok) throw new Error('Server responded ' + resp.status);
+    const ts = new Date().toISOString();
+    localStorage.setItem('crypto_course_cloud_backup_ts', ts);
+    const tsEl = document.getElementById('cloud-backup-ts');
+    if (tsEl) tsEl.textContent = 'Last cloud backup: ' + _fmtBackupTime(ts);
     showToast('✓ School data backed up to server');
-    if (statusEl) statusEl.textContent = 'Last pushed: just now';
+    if (statusEl) statusEl.textContent = '';
   } catch (e) {
     showToast('✗ Push failed: ' + e.message);
     if (statusEl) statusEl.textContent = 'Push failed — ' + e.message;
@@ -11712,6 +11733,8 @@ async function pullAdminBackup() {
       if (statusEl) statusEl.textContent = ''; return;
     }
     _restoreAdminBackupData(payload.data);
+    const ts = payload.backedUpAt || new Date().toISOString();
+    localStorage.setItem('crypto_course_cloud_backup_ts', ts);
     showToast('✓ Backup pulled — reloading…');
     setTimeout(() => location.reload(), 1200);
   } catch (e) {
@@ -13856,21 +13879,23 @@ function renderAdmin(activeTab, assignFilter) {
         </div>
 
         <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:10px">📁 Local File (USB / WhatsApp)</div>
-        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:20px">
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px">
           <button class="btn btn-primary btn-sm" onclick="exportAdminBackup()" style="width:auto">⬇ Export Backup</button>
           <label class="btn btn-secondary btn-sm" style="width:auto;cursor:pointer;display:inline-flex;align-items:center">
             ⬆ Import Backup
             <input type="file" accept=".json" style="display:none" onchange="importAdminBackup(this)">
           </label>
         </div>
+        <div id="local-backup-ts" style="font-size:11px;color:var(--muted);margin-bottom:20px">Last export: ${_fmtBackupTime(localStorage.getItem('crypto_course_local_backup_ts'))}</div>
 
         <div style="border-top:1px solid var(--border);padding-top:16px">
           <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:10px">☁ Cloud (Sync Server)</div>
-          <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px">
             <button class="btn btn-sm" onclick="pushAdminBackup()" style="width:auto;background:var(--secondary);color:white;border-color:var(--secondary)">↑ Push to Server</button>
             <button class="btn btn-secondary btn-sm" onclick="pullAdminBackup()" style="width:auto">↓ Pull from Server</button>
           </div>
-          <div id="admin-backup-server-status" style="font-size:11px;margin-top:8px;color:var(--muted)"></div>
+          <div id="cloud-backup-ts" style="font-size:11px;color:var(--muted);margin-bottom:6px">Last cloud backup: ${_fmtBackupTime(localStorage.getItem('crypto_course_cloud_backup_ts'))}</div>
+          <div id="admin-backup-server-status" style="font-size:11px;color:var(--muted)"></div>
         </div>
       </div>
     </div>
