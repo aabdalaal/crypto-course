@@ -12758,14 +12758,11 @@ async function verifyPassword(plaintext, storedHash, storedSalt) {
   return hash === storedHash;
 }
 
-async function authRegister(name, email, password, elevationCode) {
+async function authRegister(name, email, password) {
   const users = loadUsers();
   if (users.find(u => u.email === email)) return { error: 'Email already registered' };
-  let role = ROLES.STUDENT;
-  if (elevationCode === 'TEACH2025') role = ROLES.TEACHER;
-  if (elevationCode === 'ADMIN2025') role = ROLES.ADMIN;
   const { hash, salt } = await hashPassword(password);
-  const user = { id: 'u-' + Date.now(), email, passwordHash: hash, passwordSalt: salt, name, role, emailVerified: role !== ROLES.STUDENT };
+  const user = { id: 'u-' + Date.now(), email, passwordHash: hash, passwordSalt: salt, name, role: ROLES.STUDENT, emailVerified: false };
   users.push(user);
   saveUsers(users);
   const token = makeToken(user);
@@ -12902,10 +12899,6 @@ function showAuthScreen(tab) {
           <label class="form-label">Password</label>
           <input id="auth-pass" type="password" placeholder="Min 8 characters" style="width:100%;padding:12px 14px;border:2px solid var(--border);border-radius:10px;font-size:14px;font-family:Outfit,sans-serif;outline:none;box-sizing:border-box">
         </div>
-        <div style="margin-bottom:20px">
-          <label class="form-label">Elevation Code <span style="color:var(--muted);font-weight:400;text-transform:none">(optional — for teacher/admin)</span></label>
-          <input id="auth-code" type="text" placeholder="e.g. TEACH2025" style="width:100%;padding:12px 14px;border:2px solid var(--border);border-radius:10px;font-size:14px;font-family:Outfit,sans-serif;outline:none;box-sizing:border-box">
-        </div>
         <div id="auth-error" style="color:var(--danger);font-size:13px;margin-bottom:12px;display:none"></div>
         <button onclick="doRegister()" style="width:100%;padding:14px;background:var(--primary);color:white;border:none;border-radius:12px;font-size:15px;font-weight:800;font-family:Outfit,sans-serif;cursor:pointer">Create Account →</button>
       `}
@@ -12974,13 +12967,12 @@ async function doRegister() {
   const name = document.getElementById('auth-name').value.trim();
   const email = document.getElementById('auth-email').value.trim();
   const pass = document.getElementById('auth-pass').value;
-  const code = document.getElementById('auth-code').value.trim();
   if (!name || !email || !pass) {
     const el = document.getElementById('auth-error');
     el.textContent = 'Please fill in all required fields'; el.style.display = 'block';
     return;
   }
-  const result = await authRegister(name, email, pass, code);
+  const result = await authRegister(name, email, pass);
   if (result.error) {
     const el = document.getElementById('auth-error');
     el.textContent = result.error; el.style.display = 'block';
