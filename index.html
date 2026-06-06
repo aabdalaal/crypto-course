@@ -1992,16 +1992,29 @@ body.high-contrast {
         <div class="section-card">
           <div class="section-card-header" data-i18n="sync_header">🔄 Sync & Data</div>
           <div class="section-card-body">
-            <div class="sync-status">
-              <div class="sync-dot"></div>
-              <div>
-                <div style="font-size:14px;font-weight:700;color:var(--secondary-d)" data-i18n="synced">Synced</div>
-                <div style="font-size:12px;color:var(--secondary)" id="sync-time">Just now</div>
+            <!-- Student-friendly view -->
+            <div id="sync-student-view">
+              <div style="font-size:14px;color:var(--text2);line-height:1.5;margin-bottom:14px">
+                Your progress is saved on this device. When you have internet, tap below to back it up so it's safe even if you switch devices.
               </div>
-              <button class="btn btn-sm btn-secondary" style="margin-inline-start:auto;width:auto" onclick="triggerSync()" data-i18n="sync_now">Sync Now</button>
+              <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px">
+                <button class="btn btn-primary btn-sm" onclick="triggerSync()" style="width:auto">📤 Back up now</button>
+                <div id="sync-time-student" style="font-size:12px;color:var(--muted)">Checking…</div>
+              </div>
             </div>
-            <div style="margin-top:12px;font-size:12px;color:var(--muted)" data-i18n="sync_desc">
-              Only 6 data fields synced: XP deltas, streak, badge timestamps, quiz outcomes, lab completions, session duration. No personal data or free-text transmitted. AES-GCM encrypted.
+            <!-- Teacher/admin technical view -->
+            <div id="sync-admin-view">
+              <div class="sync-status">
+                <div class="sync-dot"></div>
+                <div>
+                  <div style="font-size:14px;font-weight:700;color:var(--secondary-d)" data-i18n="synced">Synced</div>
+                  <div style="font-size:12px;color:var(--secondary)" id="sync-time">Just now</div>
+                </div>
+                <button class="btn btn-sm btn-secondary" style="margin-inline-start:auto;width:auto" onclick="triggerSync()" data-i18n="sync_now">Sync Now</button>
+              </div>
+              <div style="margin-top:12px;font-size:12px;color:var(--muted)" data-i18n="sync_desc">
+                Only 6 data fields synced: XP deltas, streak, badge timestamps, quiz outcomes, lab completions, session duration. No personal data or free-text transmitted. AES-GCM encrypted.
+              </div>
             </div>
             <!-- Sync configuration -->
             <div style="margin-top:14px;border-top:1px solid var(--border);padding-top:14px">
@@ -11132,7 +11145,29 @@ function renderProfile() {
   const ta = document.getElementById('toggle-anim');
   ta.classList.toggle('on', state.reduceAnim);
   ta.setAttribute('aria-checked', state.reduceAnim ? 'true' : 'false');
-  document.getElementById('sync-time').textContent = 'Last sync: ' + new Date(state.lastSync).toLocaleTimeString();
+  // Sync section — student-friendly vs technical view
+  const isStudentRole = currentUser?.role === ROLES.STUDENT;
+  const syncStudentView = document.getElementById('sync-student-view');
+  const syncAdminView   = document.getElementById('sync-admin-view');
+  if (syncStudentView) syncStudentView.style.display = isStudentRole ? '' : 'none';
+  if (syncAdminView)   syncAdminView.style.display   = isStudentRole ? 'none' : '';
+  if (state.lastSync) {
+    const diffMs   = Date.now() - new Date(state.lastSync).getTime();
+    const diffMins = Math.floor(diffMs / 60000);
+    const diffHrs  = Math.floor(diffMins / 60);
+    const diffDays = Math.floor(diffHrs / 24);
+    const friendlyTime = diffMins < 1 ? 'Just now'
+      : diffMins < 60 ? diffMins + ' min ago'
+      : diffHrs  < 24 ? diffHrs  + ' hr ago'
+      : diffDays === 1 ? 'Yesterday'
+      : diffDays + ' days ago';
+    const el = document.getElementById('sync-time-student');
+    if (el) el.textContent = 'Last backed up: ' + friendlyTime;
+    document.getElementById('sync-time').textContent = 'Last sync: ' + new Date(state.lastSync).toLocaleTimeString();
+  } else {
+    const el = document.getElementById('sync-time-student');
+    if (el) el.textContent = 'Never backed up';
+  }
 
   // Pre-fill sync config inputs
   const urlEl = document.getElementById('cfg-sync-url');
@@ -11544,6 +11579,149 @@ async function pullSync() {
 }
 
 // Push local state to the sync server (PR13: 6-field payload categories).
+// ── ADMIN BACKUP (Option A — local file, Option B — cloud) ──────────────────
+
+const _ADMIN_BACKUP_STORES = [
+  { key: USER_DB_KEY,          field: 'users' },
+  { key: SEMESTER_KEY,         field: 'semesters' },
+  { key: GROUPS_KEY,           field: 'groups' },
+  { key: CUSTOM_BADGES_KEY,    field: 'customBadges' },
+  { key: ANNOUNCE_KEY,         field: 'announcements' },
+  { key: ASSIGN_KEY,           field: 'assignments' },
+  { key: CERT_KEY,             field: 'certs' },
+  { key: CONTENT_REGISTRY_KEY, field: 'contentRegistry' },
+];
+
+function _collectAdminBackupData({ withXAPI = false, withStudentStates = false } = {}) {
+  const data = {};
+  for (const { key, field } of _ADMIN_BACKUP_STORES) {
+    try { data[field] = JSON.parse(localStorage.getItem(key) || 'null'); } catch { data[field] = null; }
+  }
+  if (withXAPI) {
+    try { data.xapi = JSON.parse(localStorage.getItem(XAPI_KEY) || '[]'); } catch { data.xapi = []; }
+  }
+  if (withStudentStates) {
+    const users = data.users || [];
+    const states = {};
+    for (const u of users) {
+      const raw = localStorage.getItem(STATE_KEY + '_' + u.id);
+      if (raw) { try { states[u.id] = JSON.parse(raw); } catch {} }
+    }
+    data.studentStates = states;
+  }
+  return data;
+}
+
+function _restoreAdminBackupData(data) {
+  for (const { key, field } of _ADMIN_BACKUP_STORES) {
+    if (data[field] != null) localStorage.setItem(key, JSON.stringify(data[field]));
+  }
+  if (data.xapi)          localStorage.setItem(XAPI_KEY, JSON.stringify(data.xapi));
+  if (data.studentStates) {
+    for (const [uid, s] of Object.entries(data.studentStates)) {
+      localStorage.setItem(STATE_KEY + '_' + uid, JSON.stringify(s));
+    }
+  }
+}
+
+function exportAdminBackup() {
+  const payload = {
+    version: 1,
+    exportedAt: new Date().toISOString(),
+    exportedBy: currentUser?.email || currentUser?.sub || 'unknown',
+    data: _collectAdminBackupData({ withXAPI: true, withStudentStates: true }),
+  };
+  const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'crypto-course-backup-' + new Date().toISOString().slice(0, 10) + '.json';
+  a.click();
+  URL.revokeObjectURL(url);
+  showToast('✓ Backup exported');
+}
+
+function importAdminBackup(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    try {
+      const payload = JSON.parse(e.target.result);
+      if (!payload.version || !payload.data) throw new Error('not a valid backup file');
+      if (!confirm('Restore backup from ' + (payload.exportedAt?.slice(0, 10) || 'unknown date') + '?\nThis will overwrite all current school data.')) {
+        input.value = ''; return;
+      }
+      _restoreAdminBackupData(payload.data);
+      input.value = '';
+      showToast('✓ Backup restored — reloading…');
+      setTimeout(() => location.reload(), 1200);
+    } catch (err) {
+      showToast('✗ Import failed: ' + err.message);
+      input.value = '';
+    }
+  };
+  reader.readAsText(file);
+}
+
+async function pushAdminBackup() {
+  const base = getSyncEndpoint();
+  const tt   = localStorage.getItem('crypto_course_teacher_token');
+  if (!base || !tt) { showToast('⚠ Teacher token not configured — see Profile → Sync & Data'); return; }
+  const statusEl = document.getElementById('admin-backup-server-status');
+  if (statusEl) statusEl.textContent = 'Pushing…';
+  const payload = {
+    version: 1,
+    backedUpAt: new Date().toISOString(),
+    data: _collectAdminBackupData({ withXAPI: false, withStudentStates: false }),
+  };
+  try {
+    const resp = await fetchWithTimeout(`${base}/admin-backup`, {
+      method: 'PUT',
+      headers: { 'Authorization': 'Bearer ' + tt, 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    }, 10000);
+    if (!resp.ok) throw new Error('Server responded ' + resp.status);
+    showToast('✓ School data backed up to server');
+    if (statusEl) statusEl.textContent = 'Last pushed: just now';
+  } catch (e) {
+    showToast('✗ Push failed: ' + e.message);
+    if (statusEl) statusEl.textContent = 'Push failed — ' + e.message;
+  }
+}
+
+async function pullAdminBackup() {
+  const base = getSyncEndpoint();
+  const tt   = localStorage.getItem('crypto_course_teacher_token');
+  if (!base || !tt) { showToast('⚠ Teacher token not configured — see Profile → Sync & Data'); return; }
+  const statusEl = document.getElementById('admin-backup-server-status');
+  if (statusEl) statusEl.textContent = 'Pulling…';
+  try {
+    const resp = await fetchWithTimeout(`${base}/admin-backup`, {
+      headers: { 'Authorization': 'Bearer ' + tt },
+    }, 10000);
+    if (resp.status === 404 || resp.status === 204) {
+      showToast('No server backup found — push one first');
+      if (statusEl) statusEl.textContent = 'No backup on server yet';
+      return;
+    }
+    if (!resp.ok) throw new Error('Server responded ' + resp.status);
+    const payload = await resp.json();
+    if (!payload.version || !payload.data) throw new Error('invalid backup format');
+    if (!confirm('Restore server backup from ' + (payload.backedUpAt?.slice(0, 10) || 'unknown date') + '?\nThis will overwrite current local data.')) {
+      if (statusEl) statusEl.textContent = ''; return;
+    }
+    _restoreAdminBackupData(payload.data);
+    showToast('✓ Backup pulled — reloading…');
+    setTimeout(() => location.reload(), 1200);
+  } catch (e) {
+    showToast('✗ Pull failed: ' + e.message);
+    if (statusEl) statusEl.textContent = 'Pull failed — ' + e.message;
+  }
+}
+
+// ── END ADMIN BACKUP ─────────────────────────────────────────────────────────
+
 async function triggerSync() {
   state.lastSync = new Date().toISOString();
   saveState();
@@ -13660,11 +13838,39 @@ function renderAdmin(activeTab, assignFilter) {
     </div>
 
     <!-- xAPI log preview -->
-    <div class="section-card">
+    <div class="section-card" style="margin-bottom:20px">
       <div class="section-card-header">📡 xAPI Event Log</div>
       <div style="padding:12px 16px">
         <div style="font-family:var(--mono);font-size:11px;color:var(--text2);background:var(--bg);border-radius:var(--radius-xs);padding:12px;max-height:160px;overflow-y:auto" id="xapi-log-preview">
           ${getXAPILog().slice(-5).reverse().map(e => `<div style="margin-bottom:6px;padding-bottom:6px;border-bottom:1px solid var(--border)">[${e.ts}] ${e.verb} — ${e.object}</div>`).join('') || 'No events yet. Complete a lesson to generate xAPI statements.'}
+        </div>
+      </div>
+    </div>
+
+    <!-- Backup & Restore -->
+    <div class="section-card">
+      <div class="section-card-header">💾 Backup & Restore</div>
+      <div style="padding:12px 16px">
+        <div style="font-size:13px;color:var(--text2);line-height:1.5;margin-bottom:16px">
+          Protect all school data — students, semesters, groups, assignments, badges — against device loss or formatting.
+        </div>
+
+        <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:10px">📁 Local File (USB / WhatsApp)</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:20px">
+          <button class="btn btn-primary btn-sm" onclick="exportAdminBackup()" style="width:auto">⬇ Export Backup</button>
+          <label class="btn btn-secondary btn-sm" style="width:auto;cursor:pointer;display:inline-flex;align-items:center">
+            ⬆ Import Backup
+            <input type="file" accept=".json" style="display:none" onchange="importAdminBackup(this)">
+          </label>
+        </div>
+
+        <div style="border-top:1px solid var(--border);padding-top:16px">
+          <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:10px">☁ Cloud (Sync Server)</div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <button class="btn btn-sm" onclick="pushAdminBackup()" style="width:auto;background:var(--secondary);color:white;border-color:var(--secondary)">↑ Push to Server</button>
+            <button class="btn btn-secondary btn-sm" onclick="pullAdminBackup()" style="width:auto">↓ Pull from Server</button>
+          </div>
+          <div id="admin-backup-server-status" style="font-size:11px;margin-top:8px;color:var(--muted)"></div>
         </div>
       </div>
     </div>

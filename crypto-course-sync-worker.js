@@ -23,7 +23,8 @@
  *                    {"WMIN2026":{"write":"w_xxx","teacher":"t_yyy"}}
  */
 
-const MAX_BODY_BYTES = 16 * 1024;          // reject oversized payloads
+const MAX_BODY_BYTES        = 16 * 1024;   // reject oversized student payloads
+const MAX_ADMIN_BACKUP_BYTES = 512 * 1024; // admin backup can be larger
 const RETENTION_DAYS = 180;                // KV TTL for student records
 
 /* ---- PR13 allowlist: server-side minimisation (defensive) ---- */
@@ -214,6 +215,29 @@ export default {
         return json({ semCode, cohort, count: out.length, students: out }, 200, cors);
       }
 
+      // Admin backup:  GET /admin-backup  |  PUT /admin-backup
+      if (url.pathname === '/admin-backup') {
+        const cohort = cohortForTeacherToken(bearer(request), cohorts);
+        if (!cohort) return json({ error: 'unauthorized' }, 401, cors);
+        const key = `admin-backup:${cohort}`;
+
+        if (request.method === 'GET') {
+          const rec = await env.SYNC.get(key, 'json');
+          if (!rec) return new Response(null, { status: 204, headers: cors });
+          return json(rec, 200, cors);
+        }
+
+        if (request.method === 'PUT') {
+          const raw = await request.text();
+          if (raw.length > MAX_ADMIN_BACKUP_BYTES) return json({ error: 'payload too large' }, 413, cors);
+          let body;
+          try { body = JSON.parse(raw); } catch { return json({ error: 'invalid JSON' }, 400, cors); }
+          if (!body.version || !body.data) return json({ error: 'invalid backup format' }, 400, cors);
+          await env.SYNC.put(key, JSON.stringify(body), { expirationTtl: RETENTION_DAYS * 86400 });
+          return json({ ok: true }, 200, cors);
+        }
+      }
+
       // Per-student routes:  /{userId}
       const userMatch = url.pathname.match(/^\/([^/]+)\/?$/);
       if (userMatch) {
@@ -287,6 +311,14 @@ function cohortForWriteToken(token, cohorts) {
   if (!token) return null;
   for (const [code, conf] of Object.entries(cohorts)) {
     if (conf.write && conf.write === token) return code;
+  }
+  return null;
+}
+
+function cohortForTeacherToken(token, cohorts) {
+  if (!token) return null;
+  for (const [code, conf] of Object.entries(cohorts)) {
+    if (conf.teacher && conf.teacher === token) return code;
   }
   return null;
 }
