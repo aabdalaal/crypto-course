@@ -15,7 +15,7 @@
 //                   Covers YouTube thumbnails (optional, nice UX).
 // ============================================================
 
-const VERSION      = 'v6';
+const VERSION      = 'v7';
 const SHELL_CACHE  = `cc-shell-${VERSION}`;
 const CDN_CACHE    = `cc-cdn-${VERSION}`;
 const IMG_CACHE    = `cc-img-${VERSION}`;
