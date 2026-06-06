@@ -11582,14 +11582,14 @@ async function pullSync() {
 // ── ADMIN BACKUP (Option A — local file, Option B — cloud) ──────────────────
 
 const _ADMIN_BACKUP_STORES = [
-  { key: USER_DB_KEY,          field: 'users' },
-  { key: SEMESTER_KEY,         field: 'semesters' },
-  { key: GROUPS_KEY,           field: 'groups' },
-  { key: CUSTOM_BADGES_KEY,    field: 'customBadges' },
-  { key: ANNOUNCE_KEY,         field: 'announcements' },
-  { key: ASSIGN_KEY,           field: 'assignments' },
-  { key: CERT_KEY,             field: 'certs' },
-  { key: CONTENT_REGISTRY_KEY, field: 'contentRegistry' },
+  { key: 'crypto_course_users',            field: 'users' },
+  { key: 'crypto_course_semesters',        field: 'semesters' },
+  { key: 'crypto_course_groups',           field: 'groups' },
+  { key: 'crypto_course_custom_badges',    field: 'customBadges' },
+  { key: 'crypto_course_announcements',    field: 'announcements' },
+  { key: 'crypto_course_assignments',      field: 'assignments' },
+  { key: 'crypto_course_certs',            field: 'certs' },
+  { key: 'crypto_course_content_registry', field: 'contentRegistry' },
 ];
 
 function _collectAdminBackupData({ withXAPI = false, withStudentStates = false } = {}) {
@@ -11598,7 +11598,7 @@ function _collectAdminBackupData({ withXAPI = false, withStudentStates = false }
     try { data[field] = JSON.parse(localStorage.getItem(key) || 'null'); } catch { data[field] = null; }
   }
   if (withXAPI) {
-    try { data.xapi = JSON.parse(localStorage.getItem(XAPI_KEY) || '[]'); } catch { data.xapi = []; }
+    try { data.xapi = JSON.parse(localStorage.getItem('crypto_course_xapi') || '[]'); } catch { data.xapi = []; }
   }
   if (withStudentStates) {
     const users = data.users || [];
@@ -11616,7 +11616,7 @@ function _restoreAdminBackupData(data) {
   for (const { key, field } of _ADMIN_BACKUP_STORES) {
     if (data[field] != null) localStorage.setItem(key, JSON.stringify(data[field]));
   }
-  if (data.xapi)          localStorage.setItem(XAPI_KEY, JSON.stringify(data.xapi));
+  if (data.xapi)          localStorage.setItem('crypto_course_xapi', JSON.stringify(data.xapi));
   if (data.studentStates) {
     for (const [uid, s] of Object.entries(data.studentStates)) {
       localStorage.setItem(STATE_KEY + '_' + uid, JSON.stringify(s));
