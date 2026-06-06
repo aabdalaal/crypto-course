@@ -19935,7 +19935,7 @@ async function refreshStudentsTab() {
   for (const u of merged) {
     if (!localUserIds.has(u.id)) {
       const serverState = await fetchServerStudentState(u.id);
-      _studentStateOverrides[u.id] = { user: u, state: serverState };
+      _studentStateOverrides[u.id] = { user: u, state: { ...serverState, lastSync: u.lastSync || null } };
     }
   }
 
@@ -19967,6 +19967,12 @@ async function refreshStudentsTab() {
     const daysSince = lastTs ? Math.floor((now - lastTs) / 86400000) : null;
     const lastLabel = daysSince === null ? '–' : daysSince === 0 ? 'Today' : daysSince === 1 ? 'Yesterday' : daysSince + 'd ago';
     const atRisk = daysSince !== null && daysSince >= 7;
+    const syncTs = s.lastSync ? new Date(s.lastSync) : null;
+    const syncDays = syncTs ? Math.floor((now - syncTs) / 86400000) : null;
+    const syncLabel = syncTs === null ? 'Never'
+      : syncDays === 0 ? 'Today ' + syncTs.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+      : syncDays === 1 ? 'Yesterday'
+      : syncDays + 'd ago';
     if (atRisk) atRiskCount++;
     const initials = (u.name || '?').split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase();
     const diagLine = s.diagnosticDone && s.diagnosticScore !== null
@@ -19988,6 +19994,7 @@ async function refreshStudentsTab() {
             <span style="font-size:11px;color:var(--text2)">⚗️ ${labsCompleted}</span>
             ${perfectPct !== null ? `<span style="font-size:11px;color:var(--text2)">🎯 ${perfectPct}%</span>` : ''}
             <span style="font-size:11px;color:var(--muted)">🕐 ${lastLabel}</span>
+            <span style="font-size:11px;color:${syncTs ? 'var(--secondary-d)' : 'var(--muted)'}">🔄 ${syncLabel}</span>
           </div>
         </div>
         <div style="display:flex;flex-direction:column;gap:4px;flex-shrink:0">
@@ -20182,7 +20189,7 @@ async function getSemesterGroupStudents(semCode) {
     if (r.ok) {
       const data = await r.json();
       const cleanName = n => (!n || n === 'undefined' || n === 'null') ? '' : n;
-    return (data.students || []).map(s => ({ id: s.userId, name: cleanName(s.name) || s.userId, email: '' }));
+    return (data.students || []).map(s => ({ id: s.userId, name: cleanName(s.name) || s.userId, email: '', lastSync: s.updatedAt || null }));
     }
   } catch(e) {}
   return [];
