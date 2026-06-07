@@ -11796,6 +11796,8 @@ async function triggerSync() {
       body: JSON.stringify(payload),
     }, 8000);
     if (resp.ok) {
+      // Pull any content updates the teacher has published (YouTube URLs, flowcharts, etc.)
+      await pullContentFromServer();
       if (syncEl) syncEl.textContent = 'Synced just now ✓';
       showXPToast(0, 'Sync complete');
     } else {
@@ -15520,24 +15522,32 @@ async function publishContentNow() {
 }
 
 async function pushContentToServer() {
-  try {
-    const registry = localStorage.getItem(CONTENT_REGISTRY_KEY);
-    if (!registry) return;
-    const payload = JSON.stringify({
-      registry,
-      videos_seeded_flag: localStorage.getItem('crypto_course_videos_seeded_v1'),
-      flowcharts_seeded_flag: localStorage.getItem('crypto_course_flowcharts_seeded_v4'),
-      pushed_at: new Date().toISOString(),
-    });
-    await fetch(_serverBase() + '/api/content', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: payload });
-  } catch(e) { /* offline or local file — silently skip */ }
+  const base = getSyncEndpoint();
+  const tt = localStorage.getItem('crypto_course_teacher_token');
+  if (!base || !tt) throw new Error('No sync server or teacher token configured');
+  const registry = localStorage.getItem(CONTENT_REGISTRY_KEY);
+  if (!registry) throw new Error('No content registry to publish');
+  const payload = JSON.stringify({
+    registry,
+    videos_seeded_flag: localStorage.getItem('crypto_course_videos_seeded_v1'),
+    flowcharts_seeded_flag: localStorage.getItem('crypto_course_flowcharts_seeded_v4'),
+  });
+  const resp = await fetchWithTimeout(base + '/content', {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + tt },
+    body: payload,
+  }, 10000);
+  if (!resp.ok) throw new Error('Server returned ' + resp.status);
 }
 
 async function pullContentFromServer() {
-  // Only available on local dev server — skip on GitHub Pages and other static hosts
-  if (!window.location.hostname.match(/^(localhost|127\.|0\.0\.0\.0)/)) return false;
+  const base = getSyncEndpoint();
+  const wt = localStorage.getItem('crypto_course_write_token');
+  if (!base || !wt) return false;
   try {
-    const res = await fetch(_serverBase() + '/api/content');
+    const res = await fetchWithTimeout(base + '/content', {
+      headers: { 'Authorization': 'Bearer ' + wt },
+    }, 8000);
     if (res.status === 204) return false; // nothing published yet
     if (!res.ok) return false;
     const payload = await res.json();

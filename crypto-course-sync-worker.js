@@ -25,6 +25,7 @@
 
 const MAX_BODY_BYTES        = 16 * 1024;   // reject oversized student payloads
 const MAX_ADMIN_BACKUP_BYTES = 512 * 1024; // admin backup can be larger
+const MAX_CONTENT_BYTES     = 1024 * 1024; // content registry (videos, flowcharts, modules)
 const RETENTION_DAYS = 180;                // KV TTL for student records
 
 /* ---- PR13 allowlist: server-side minimisation (defensive) ---- */
@@ -291,6 +292,30 @@ export default {
           if (!body.version || !body.data) return json({ error: 'invalid backup format' }, 400, cors);
           await env.SYNC.put(key, JSON.stringify(body), { expirationTtl: RETENTION_DAYS * 86400 });
           return json({ ok: true }, 200, cors);
+        }
+      }
+
+      // Content registry:  GET /content  |  PUT /content
+      // PUT — teacher pushes updated module content (videos, flowcharts, custom modules)
+      // GET — student pulls on sync; returns the cohort's published content
+      if (url.pathname === '/content') {
+        if (request.method === 'PUT') {
+          const cohort = cohortForTeacherToken(bearer(request), cohorts);
+          if (!cohort) return json({ error: 'unauthorized' }, 401, cors);
+          const raw = await request.text();
+          if (raw.length > MAX_CONTENT_BYTES) return json({ error: 'payload too large' }, 413, cors);
+          let body;
+          try { body = JSON.parse(raw); } catch { return json({ error: 'invalid JSON' }, 400, cors); }
+          await env.SYNC.put(`content:${cohort}`, JSON.stringify({ ...body, pushed_at: new Date().toISOString() }),
+            { expirationTtl: RETENTION_DAYS * 86400 });
+          return json({ ok: true }, 200, cors);
+        }
+        if (request.method === 'GET') {
+          const cohort = cohortForWriteToken(bearer(request), cohorts);
+          if (!cohort) return json({ error: 'unauthorized' }, 401, cors);
+          const rec = await env.SYNC.get(`content:${cohort}`, 'json');
+          if (!rec) return new Response(null, { status: 204, headers: cors });
+          return json(rec, 200, cors);
         }
       }
 
