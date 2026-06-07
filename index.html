@@ -12554,7 +12554,7 @@ function showEditUserModal(userId) {
       </div>
 
       <div style="margin-bottom:14px">
-        <label class="lab-label">Email${isServerOnly ? ' <span style="font-weight:500;text-transform:none">(optional for server students)</span>' : ''}</label>
+        <label class="lab-label">Email</label>
         <input id="eu-email" class="lab-input" type="email" value="${_escHtml(u.email || '')}" placeholder="email@example.com">
       </div>
 
@@ -12580,9 +12580,9 @@ function showEditUserModal(userId) {
       <button class="btn btn-primary" onclick="saveEditUser('${userId}')">Save Changes</button>
       <button class="btn btn-ghost" onclick="document.getElementById('edit-user-overlay').remove()" style="margin-top:8px;width:100%">Cancel</button>
 
-      ${!isServerOnly ? `<div style="margin-top:20px;padding-top:16px;border-top:1px solid var(--border)">
-        <button onclick="confirmDeleteUser('${userId}')" style="background:none;border:none;color:var(--danger);font-size:13px;font-weight:700;cursor:pointer;font-family:var(--font);padding:0">🗑 Delete this user account</button>
-      </div>` : ''}
+      <div style="margin-top:20px;padding-top:16px;border-top:1px solid var(--border)">
+        <button onclick="confirmDeleteUser('${userId}')" style="background:none;border:none;color:var(--danger);font-size:13px;font-weight:700;cursor:pointer;font-family:var(--font);padding:0">🗑 Delete this account</button>
+      </div>
     </div>`;
   document.body.appendChild(ov);
 }
@@ -12642,14 +12642,38 @@ async function saveEditUser(userId) {
   renderAdmin('dashboard');
 }
 
-function confirmDeleteUser(userId) {
+async function confirmDeleteUser(userId) {
   const users = loadUsers();
-  const u = users.find(x => x.id === userId);
+  const localU = users.find(x => x.id === userId);
+  const serverU = _studentStateOverrides[userId]?.user;
+  const u = localU || serverU;
   if (!u) return;
-  if (!confirm(`Delete "${u.name}" (${u.email})?\n\nThis cannot be undone. Their assignments and progress data will remain but the account will be removed.`)) return;
-  saveUsers(users.filter(x => x.id !== userId));
-  document.getElementById('edit-user-overlay').remove();
-  renderAdmin('dashboard');
+  const label = u.name && u.name !== 'Student' ? `"${u.name}"` : u.email ? `"${u.email}"` : `"${userId}"`;
+  if (!confirm(`Delete ${label}?\n\nThis removes the account from the server and this device. Their progress data will be deleted and cannot be recovered.`)) return;
+
+  // Remove from server KV
+  const base = getSyncEndpoint();
+  const tt = localStorage.getItem('crypto_course_teacher_token');
+  if (base && tt) {
+    try {
+      await fetchWithTimeout(`${base}/student/${encodeURIComponent(userId)}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': 'Bearer ' + tt },
+      }, 8000);
+    } catch(e) {}
+  }
+
+  // Remove locally
+  if (localU) saveUsers(users.filter(x => x.id !== userId));
+  delete _studentStateOverrides[userId];
+
+  document.getElementById('edit-user-overlay')?.remove();
+  if (!localU) {
+    showToast('Account deleted');
+    refreshStudentsTab();
+  } else {
+    renderAdmin('dashboard');
+  }
 }
 
 // ============================================================
