@@ -339,7 +339,9 @@ export default {
           let body;
           try { body = JSON.parse(raw); } catch { return json({ error: 'invalid JSON' }, 400, cors); }
           const clean = sanitise(body);                 // strip anything not on the allowlist
-          await env.SYNC.put(key, JSON.stringify({ payload: clean, updatedAt: new Date().toISOString() }),
+          // Merge with existing record to preserve name/role/emailVerified set by /register
+          const existing = (await env.SYNC.get(key, 'json')) || {};
+          await env.SYNC.put(key, JSON.stringify({ ...existing, payload: clean, updatedAt: new Date().toISOString() }),
             { expirationTtl: RETENTION_DAYS * 86400 });
           return json({ ok: true }, 200, cors);
         }

@@ -19678,7 +19678,7 @@ async function toggleSemesterStudents(semId, code) {
           const serverState = { xp: p.xpDelta ?? 0, streak: p.streak ?? 0, badges: p.badgeTimestamps ?? [], labsCompleted: p.labCompletions?.count ?? 0, moduleProgress: p.quizOutcomes?.moduleProgress ?? {}, quizzesCompleted: p.quizOutcomes?.quizzesCompleted ?? 0, perfectQuizzes: p.quizOutcomes?.perfectQuizzes ?? 0, lessonsCompleted: p.quizOutcomes?.lessonsCompleted ?? 0, diagnosticDone: p.quizOutcomes?.diagnosticDone ?? false, diagnosticScore: p.quizOutcomes?.diagnosticScore ?? null };
           const cleanName = n => (!n || n === 'undefined' || n === 'null') ? '' : n;
           // Prefer local name if user exists locally (avoids "Nabil" vs "Nabil2" split)
-          const name = localRecord?.name || cleanName(s.name) || s.userId;
+          const name = localRecord?.name || cleanName(s.name) || 'Student';
           _studentStateOverrides[s.userId] = { user: { id: s.userId, name, email: localRecord?.email || '' }, state: serverState };
           merged.push({ id: s.userId, name, email: localRecord?.email || '', xp: serverState.xp, modsCompleted: Object.values(serverState.moduleProgress).filter(v => v >= 1).length, pending: s.emailVerified === false, suspended: s.suspended === true, isLocal: false });
         });
