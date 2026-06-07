@@ -2017,7 +2017,7 @@ body.high-contrast {
               </div>
             </div>
             <!-- Sync configuration -->
-            <div style="margin-top:14px;border-top:1px solid var(--border);padding-top:14px">
+            <div id="sync-config-block" style="margin-top:14px;border-top:1px solid var(--border);padding-top:14px">
               <div style="font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:10px">Sync Configuration</div>
               <div style="margin-bottom:8px">
                 <label style="font-size:11px;font-weight:700;color:var(--text2);display:block;margin-bottom:4px">Server URL</label>
@@ -11178,6 +11178,8 @@ function renderProfile() {
   if (wtEl)  wtEl.value  = localStorage.getItem('crypto_course_write_token') || '';
   if (ttEl)  ttEl.value  = localStorage.getItem('crypto_course_teacher_token') || '';
   if (trEl)  trEl.style.display = canAccess(ROLES.TEACHER) ? '' : 'none';
+  const syncCfgBlock = document.getElementById('sync-config-block');
+  if (syncCfgBlock) syncCfgBlock.style.display = canAccess(ROLES.TEACHER) ? '' : 'none';
 
   const isStudent = currentUser?.role === ROLES.STUDENT;
 
