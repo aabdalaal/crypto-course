@@ -11814,7 +11814,7 @@ function pushRegistration() {
   fetchWithTimeout(`${base}/register/${encodeURIComponent(userId)}`, {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + wt },
-    body: JSON.stringify({ name: currentUser.name || '', role: currentUser.role || 'student', emailVerified: false }),
+    body: JSON.stringify({ name: currentUser.name || '', role: currentUser.role || 'student', emailVerified: currentUser.emailVerified ?? true }),
   }, 6000).catch(() => {});
 }
 
@@ -13162,7 +13162,7 @@ async function doLogin() {
         } catch(e) {}
       }
     }
-    if (!verified) { showPendingApprovalScreen(); return; }
+    if (!verified) { showVerificationScreen(); return; }
   }
   enterApp();
   pushRegistration();
@@ -13191,7 +13191,7 @@ async function doRegister() {
     if (joinCode) {
       sessionStorage.removeItem('_invite_join');
       await joinSemesterWithCode(joinCode.toUpperCase(), null);
-      if (state.semesterId) return; // enrolled — pending screen shown by enrollInSemester
+      if (state.semesterId) return; // enrolled — enterApp() called inside joinSemesterWithCode
     }
     showEnrollSemesterSheet(true);
   } else {
@@ -13203,9 +13203,142 @@ function onSkipSemesterEnrollment() {
   document.getElementById('enroll-sem-overlay')?.remove();
   const me = loadUsers().find(u => u.id === currentUser?.sub);
   if (currentUser?.role === ROLES.STUDENT && me && !me.emailVerified) {
-    showPendingApprovalScreen();
+    showVerificationScreen();
   }
 }
+
+// ── EMAIL VERIFICATION ────────────────────────────────────────────────────────
+
+function maskEmail(email) {
+  const at = email.indexOf('@');
+  if (at < 0) return email;
+  const user = email.slice(0, at);
+  const visible = Math.min(3, user.length);
+  return user.slice(0, visible) + '***' + email.slice(at);
+}
+
+function showVerificationScreen() {
+  document.getElementById('auth-screen')?.remove();
+  document.getElementById('pending-approval-screen')?.remove();
+  let el = document.getElementById('verify-screen');
+  if (el) { el.style.display = 'flex'; return; }
+  el = document.createElement('div');
+  el.id = 'verify-screen';
+  el.style.cssText = 'position:fixed;inset:0;background:var(--bg);z-index:900;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px;overflow-y:auto';
+  const masked = maskEmail(currentUser?.email || '');
+  el.innerHTML = `
+    <div style="max-width:340px;width:100%;text-align:center">
+      <div style="font-size:52px;margin-bottom:16px">📧</div>
+      <div style="font-size:22px;font-weight:800;color:var(--text);margin-bottom:8px">Check your email</div>
+      <div style="font-size:14px;color:var(--muted);line-height:1.6;margin-bottom:24px">
+        We sent a 6-digit code to<br>
+        <strong style="color:var(--text);font-family:var(--mono)">${_escHtml(masked)}</strong>
+      </div>
+      <input id="verify-code-input" type="text" inputmode="numeric" maxlength="6" autocomplete="one-time-code"
+        placeholder="000000"
+        style="width:100%;text-align:center;letter-spacing:10px;font-size:32px;font-weight:800;padding:16px;border:2px solid var(--border);border-radius:12px;box-sizing:border-box;font-family:var(--mono);background:var(--surface);color:var(--text);outline:none"
+        oninput="this.value=this.value.replace(/[^0-9]/g,'');if(this.value.length===6)checkVerificationCode()">
+      <div id="verify-error" style="color:var(--danger);font-size:13px;margin:10px 0;min-height:18px"></div>
+      <button onclick="checkVerificationCode()"
+        style="width:100%;padding:14px;background:var(--primary);color:white;border:none;border-radius:12px;font-size:15px;font-weight:800;font-family:var(--font);cursor:pointer;margin-bottom:12px">
+        Verify →
+      </button>
+      <button id="verify-resend-btn" onclick="resendVerificationCode()"
+        style="background:none;border:none;color:var(--primary);font-size:13px;font-weight:700;cursor:pointer;font-family:var(--font)">
+        Resend code
+      </button>
+      <div style="margin-top:28px;border-top:1px solid var(--border);padding-top:20px">
+        <button onclick="authLogout()"
+          style="background:none;border:none;color:var(--muted);font-size:12px;cursor:pointer;font-family:var(--font);text-decoration:underline">
+          Use a different account
+        </button>
+      </div>
+    </div>`;
+  document.body.appendChild(el);
+  sendVerificationCode();
+  setTimeout(() => document.getElementById('verify-code-input')?.focus(), 300);
+}
+
+async function sendVerificationCode() {
+  const base = getSyncEndpoint();
+  const wt   = localStorage.getItem('crypto_course_write_token');
+  const errEl = document.getElementById('verify-error');
+  if (!base || !wt) {
+    if (errEl) errEl.textContent = 'Join a class first so we know where to send your code.';
+    return false;
+  }
+  try {
+    const resp = await fetchWithTimeout(`${base}/verify/send`, {
+      method: 'POST',
+      headers: { 'Authorization': 'Bearer ' + wt, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ userId: currentUser?.sub, email: currentUser?.email, name: currentUser?.name }),
+    }, 10000);
+    if (!resp.ok) {
+      if (errEl) errEl.textContent = 'Could not send verification code. Try again.';
+      return false;
+    }
+    return true;
+  } catch(e) {
+    if (errEl) errEl.textContent = 'No internet connection — connect and tap Resend.';
+    return false;
+  }
+}
+
+let _verifyResendCooldown = 0;
+function resendVerificationCode() {
+  if (_verifyResendCooldown > 0) return;
+  const errEl = document.getElementById('verify-error');
+  if (errEl) errEl.textContent = '';
+  sendVerificationCode().then(ok => {
+    if (!ok) return;
+    _verifyResendCooldown = 60;
+    const btn = document.getElementById('verify-resend-btn');
+    const tick = setInterval(() => {
+      _verifyResendCooldown--;
+      if (btn) btn.textContent = _verifyResendCooldown > 0 ? `Resend code (${_verifyResendCooldown}s)` : 'Resend code';
+      if (_verifyResendCooldown <= 0) clearInterval(tick);
+    }, 1000);
+  });
+}
+
+async function checkVerificationCode() {
+  const codeEl = document.getElementById('verify-code-input');
+  const errEl  = document.getElementById('verify-error');
+  const code   = (codeEl?.value || '').trim();
+  if (code.length !== 6) {
+    if (errEl) errEl.textContent = 'Please enter the full 6-digit code.';
+    return;
+  }
+  const base = getSyncEndpoint();
+  if (!base) { if (errEl) errEl.textContent = 'Sync server not configured.'; return; }
+  if (errEl) errEl.textContent = '';
+  try {
+    const resp = await fetchWithTimeout(`${base}/verify/check`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ userId: currentUser?.sub, code }),
+    }, 8000);
+    const data = await resp.json().catch(() => ({}));
+    if (!resp.ok) {
+      if (errEl) errEl.textContent =
+        data.error === 'code expired' ? 'Code has expired — tap Resend to get a new one.' :
+        data.attemptsLeft != null    ? `Incorrect code. ${data.attemptsLeft} attempt${data.attemptsLeft !== 1 ? 's' : ''} remaining.` :
+        data.error || 'Incorrect code.';
+      return;
+    }
+    // Mark verified locally
+    const users = loadUsers();
+    const idx = users.findIndex(u => u.id === currentUser?.sub);
+    if (idx >= 0) { users[idx].emailVerified = true; saveUsers(users); }
+    document.getElementById('verify-screen')?.remove();
+    showToast('✓ Email verified — welcome!');
+    enterApp();
+  } catch(e) {
+    if (errEl) errEl.textContent = 'No internet connection — check connection and try again.';
+  }
+}
+
+// ── END EMAIL VERIFICATION ────────────────────────────────────────────────────
 
 function showPendingApprovalScreen() {
   document.getElementById('auth-screen')?.remove();
@@ -19671,7 +19804,7 @@ function enrollInSemester(semId) {
   const _me = loadUsers().find(u => u.id === currentUser?.sub);
   if (currentUser?.role === ROLES.STUDENT && _me && !_me.emailVerified) {
     pushRegistration();
-    showPendingApprovalScreen();
+    showVerificationScreen();
     return;
   }
 }

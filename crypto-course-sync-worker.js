@@ -215,6 +215,62 @@ export default {
         return json({ semCode, cohort, count: out.length, students: out }, 200, cors);
       }
 
+      // ── Email verification ──────────────────────────────────────────────────
+      //   POST /verify/send   — generate code, store in KV, email to student
+      //   POST /verify/check  — validate code, mark student emailVerified
+      // ───────────────────────────────────────────────────────────────────────
+
+      if (url.pathname === '/verify/send' && request.method === 'POST') {
+        const cohort = cohortForWriteToken(bearer(request), cohorts);
+        if (!cohort) return json({ error: 'unauthorized' }, 401, cors);
+        const raw = await request.text();
+        if (raw.length > 512) return json({ error: 'payload too large' }, 413, cors);
+        let body;
+        try { body = JSON.parse(raw); } catch { return json({ error: 'invalid JSON' }, 400, cors); }
+        const { userId, email, name } = body;
+        if (!userId || !email) return json({ error: 'missing userId or email' }, 400, cors);
+        const code = String(Math.floor(100000 + Math.random() * 900000));
+        await env.SYNC.put(`verify:${userId}`, JSON.stringify({
+          code, email, name: String(name || ''), attempts: 0,
+          expiresAt: new Date(Date.now() + 86400000).toISOString(),
+        }), { expirationTtl: 86400 });
+        await sendVerificationEmail(env, email, name || 'Student', code);
+        return json({ ok: true }, 200, cors);
+      }
+
+      if (url.pathname === '/verify/check' && request.method === 'POST') {
+        const raw = await request.text();
+        let body;
+        try { body = JSON.parse(raw); } catch { return json({ error: 'invalid JSON' }, 400, cors); }
+        const { userId, code } = body;
+        if (!userId || !code) return json({ error: 'missing fields' }, 400, cors);
+        const key = `verify:${userId}`;
+        const rec = await env.SYNC.get(key, 'json');
+        if (!rec) return json({ error: 'no pending verification — request a new code' }, 404, cors);
+        if (new Date(rec.expiresAt) < new Date()) {
+          await env.SYNC.delete(key);
+          return json({ error: 'code expired' }, 410, cors);
+        }
+        if (rec.attempts >= 5) return json({ error: 'too many attempts — request a new code' }, 429, cors);
+        if (rec.code !== String(code).trim()) {
+          rec.attempts++;
+          await env.SYNC.put(key, JSON.stringify(rec), { expirationTtl: 86400 });
+          return json({ error: 'invalid code', attemptsLeft: 5 - rec.attempts }, 400, cors);
+        }
+        await env.SYNC.delete(key);
+        // Mark student as verified in their KV record
+        const list = await env.SYNC.list({ prefix: 'student:' });
+        for (const k of list.keys) {
+          if (k.name.endsWith(':' + userId)) {
+            const sr = (await env.SYNC.get(k.name, 'json')) || {};
+            sr.emailVerified = true;
+            await env.SYNC.put(k.name, JSON.stringify(sr), { expirationTtl: RETENTION_DAYS * 86400 });
+            break;
+          }
+        }
+        return json({ ok: true }, 200, cors);
+      }
+
       // Admin backup:  GET /admin-backup  |  PUT /admin-backup
       if (url.pathname === '/admin-backup') {
         const cohort = cohortForTeacherToken(bearer(request), cohorts);
@@ -278,7 +334,7 @@ function corsHeaders(origin, env) {
   const allow = allowed.includes(origin) ? origin : (allowed[0] || '*');
   return {
     'Access-Control-Allow-Origin': allow,
-    'Access-Control-Allow-Methods': 'GET, PUT, DELETE, OPTIONS',
+    'Access-Control-Allow-Methods': 'GET, PUT, POST, DELETE, OPTIONS',
     'Access-Control-Allow-Headers': 'Authorization, Content-Type',
     'Access-Control-Max-Age': '86400',
     'Vary': 'Origin',
@@ -313,6 +369,21 @@ function cohortForWriteToken(token, cohorts) {
     if (conf.write && conf.write === token) return code;
   }
   return null;
+}
+
+async function sendVerificationEmail(env, email, name, code) {
+  if (!env.RESEND_API_KEY) return; // skip silently if not configured
+  const from = env.FROM_EMAIL || 'CryptoCourse <onboarding@resend.dev>';
+  await fetch('https://api.resend.com/emails', {
+    method: 'POST',
+    headers: { 'Authorization': `Bearer ${env.RESEND_API_KEY}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      from,
+      to: [email],
+      subject: 'Your CryptoCourse verification code',
+      text: `Hi ${name},\n\nYour CryptoCourse verification code is:\n\n    ${code}\n\nEnter this code in the app. It expires in 24 hours.\n\nIf you did not sign up for CryptoCourse, you can safely ignore this email.`,
+    }),
+  }).catch(() => {}); // fire-and-forget; don't fail the route if email fails
 }
 
 function cohortForTeacherToken(token, cohorts) {
