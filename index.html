@@ -11818,7 +11818,7 @@ function pushRegistration() {
   fetchWithTimeout(`${base}/register/${encodeURIComponent(userId)}`, {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + wt },
-    body: JSON.stringify({ name: currentUser.name || '', role: currentUser.role || 'student', emailVerified: currentUser.emailVerified ?? true }),
+    body: JSON.stringify({ name: currentUser.name || '', email: currentUser.email || '', role: currentUser.role || 'student', emailVerified: currentUser.emailVerified ?? true }),
   }, 6000).catch(() => {});
 }
 
@@ -20196,15 +20196,16 @@ function _renderStudentRows() {
     const noteDot = note ? '<span style="font-size:10px;background:var(--accent-l);color:var(--accent-d);padding:1px 5px;border-radius:100px">📝</span>' : '';
     const diagLine = s.diagnosticDone && s.diagnosticScore !== null
       ? `<span style="font-size:10px;font-weight:700;background:var(--primary-l);color:var(--primary);padding:1px 6px;border-radius:100px">🔬 ${s.diagnosticScore}%</span>` : '';
-    const initials     = (u.name || '?').split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase();
-    const escapedName  = _escHtml(u.name || u.id).replace(/'/g, '\\\'');
+    const displayName  = u.name || 'Student';
+    const initials     = displayName.split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase();
+    const escapedName  = _escHtml(displayName).replace(/'/g, '\\\'');
 
     return `
       <div style="display:flex;align-items:flex-start;gap:10px;padding:12px 0;border-bottom:1px solid var(--border)">
         <div style="width:36px;height:36px;border-radius:50%;background:${atRisk ? 'var(--danger-l)' : 'var(--primary-l)'};display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;color:${atRisk ? 'var(--danger)' : 'var(--primary)'};flex-shrink:0;margin-top:2px">${initials}</div>
         <div style="flex:1;min-width:0">
           <div style="display:flex;align-items:center;gap:5px;margin-bottom:1px;flex-wrap:wrap">
-            <div style="font-size:13px;font-weight:800;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${_escHtml(u.name || u.id)}</div>
+            <div style="font-size:13px;font-weight:800;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${_escHtml(displayName)}</div>
             ${diagLine}${noteDot}
             ${atRisk ? '<span style="font-size:10px;font-weight:700;background:var(--danger-l);color:var(--danger);padding:1px 6px;border-radius:100px;flex-shrink:0">⚠ Inactive</span>' : ''}
           </div>
@@ -20471,7 +20472,7 @@ async function getSemesterGroupStudents(semCode) {
     if (r.ok) {
       const data = await r.json();
       const cleanName = n => (!n || n === 'undefined' || n === 'null') ? '' : n;
-    return (data.students || []).map(s => ({ id: s.userId, name: cleanName(s.name) || s.userId, email: '', lastSync: s.updatedAt || null }));
+    return (data.students || []).map(s => ({ id: s.userId, name: cleanName(s.name) || 'Student', email: cleanName(s.email) || '', lastSync: s.updatedAt || null }));
     }
   } catch(e) {}
   return [];

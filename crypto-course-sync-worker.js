@@ -61,7 +61,7 @@ export default {
         const out = [];
         for (const k of list.keys) {
           const rec = await env.SYNC.get(k.name, 'json');
-          if (rec) out.push({ userId: k.name.split(':').slice(2).join(':'), name: rec.name || '', role: rec.role || 'student', emailVerified: rec.emailVerified || false, registeredAt: rec.registeredAt || null, updatedAt: rec.updatedAt || null, payload: rec.payload || null });
+          if (rec) out.push({ userId: k.name.split(':').slice(2).join(':'), name: rec.name || '', email: rec.email || '', role: rec.role || 'student', emailVerified: rec.emailVerified || false, registeredAt: rec.registeredAt || null, updatedAt: rec.updatedAt || null, payload: rec.payload || null });
         }
         return json({ cohort: code, count: out.length, students: out }, 200, cors);
       }
@@ -140,8 +140,9 @@ export default {
         const existing = (await env.SYNC.get(key, 'json')) || {};
         const updated = {
           ...existing,
-          name: String(body.name || '').substring(0, 100),
-          role: String(body.role || 'student'),
+          name:  String(body.name  || '').substring(0, 100),
+          email: String(body.email || '').substring(0, 200),
+          role:  String(body.role  || 'student'),
           registeredAt: existing.registeredAt || new Date().toISOString(),
         };
         await env.SYNC.put(key, JSON.stringify(updated), { expirationTtl: RETENTION_DAYS * 86400 });
@@ -211,7 +212,7 @@ export default {
         const out = [];
         for (const k of list.keys) {
           const rec = await env.SYNC.get(k.name, 'json');
-          if (rec) out.push({ userId: k.name.split(':').slice(2).join(':'), name: rec.name || '', role: rec.role || 'student', emailVerified: rec.emailVerified || false, suspended: rec.suspended || false, registeredAt: rec.registeredAt || null, updatedAt: rec.updatedAt || null, payload: rec.payload || null });
+          if (rec) out.push({ userId: k.name.split(':').slice(2).join(':'), name: rec.name || '', email: rec.email || '', role: rec.role || 'student', emailVerified: rec.emailVerified || false, suspended: rec.suspended || false, registeredAt: rec.registeredAt || null, updatedAt: rec.updatedAt || null, payload: rec.payload || null });
         }
         return json({ semCode, cohort, count: out.length, students: out }, 200, cors);
       }
