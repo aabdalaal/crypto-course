@@ -13358,8 +13358,10 @@ async function checkVerificationCode() {
     const users = loadUsers();
     const idx = users.findIndex(u => u.id === currentUser?.sub);
     if (idx >= 0) { users[idx].emailVerified = true; saveUsers(users); }
+    if (currentUser) currentUser.emailVerified = true; // keep in-memory token in sync
     document.getElementById('verify-screen')?.remove();
     showToast('✓ Email verified — welcome!');
+    pushRegistration(); // push name + email to KV now that write token is available
     enterApp();
   } catch(e) {
     if (errEl) errEl.textContent = 'No internet connection — check connection and try again.';
