@@ -2208,11 +2208,19 @@ function userStateKey() {
   return (currentUser && currentUser.sub) ? STATE_KEY + '_' + currentUser.sub : STATE_KEY;
 }
 
+let _quotaWarned = false;
 function saveState() {
   try {
     localStorage.setItem(userStateKey(), JSON.stringify(state));
     if (state.leaderboardOptIn) updateLeaderboardEntry();
-  } catch(e) {}
+  } catch(e) {
+    // QuotaExceededError (or similar): progress can no longer be saved locally.
+    // Warn the learner once so silent data loss is visible.
+    if (!_quotaWarned && (e.name === 'QuotaExceededError' || /quota/i.test(e.message || ''))) {
+      _quotaWarned = true;
+      try { showToast('⚠️ Storage full — your progress may not be saved. Free up space or contact your teacher.'); } catch(_) {}
+    }
+  }
 }
 
 function loadUserState() {
@@ -2221,8 +2229,19 @@ function loadUserState() {
     if (s) return JSON.parse(s);
     // Migration: only carry over legacy shared state for students —
     // teachers/admins have no course progress to migrate and must not
-    // inherit a previous student's data.
-    if (currentUser?.role === ROLES.STUDENT) return loadState();
+    // inherit a previous student's data. After migrating, the legacy key is
+    // copied to this user's namespaced key and REMOVED, so the next student
+    // on a shared device starts clean instead of inheriting prior progress.
+    if (currentUser?.role === ROLES.STUDENT) {
+      const legacy = loadState();
+      if (legacy) {
+        try {
+          localStorage.setItem(userStateKey(), JSON.stringify(legacy));
+          localStorage.removeItem(STATE_KEY);
+        } catch(e) {}
+      }
+      return legacy;
+    }
     return null;
   } catch(e) { return null; }
 }
@@ -5759,6 +5778,7 @@ const defaultState = {
   language: 'en', highContrast: false, textSize: 'default', reduceAnim: false,
   lastSync: new Date().toISOString(),
   quizAttempts: {}, currentLesson: { moduleId: 0, stage: 1 },
+  lastLoginDate: null,
   lastChallengeDate: null, lastMCQDate: null, diagnosticDone: false, diagDismissed: false, diagnosticScore: null, bypassedModules: [], leaderboardOptIn: false,
   readAnnouncements: [], semesterId: null,
   spacedRevisits: {}, // ── Phase 3: { moduleId: { completedAt, nextRevisit7, nextRevisit14, revisitsDone } }
@@ -11061,6 +11081,7 @@ function renderProfile() {
   const completionWrap = document.getElementById('profile-completion-wrap');
   const completionBar = document.getElementById('profile-completion-bar');
   const completionLabel = document.getElementById('profile-completion-label');
+  const levelChip = document.getElementById('profile-level-chip'); // may be null; guarded below
 
   if (currentUser?.role !== ROLES.ADMIN) {
     const lv = getLevel(state.xp);
@@ -11108,7 +11129,7 @@ function renderProfile() {
     const users = loadUsers();
     const students = users.filter(u => u.role === ROLES.STUDENT).length;
     const assignments = loadAssignments();
-    levelChip.style.display = 'none';
+    if (levelChip) levelChip.style.display = 'none';
     strip.style.display = '';
     strip.innerHTML = `
       <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;padding:12px 0">
@@ -12948,8 +12969,13 @@ function parseToken(token) {
   try { return JSON.parse(atob(token)); } catch(e) { return null; }
 }
 
-// Seed a default admin account on first run
+// Seed default admin/teacher accounts — DEV ONLY.
+// Enabled only when ?seed=1 is present in the URL (or window.CRYPTO_COURSE_DEV is set).
+// In production these accounts are provisioned via the sync backend, never on the device.
 function seedDefaultAdmin() {
+  const devSeed = window.CRYPTO_COURSE_DEV === true ||
+                  new URLSearchParams(location.search).get('seed') === '1';
+  if (!devSeed) return;
   const users = loadUsers();
   if (!users.find(u => u.role === ROLES.ADMIN)) {
     users.push({ id: 'admin-001', email: 'admin@crypto-course.edu', password: 'admin123', name: 'Admin', role: ROLES.ADMIN });
@@ -13106,15 +13132,14 @@ function showAuthScreen(tab) {
       ${isLogin ? `
         <div style="margin-bottom:14px">
           <label class="form-label">Email</label>
-          <input id="auth-email" type="email" placeholder="you@example.com" value="student@crypto-course.edu" style="width:100%;padding:12px 14px;border:2px solid var(--border);border-radius:10px;font-size:14px;font-family:Outfit,sans-serif;outline:none;box-sizing:border-box">
+          <input id="auth-email" type="email" placeholder="you@example.com" style="width:100%;padding:12px 14px;border:2px solid var(--border);border-radius:10px;font-size:14px;font-family:Outfit,sans-serif;outline:none;box-sizing:border-box">
         </div>
         <div style="margin-bottom:20px">
           <label class="form-label">Password</label>
-          <input id="auth-pass" type="password" placeholder="••••••••" value="student123" style="width:100%;padding:12px 14px;border:2px solid var(--border);border-radius:10px;font-size:14px;font-family:Outfit,sans-serif;outline:none;box-sizing:border-box">
+          <input id="auth-pass" type="password" placeholder="••••••••" style="width:100%;padding:12px 14px;border:2px solid var(--border);border-radius:10px;font-size:14px;font-family:Outfit,sans-serif;outline:none;box-sizing:border-box">
         </div>
         <div id="auth-error" style="color:var(--danger);font-size:13px;margin-bottom:12px;display:none"></div>
         <button onclick="doLogin()" style="width:100%;padding:14px;background:var(--primary);color:white;border:none;border-radius:12px;font-size:15px;font-weight:800;font-family:Outfit,sans-serif;cursor:pointer;margin-bottom:16px">Sign In →</button>
-        <div style="font-size:12px;color:var(--muted);text-align:center">Demo accounts:<br>student@crypto-course.edu / student123<br>teacher@crypto-course.edu / teach123<br>admin@crypto-course.edu / admin123</div>
       ` : `
         <div style="margin-bottom:12px">
           <label class="form-label">Name</label>
@@ -13142,12 +13167,6 @@ function showAuthScreen(tab) {
     </div>
   `;
 
-  // Seed demo student account
-  const users = loadUsers();
-  if (!users.find(u => u.email === 'student@crypto-course.edu')) {
-    users.push({ id: 'student-demo', email: 'student@crypto-course.edu', password: 'student123', name: 'Sara Student', role: ROLES.STUDENT });
-    saveUsers(users);
-  }
 }
 
 async function doLogin() {
@@ -13201,11 +13220,11 @@ async function doRegister() {
   const email = document.getElementById('auth-email').value.trim();
   const pass = document.getElementById('auth-pass').value;
   const semCode = (document.getElementById('auth-sem-code')?.value || '').trim().toUpperCase();
-  if (!name || !email || !pass) {
-    const el = document.getElementById('auth-error');
-    el.textContent = 'Please fill in all required fields'; el.style.display = 'block';
-    return;
-  }
+  const errEl = document.getElementById('auth-error');
+  const showErr = m => { if (errEl) { errEl.textContent = m; errEl.style.display = 'block'; } };
+  if (!name || !email || !pass) { showErr('Please fill in all required fields'); return; }
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { showErr('Please enter a valid email address'); return; }
+  if (pass.length < 8) { showErr('Password must be at least 8 characters'); return; }
   const result = await authRegister(name, email, pass);
   if (result.error) {
     const el = document.getElementById('auth-error');
@@ -13275,7 +13294,14 @@ function showVerificationScreen() {
         style="background:none;border:none;color:var(--primary);font-size:13px;font-weight:700;cursor:pointer;font-family:var(--font)">
         Resend code
       </button>
-      <div style="margin-top:28px;border-top:1px solid var(--border);padding-top:20px">
+      <div style="margin-top:20px;padding-top:18px;border-top:1px solid var(--border)">
+        <div style="font-size:12px;color:var(--muted);margin-bottom:8px">Not enrolled in a class yet?</div>
+        <button onclick="showEnrollSemesterSheet(false)"
+          style="width:100%;padding:12px;background:var(--surface2);color:var(--text);border:2px solid var(--border);border-radius:12px;font-size:14px;font-weight:700;font-family:var(--font);cursor:pointer">
+          Join a Class
+        </button>
+      </div>
+      <div style="margin-top:18px;border-top:1px solid var(--border);padding-top:18px">
         <button onclick="authLogout()"
           style="background:none;border:none;color:var(--muted);font-size:12px;cursor:pointer;font-family:var(--font);text-decoration:underline">
           Use a different account
@@ -13483,6 +13509,21 @@ function seedDefaultFlowcharts() {
   localStorage.setItem(FLAG, '1');
 }
 
+// Daily login streak: +1 if last login was yesterday, reset to 1 if a day was missed,
+// unchanged if already logged in today. Freeze tokens still protect via confirmFreezeToken().
+function updateLoginStreak() {
+  const today = todayDateString();
+  const last = state.lastLoginDate;
+  if (last === today) return;            // already counted today
+  const y = new Date(); y.setDate(y.getDate() - 1);
+  const yStr = y.toISOString().slice(0, 10);
+  if (last === yStr) state.streak = (state.streak || 0) + 1;
+  else if (!last) state.streak = Math.max(state.streak || 0, 1);
+  else state.streak = 1;                 // a day was missed
+  state.lastLoginDate = today;
+  saveState();
+}
+
 async function enterApp() {
   window._sessionStart = Date.now();
 
@@ -13492,6 +13533,7 @@ async function enterApp() {
   // Load this user's personal progress (isolated per userId)
   const userState = loadUserState();
   Object.assign(state, defaultState, userState || {});
+  updateLoginStreak();
   applyUserSettings();
 
   // Pull shared content registry from server (silently skipped if offline/local)
@@ -15526,7 +15568,10 @@ function loadRegistry() {
 function saveRegistry(reg) {
   try { localStorage.setItem(CONTENT_REGISTRY_KEY, JSON.stringify(reg)); }
   catch(e) { console.warn('Registry save failed', e); }
-  if (canAccess(ROLES.TEACHER)) pushContentToServer();
+  // pushContentToServer() rejects when no sync backend/token is configured.
+  // Swallow that here so local-only teacher/admin sessions don't emit
+  // unhandled promise rejections on every registry write.
+  if (canAccess(ROLES.TEACHER)) { pushContentToServer().catch(() => {}); }
 }
 
 function _serverBase() {
