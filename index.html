@@ -11584,7 +11584,7 @@ async function loadCohortPanel() {
         <div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border)">
           <div style="width:32px;height:32px;border-radius:50%;background:${pending ? 'var(--accent-l)' : notSynced ? 'var(--border)' : 'var(--primary-l)'};display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:${pending ? 'var(--accent-d)' : notSynced ? 'var(--muted)' : 'var(--primary)'};flex-shrink:0">${initials}</div>
           <div style="flex:1;min-width:0">
-            <div style="font-size:13px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${displayName} ${pending ? '<span style="font-size:10px;font-weight:700;background:var(--accent-l);color:var(--accent-d);padding:1px 6px;border-radius:100px">Pending</span>' : ''}</div>
+            <div style="font-size:13px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${_escHtml(displayName)} ${pending ? '<span style="font-size:10px;font-weight:700;background:var(--accent-l);color:var(--accent-d);padding:1px 6px;border-radius:100px">Pending</span>' : ''}</div>
             <div style="font-size:11px;color:var(--muted)">${notSynced ? 'Registered · no progress synced yet' : modsDone + '/' + allMods.length + ' modules · ' + syncLabel}</div>
           </div>
           ${pending
@@ -11607,7 +11607,7 @@ function showStudentActionSheet(semId, semCode, studentJson) {
   el.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:600;display:flex;align-items:flex-end;justify-content:center';
   el.innerHTML = `
     <div style="background:var(--bg);border-radius:20px 20px 0 0;padding:24px 20px 40px;width:100%;max-width:500px">
-      <div style="font-size:16px;font-weight:800;margin-bottom:4px">${s.name}</div>
+      <div style="font-size:16px;font-weight:800;margin-bottom:4px">${_escHtml(s.name)}</div>
       <div style="font-size:12px;color:var(--muted);margin-bottom:20px">${s.userId}</div>
       <div style="display:flex;flex-direction:column;gap:8px">
         <button class="btn btn-primary" onclick="document.getElementById('student-action-sheet').remove();showStudentProfile('${s.userId}')">📊 View Full Profile</button>
@@ -12184,8 +12184,8 @@ function showStudentProfile(userId) {
         <div style="display:flex;align-items:center;gap:14px">
           <div style="width:52px;height:52px;border-radius:50%;background:rgba(255,255,255,0.25);display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:800;color:white;flex-shrink:0">${initials}</div>
           <div>
-            <div style="font-size:18px;font-weight:800;color:white">${u.name}</div>
-            <div style="font-size:12px;color:rgba(255,255,255,0.75);margin-top:2px">${u.email}</div>
+            <div style="font-size:18px;font-weight:800;color:white">${_escHtml(u.name)}</div>
+            <div style="font-size:12px;color:rgba(255,255,255,0.75);margin-top:2px">${_escHtml(u.email)}</div>
             <div style="margin-top:6px;display:flex;align-items:center;gap:6px">
               <span style="font-size:10px;font-weight:800;background:rgba(255,255,255,0.2);color:white;padding:2px 8px;border-radius:100px;text-transform:uppercase">${u.role}</span>
               ${atRisk ? `<span style="font-size:10px;font-weight:800;background:#fef2f2;color:var(--danger);padding:2px 8px;border-radius:100px">⚠ Inactive ${daysSince}d</span>` : daysSince === 0 ? `<span style="font-size:10px;font-weight:800;background:rgba(255,255,255,0.2);color:white;padding:2px 8px;border-radius:100px">● Active today</span>` : daysSince !== null ? `<span style="font-size:10px;font-weight:800;background:rgba(255,255,255,0.15);color:rgba(255,255,255,0.8);padding:2px 8px;border-radius:100px">Last seen ${daysSince}d ago</span>` : ''}
@@ -12227,7 +12227,7 @@ function showStudentProfile(userId) {
 
       <!-- Action buttons -->
       <div style="display:flex;gap:8px;padding:12px 16px;border-bottom:1px solid var(--border)">
-        <button onclick="assignToStudent('${userId}','${u.name.replace(/'/g,"&apos;")}');document.getElementById('student-profile-overlay').remove();" class="btn btn-sm btn-primary" style="flex:1;width:auto">➕ Assign Module</button>
+        <button onclick="assignToStudent('${userId}','${_escAttrJs(u.name)}');document.getElementById('student-profile-overlay').remove();" class="btn btn-sm btn-primary" style="flex:1;width:auto">➕ Assign Module</button>
         <button onclick="document.getElementById('student-profile-overlay').remove();showEditUserModal('${userId}')" class="btn btn-sm" style="flex:1;width:auto;background:var(--bg);border:1px solid var(--border);color:var(--text2)">✏️ Edit Account</button>
       </div>
 
@@ -12272,7 +12272,7 @@ function showEditUserModal(userId) {
         <div style="width:48px;height:48px;border-radius:50%;background:var(--primary-l);display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:800;color:var(--primary);flex-shrink:0">${initials}</div>
         <div>
           <div style="font-size:18px;font-weight:800">Edit User</div>
-          <div style="font-size:12px;color:var(--muted);margin-top:1px">${u.email || u.id}</div>
+          <div style="font-size:12px;color:var(--muted);margin-top:1px">${_escHtml(u.email || u.id)}</div>
         </div>
       </div>
       ${isServerOnly ? `
@@ -12456,7 +12456,7 @@ function showBulkInviteModal() {
         ${activeSems.length === 0
           ? `<div style="padding:10px 12px;background:var(--danger-l);border-radius:var(--radius-xs);font-size:12px;color:var(--danger);font-weight:600">No active semesters with sync token. Create one in Dashboard first.</div>`
           : `<select id="bulk-invite-sem" class="lab-input" style="padding:10px 12px" onchange="previewBulkInvite()">
-               ${activeSems.map(s => `<option value="${s.id}">${s.name} (${s.code})</option>`).join('')}
+               ${activeSems.map(s => `<option value="${s.id}">${_escHtml(s.name)} (${_escHtml(s.code)})</option>`).join('')}
              </select>`}
       </div>
 
@@ -12531,7 +12531,7 @@ function previewBulkInvite() {
             <div style="width:28px;height:28px;border-radius:50%;background:${isDupe?'var(--surface2)':'var(--primary-l)'};display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:${isDupe?'var(--muted)':'var(--primary)'};flex-shrink:0">${p.name[0].toUpperCase()}</div>
             <div style="flex:1;min-width:0">
               <div style="font-size:13px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${p.name}</div>
-              <div style="font-size:11px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${p.email}</div>
+              <div style="font-size:11px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${_escHtml(p.email)}</div>
             </div>
             <span style="font-size:10px;font-weight:700;color:${isDupe?'var(--muted)':'var(--secondary-d)'}">${isDupe?'exists':'new'}</span>
           </div>`;
@@ -12618,7 +12618,7 @@ function showBulkInviteResults(results) {
               <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
                 <div>
                   <div style="font-size:13px;font-weight:800">${r.name}</div>
-                  <div style="font-size:11px;color:var(--muted)">${r.email} · Temp: <span style="font-family:var(--mono);color:var(--primary);font-weight:700">${r.tempPass}</span></div>
+                  <div style="font-size:11px;color:var(--muted)">${_escHtml(r.email)} · Temp: <span style="font-family:var(--mono);color:var(--primary);font-weight:700">${r.tempPass}</span></div>
                 </div>
                 <button onclick="copyRowCredentials(${i})" title="Copy credentials" style="background:var(--bg);border:1px solid var(--border);border-radius:6px;cursor:pointer;font-size:12px;padding:4px 8px;color:var(--text2)">⎘ Copy</button>
               </div>
@@ -13560,7 +13560,7 @@ function renderAtRiskPanel() {
             <div style="display:flex;align-items:center;gap:12px;padding:12px 16px;border-bottom:1px solid var(--border)">
               <div style="width:38px;height:38px;border-radius:50%;background:${topReason.bg};display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;color:${topReason.color};flex-shrink:0">${initials}</div>
               <div style="flex:1;min-width:0">
-                <div style="font-size:13px;font-weight:800;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${u.name}</div>
+                <div style="font-size:13px;font-weight:800;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${_escHtml(u.name)}</div>
                 <div style="display:flex;align-items:center;gap:4px;flex-wrap:wrap;margin-top:3px">
                   ${reasons.map(r => `<span style="font-size:10px;font-weight:800;background:${r.bg};color:${r.color};padding:1px 7px;border-radius:100px">${r.label}</span>`).join('')}
                   <span style="font-size:10px;color:var(--muted)">${modsCompleted}/${allMods.length} modules</span>
@@ -13670,7 +13670,7 @@ function renderAdmin(activeTab, assignFilter) {
                 <div style="display:flex;align-items:flex-start;gap:10px;padding:14px 12px 10px">
                   <div style="flex:1;min-width:0">
                     <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
-                      <div style="font-size:14px;font-weight:800">${sem.name}</div>
+                      <div style="font-size:14px;font-weight:800">${_escHtml(sem.name)}</div>
                       <span class="tag ${tagCls}" style="font-size:10px">${st}</span>
                     </div>
                     <div style="font-size:12px;color:var(--muted);margin-bottom:8px">${sem.startDate} → ${sem.endDate}</div>
@@ -13742,7 +13742,7 @@ function renderAdmin(activeTab, assignFilter) {
                       ${a.taskType === 'required' ? `<span class="assign-tag-required">Required</span>` : a.taskType === 'optional' ? `<span class="assign-tag-optional">Optional</span>` : ''}
                     </div>
                     <div style="font-size:12px;color:var(--text2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${mod ? mod.name : 'Unknown Module'}</div>
-                    ${a.note ? `<div style="font-size:11px;color:var(--muted);margin-top:2px;font-style:italic;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">📝 ${a.note}</div>` : ''}
+                    ${a.note ? `<div style="font-size:11px;color:var(--muted);margin-top:2px;font-style:italic;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">📝 ${_escHtml(a.note)}</div>` : ''}
                   </div>
                   <div style="text-align:right;flex-shrink:0">
                     <span class="tag ${isOverdue?'tag-red':a.status==='complete'?'tag-green':daysLeft!==null&&daysLeft<=2?'tag-amber':'tag-blue'}" style="font-size:10px;margin-bottom:4px;display:inline-flex">${isOverdue?'Overdue':a.status==='complete'?'✓ Done':dueLabel}</span>
@@ -14156,7 +14156,7 @@ async function showAssignModal(studentId, studentName) {
       sel.innerHTML = '<option value="">No students found</option>';
     } else {
       sel.innerHTML = allStudents.map(s =>
-        `<option value="${s.id}" data-name="${s.name}" ${s.id === studentId ? 'selected' : ''}>${s.name}${s.email ? ' (' + s.email + ')' : ''}</option>`
+        `<option value="${s.id}" data-name="${_escHtml(s.name)}" ${s.id === studentId ? 'selected' : ''}>${_escHtml(s.name)}${s.email ? ' (' + _escHtml(s.email) + ')' : ''}</option>`
       ).join('');
     }
     if (studentId) sel.value = studentId;
@@ -14289,7 +14289,7 @@ function renderAssignmentBanner() {
               </div>
               <span class="tag ${isOverdue?'tag-red':isUrgent?'tag-amber':'tag-blue'}" style="flex-shrink:0;font-size:11px">${isOverdue?'⚠ Overdue':dueLabel}</span>
             </div>
-            ${a.note ? `<div style="font-size:12px;color:var(--text2);background:${bgColor};border-radius:6px;padding:7px 10px;margin-bottom:8px;line-height:1.4">📝 ${a.note}</div>` : ''}
+            ${a.note ? `<div style="font-size:12px;color:var(--text2);background:${bgColor};border-radius:6px;padding:7px 10px;margin-bottom:8px;line-height:1.4">📝 ${_escHtml(a.note)}</div>` : ''}
             <div style="display:flex;align-items:center;justify-content:space-between">
               <div style="font-size:12px;color:var(--muted)">${dueDateStr ? `📅 ${dueDateStr}` : '📅 No deadline'} · from ${a.assignedBy}</div>
               <div style="font-size:12px;font-weight:700;color:${accentColor}">Start →</div>
@@ -14552,7 +14552,7 @@ function mwAssignmentRow(a) {
           : `<div class="mywork-bar"><div class="mywork-bar-fill" style="width:${prog}%"></div></div>
              <div class="mywork-item-meta" style="margin-top:4px">${prog}% done${dueDateStr ? ' · 📅 ' + dueDateStr : ''}${a.assignedBy ? ' · ' + a.assignedBy : ''}</div>`
         }
-        ${a.note && !isDone ? `<div style="font-size:11px;color:var(--text2);background:var(--surface2);border-radius:6px;padding:5px 8px;margin-top:6px;line-height:1.4">📝 ${a.note}</div>` : ''}
+        ${a.note && !isDone ? `<div style="font-size:11px;color:var(--text2);background:var(--surface2);border-radius:6px;padding:5px 8px;margin-top:6px;line-height:1.4">📝 ${_escHtml(a.note)}</div>` : ''}
         ${hasFeedback ? `<div style="font-size:11px;color:var(--primary);font-weight:700;margin-top:5px">💬 New feedback from ${a.assignedBy || 'teacher'}</div>` : ''}
       </div>
       ${!isDone && dueLabel ? `<span class="tag ${tagClass}" style="font-size:10px;flex-shrink:0;align-self:flex-start;margin-top:2px">${dueLabel}</span>` : ''}
@@ -14919,9 +14919,9 @@ function renderLeaderboard() {
     return `
       <div class="lb-row ${isMe ? 'lb-row-me' : ''}">
         <div class="lb-rank">${rank <= 3 ? medals[rank - 1] : `#${rank}`}</div>
-        <div class="lb-avatar">${(e.displayName[0] || '?').toUpperCase()}</div>
+        <div class="lb-avatar">${_escHtml((e.displayName[0] || '?').toUpperCase())}</div>
         <div class="lb-info">
-          <div class="lb-name">${e.displayName}${isMe ? ' <span class="lb-you-tag">You</span>' : ''}</div>
+          <div class="lb-name">${_escHtml(e.displayName)}${isMe ? ' <span class="lb-you-tag">You</span>' : ''}</div>
           <div class="lb-meta">${e.lessonsCompleted} lesson${e.lessonsCompleted !== 1 ? 's' : ''} · 🔥${e.streak} · ${e.badgeCount} badge${e.badgeCount !== 1 ? 's' : ''}</div>
         </div>
         <div class="lb-xp">${e.xp} XP</div>
@@ -14954,9 +14954,9 @@ function renderLeaderboard() {
   const stickyYouHtml = (myIdx >= COLLAPSE_AT && myEntry)
     ? `<div style="background:var(--primary-l);border:1.5px solid var(--primary);border-radius:var(--radius-sm);padding:12px 16px;display:flex;align-items:center;gap:12px;margin-top:4px" id="lb-you-sticky">
          <div class="lb-rank" style="color:var(--primary)">#${myRank}</div>
-         <div class="lb-avatar" style="background:linear-gradient(135deg,var(--secondary),#059669)">${(myEntry.displayName[0]||'?').toUpperCase()}</div>
+         <div class="lb-avatar" style="background:linear-gradient(135deg,var(--secondary),#059669)">${_escHtml((myEntry.displayName[0]||'?').toUpperCase())}</div>
          <div class="lb-info">
-           <div class="lb-name">${myEntry.displayName} <span class="lb-you-tag">You</span></div>
+           <div class="lb-name">${_escHtml(myEntry.displayName)} <span class="lb-you-tag">You</span></div>
            <div class="lb-meta">${myEntry.xp} XP</div>
          </div>
        </div>`
@@ -15237,7 +15237,7 @@ function showReminderToast(reminders) {
           <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:8px 10px;background:${bg};border-radius:8px;margin-bottom:6px;cursor:pointer" onclick="document.getElementById('reminder-toast').remove();openModule(${a.moduleId})">
             <div style="min-width:0">
               <div style="font-size:13px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${mod?.name || 'Module'}</div>
-              ${a.note ? `<div style="font-size:11px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">📝 ${a.note}</div>` : ''}
+              ${a.note ? `<div style="font-size:11px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">📝 ${_escHtml(a.note)}</div>` : ''}
             </div>
             <span style="font-size:11px;font-weight:800;color:${color};white-space:nowrap;flex-shrink:0">${label}</span>
           </div>`;
@@ -19247,7 +19247,7 @@ function renderSemesterProfile() {
   body.innerHTML = `
     <div style="padding:4px 0 4px">
       <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
-        <div style="font-size:15px;font-weight:800">${sem.name}</div>
+        <div style="font-size:15px;font-weight:800">${_escHtml(sem.name)}</div>
         <span class="tag ${tagCls}">${st}</span>
       </div>
       <div style="font-size:12px;color:var(--muted);margin-bottom:14px">${sem.startDate} → ${sem.endDate}</div>
@@ -19266,7 +19266,7 @@ function renderSemesterHomeInfo() {
 
   const st = getSemesterStatus(sem);
   const color = st === 'active' ? 'var(--secondary-d)' : st === 'upcoming' ? 'var(--primary)' : 'var(--muted)';
-  el.innerHTML = `<div style="text-align:center;padding:8px 0 2px;font-size:12px;font-weight:700;color:${color}">📅 ${sem.name}</div>`;
+  el.innerHTML = `<div style="text-align:center;padding:8px 0 2px;font-size:12px;font-weight:700;color:${color}">📅 ${_escHtml(sem.name)}</div>`;
 }
 
 // Student: join sheet
@@ -19367,7 +19367,7 @@ async function showEnrollSemesterSheet(auto) {
         <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
           <div style="font-size:22px">📅</div>
           <div>
-            <div style="font-size:14px;font-weight:800">${s.name} <span class="tag ${tagCls}" style="font-size:10px">${st}</span></div>
+            <div style="font-size:14px;font-weight:800">${_escHtml(s.name)} <span class="tag ${tagCls}" style="font-size:10px">${st}</span></div>
             <div style="font-size:12px;color:var(--muted)">${s.startDate} → ${s.endDate}</div>
           </div>
         </div>
@@ -20071,10 +20071,10 @@ function openGroupModal(type) {
               ? '<div style="padding:16px;text-align:center;color:var(--muted)">No students registered yet.</div>'
               : users.map(u => `
                 <label style="display:flex;align-items:center;gap:12px;padding:12px 14px;border-bottom:1px solid var(--border);cursor:pointer">
-                  <input type="checkbox" value="${u.id}" data-name="${u.name}" data-email="${u.email}" style="flex-shrink:0">
+                  <input type="checkbox" value="${u.id}" data-name="${_escHtml(u.name)}" data-email="${_escHtml(u.email)}" style="flex-shrink:0">
                   <div>
-                    <div style="font-size:13px;font-weight:700">${u.name}</div>
-                    <div style="font-size:11px;color:var(--muted)">${u.email}</div>
+                    <div style="font-size:13px;font-weight:700">${_escHtml(u.name)}</div>
+                    <div style="font-size:11px;color:var(--muted)">${_escHtml(u.email)}</div>
                   </div>
                 </label>`).join('')}
           </div>
@@ -20092,7 +20092,7 @@ function openGroupModal(type) {
           <div style="font-size:12px;color:var(--text2);margin-bottom:8px">Set department/country on users so dynamic rules can match them:</div>
           ${users.slice(0,3).map(u => `
             <div style="display:flex;gap:6px;margin-bottom:6px;align-items:center">
-              <div style="font-size:12px;min-width:80px;color:var(--text2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${u.name.split(' ')[0]}</div>
+              <div style="font-size:12px;min-width:80px;color:var(--text2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${_escHtml(u.name.split(' ')[0])}</div>
               <input placeholder="department" id="dept-${u.id}" class="lab-input" style="flex:1;padding:6px 8px;font-size:12px" value="${u.department||''}">
               <input placeholder="country"    id="ctry-${u.id}" class="lab-input" style="flex:1;padding:6px 8px;font-size:12px" value="${u.country||''}">
             </div>`).join('')}
@@ -20224,10 +20224,10 @@ async function viewGroup(groupId) {
             : '';
           return `
           <div style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--border)">
-            <div style="width:32px;height:32px;border-radius:50%;background:var(--primary-l);display:flex;align-items:center;justify-content:center;font-weight:800;color:var(--primary);font-size:13px;flex-shrink:0">${(m.name||'?')[0].toUpperCase()}</div>
+            <div style="width:32px;height:32px;border-radius:50%;background:var(--primary-l);display:flex;align-items:center;justify-content:center;font-weight:800;color:var(--primary);font-size:13px;flex-shrink:0">${_escHtml((m.name||'?')[0].toUpperCase())}</div>
             <div style="flex:1;min-width:0">
-              <div style="font-size:13px;font-weight:700">${m.name || m.id}</div>
-              ${m.email ? `<div style="font-size:11px;color:var(--muted)">${m.email}</div>` : ''}
+              <div style="font-size:13px;font-weight:700">${_escHtml(m.name || m.id)}</div>
+              ${m.email ? `<div style="font-size:11px;color:var(--muted)">${_escHtml(m.email)}</div>` : ''}
             </div>
             ${profileBtn}
           </div>`;
@@ -20485,7 +20485,7 @@ function _renderCompletionGrid(students, allMods) {
       </div>
       <div style="width:100px;flex-shrink:0;display:flex;align-items:center;gap:6px;padding-left:6px">
         <div style="width:24px;height:24px;border-radius:50%;background:var(--primary-l);display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:800;color:var(--primary);flex-shrink:0">${initials}</div>
-        <div style="font-size:11px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:62px" title="${u.name}">${u.name.split(' ')[0]}</div>
+        <div style="font-size:11px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:62px" title="${_escHtml(u.name)}">${_escHtml(u.name.split(' ')[0])}</div>
       </div>
       ${dots}
       <div style="width:44px;flex-shrink:0;text-align:center;font-size:11px;font-weight:800;color:var(--text2)">${totalPct}%</div>
@@ -20838,7 +20838,7 @@ function renderAnalyticsTab() {
         <div style="border-bottom:1px solid var(--border)">
           <div style="display:flex;align-items:center;gap:10px;padding:10px 16px">
             <div style="flex:1;min-width:0">
-              <div style="font-size:13px;font-weight:700">${sem.name}</div>
+              <div style="font-size:13px;font-weight:700">${_escHtml(sem.name)}</div>
               <div style="font-size:11px;color:var(--muted)">${sem.startDate} → ${sem.endDate} · Code: ${sem.code}</div>
             </div>
             <button onclick="toggleSemesterStudents('${sem.id}','${sem.code}')"
@@ -21077,7 +21077,7 @@ function renderAnalyticsTab() {
             <div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border)">
               <div style="width:32px;height:32px;border-radius:50%;background:${topReason.bg};display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;color:${topReason.color};flex-shrink:0">${initials}</div>
               <div style="flex:1;min-width:0">
-                <div style="font-size:13px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${u.name}</div>
+                <div style="font-size:13px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${_escHtml(u.name)}</div>
                 <div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:2px">
                   ${reasons.map(r=>`<span style="font-size:10px;font-weight:800;background:${r.bg};color:${r.color};padding:1px 6px;border-radius:100px">${r.label}</span>`).join('')}
                 </div>
@@ -22645,6 +22645,18 @@ function speakGraphDesc(key, btn) {
 
 function _escHtml(str) {
   return String(str == null ? '' : str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// Escape a string for safe embedding inside a single-quoted JS string that itself
+// sits inside a double-quoted HTML attribute (e.g. onclick="fn('${_escAttrJs(name)}')").
+// Neutralises the JS-string delimiter, backslash, and HTML-attribute/tag characters.
+function _escAttrJs(str) {
+  return String(str == null ? '' : str)
+    .replace(/\\/g, '\\\\')
+    .replace(/'/g, "\\'")
+    .replace(/"/g, '&quot;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
 }
 
 // ── Flowchart storage (legacy alias) ─────────────────────────
