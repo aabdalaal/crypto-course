@@ -12779,8 +12779,9 @@ async function verifyPassword(plaintext, storedHash, storedSalt, storedIteration
 }
 
 async function authRegister(name, email, password) {
+  email = String(email || '').trim().toLowerCase(); // emails are case-insensitive
   const users = loadUsers();
-  if (users.find(u => u.email === email)) return { error: 'Email already registered' };
+  if (users.find(u => (u.email || '').toLowerCase() === email)) return { error: 'Email already registered' };
   const { hash, salt, iterations } = await hashPassword(password);
   const user = { id: 'u-' + Date.now(), email, passwordHash: hash, passwordSalt: salt, passwordIter: iterations, name, role: ROLES.STUDENT, emailVerified: false };
   users.push(user);
@@ -12792,8 +12793,9 @@ async function authRegister(name, email, password) {
 }
 
 async function authLogin(email, password) {
+  email = String(email || '').trim().toLowerCase(); // emails are case-insensitive
   const users = loadUsers();
-  const user = users.find(u => u.email === email);
+  const user = users.find(u => (u.email || '').toLowerCase() === email);
   if (!user) return { error: 'Invalid email or password' };
 
   let valid = false;
@@ -12882,9 +12884,13 @@ function showAuthScreen(tab) {
   if (!el) {
     el = document.createElement('div');
     el.id = 'auth-screen';
+    // NOTE: no justify-content:center here — with overflow-y:auto, flexbox centering
+    // makes the TOP of overflowing content unreachable (register form + open keyboard
+    // on small phones). margin:auto on the children centres when it fits and scrolls
+    // correctly when it doesn't.
     el.style.cssText = `
       position:fixed;inset:0;background:linear-gradient(160deg,#0F172A 0%,#1E3A8A 60%,#0F172A 100%);
-      display:flex;flex-direction:column;align-items:center;justify-content:center;
+      display:flex;flex-direction:column;align-items:center;
       padding:32px;z-index:600;overflow-y:auto;
     `;
     document.body.appendChild(el);
@@ -12892,12 +12898,12 @@ function showAuthScreen(tab) {
 
   const isLogin = tab !== 'register';
   el.innerHTML = `
-    <div style="text-align:center;margin-bottom:32px">
+    <div style="text-align:center;margin-bottom:32px;margin-top:auto">
       <div style="font-size:56px;margin-bottom:12px">🔐</div>
       <div style="font-size:28px;font-weight:800;color:white;margin-bottom:4px">Crypto<span style="color:var(--blue-l)">Course</span></div>
       <div style="font-size:13px;color:var(--muted)">Offline-first cryptography education</div>
     </div>
-    <div style="width:100%;max-width:360px;background:white;border-radius:20px;padding:28px;box-shadow:0 20px 60px rgba(0,0,0,0.4)">
+    <div style="width:100%;max-width:360px;background:white;border-radius:20px;padding:28px;box-shadow:0 20px 60px rgba(0,0,0,0.4);margin-bottom:auto">
       <!-- Tab switcher -->
       <div style="display:flex;border-radius:10px;background:var(--surface2);padding:4px;margin-bottom:24px">
         <button onclick="showAuthScreen('login')" style="flex:1;padding:10px;border:none;border-radius:8px;font-weight:700;font-size:14px;cursor:pointer;font-family:Outfit,sans-serif;transition:all 0.2s;background:${isLogin?'white':'transparent'};color:${isLogin?'var(--text)':'var(--muted)'};box-shadow:${isLogin?'0 1px 4px rgba(0,0,0,0.1)':'none'}">Sign In</button>
@@ -12907,33 +12913,40 @@ function showAuthScreen(tab) {
       ${isLogin ? `
         <div style="margin-bottom:14px">
           <label class="form-label">Email</label>
-          <input id="auth-email" type="email" placeholder="you@example.com" style="width:100%;padding:12px 14px;border:2px solid var(--border);border-radius:10px;font-size:14px;font-family:Outfit,sans-serif;outline:none;box-sizing:border-box">
+          <input id="auth-email" type="email" autocomplete="email" placeholder="you@example.com" onkeydown="if(event.key==='Enter')doLogin()" style="width:100%;padding:12px 14px;border:2px solid var(--border);border-radius:10px;font-size:14px;font-family:Outfit,sans-serif;outline:none;box-sizing:border-box">
         </div>
         <div style="margin-bottom:20px">
           <label class="form-label">Password</label>
-          <input id="auth-pass" type="password" placeholder="••••••••" style="width:100%;padding:12px 14px;border:2px solid var(--border);border-radius:10px;font-size:14px;font-family:Outfit,sans-serif;outline:none;box-sizing:border-box">
+          <div style="position:relative">
+            <input id="auth-pass" type="password" autocomplete="current-password" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin()" style="width:100%;padding:12px 44px 12px 14px;border:2px solid var(--border);border-radius:10px;font-size:14px;font-family:Outfit,sans-serif;outline:none;box-sizing:border-box">
+            <button type="button" onclick="togglePasswordVisibility()" aria-label="Show or hide password" style="position:absolute;right:8px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:17px;padding:4px;line-height:1">👁</button>
+          </div>
         </div>
         <div id="auth-error" style="color:var(--danger);font-size:13px;margin-bottom:12px;display:none"></div>
-        <button onclick="doLogin()" style="width:100%;padding:14px;background:var(--primary);color:white;border:none;border-radius:12px;font-size:15px;font-weight:800;font-family:Outfit,sans-serif;cursor:pointer;margin-bottom:16px">Sign In →</button>
+        <button id="auth-submit" onclick="doLogin()" style="width:100%;padding:14px;background:var(--primary);color:white;border:none;border-radius:12px;font-size:15px;font-weight:800;font-family:Outfit,sans-serif;cursor:pointer;margin-bottom:16px">Sign In →</button>
       ` : `
         <div style="margin-bottom:12px">
           <label class="form-label">Name</label>
-          <input id="auth-name" type="text" placeholder="Your full name" style="width:100%;padding:12px 14px;border:2px solid var(--border);border-radius:10px;font-size:14px;font-family:Outfit,sans-serif;outline:none;box-sizing:border-box">
+          <input id="auth-name" type="text" autocomplete="name" placeholder="Your full name" onkeydown="if(event.key==='Enter')doRegister()" style="width:100%;padding:12px 14px;border:2px solid var(--border);border-radius:10px;font-size:14px;font-family:Outfit,sans-serif;outline:none;box-sizing:border-box">
         </div>
         <div style="margin-bottom:12px">
           <label class="form-label">Email</label>
-          <input id="auth-email" type="email" placeholder="you@example.com" style="width:100%;padding:12px 14px;border:2px solid var(--border);border-radius:10px;font-size:14px;font-family:Outfit,sans-serif;outline:none;box-sizing:border-box">
+          <input id="auth-email" type="email" autocomplete="email" placeholder="you@example.com" onkeydown="if(event.key==='Enter')doRegister()" style="width:100%;padding:12px 14px;border:2px solid var(--border);border-radius:10px;font-size:14px;font-family:Outfit,sans-serif;outline:none;box-sizing:border-box">
         </div>
         <div style="margin-bottom:12px">
           <label class="form-label">Password</label>
-          <input id="auth-pass" type="password" placeholder="Min 8 characters" style="width:100%;padding:12px 14px;border:2px solid var(--border);border-radius:10px;font-size:14px;font-family:Outfit,sans-serif;outline:none;box-sizing:border-box">
+          <div style="position:relative">
+            <input id="auth-pass" type="password" autocomplete="new-password" placeholder="Min 8 characters" onkeydown="if(event.key==='Enter')doRegister()" style="width:100%;padding:12px 44px 12px 14px;border:2px solid var(--border);border-radius:10px;font-size:14px;font-family:Outfit,sans-serif;outline:none;box-sizing:border-box">
+            <button type="button" onclick="togglePasswordVisibility()" aria-label="Show or hide password" style="position:absolute;right:8px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:17px;padding:4px;line-height:1">👁</button>
+          </div>
         </div>
-        <div style="margin-bottom:20px">
+        <div style="margin-bottom:16px">
           <label class="form-label">Class Code <span style="color:var(--muted);font-weight:400;text-transform:none">(optional — given by your teacher)</span></label>
-          <input id="auth-sem-code" type="text" placeholder="e.g. FALL2026" style="width:100%;padding:12px 14px;border:2px solid var(--border);border-radius:10px;font-size:14px;font-family:Outfit,sans-serif;outline:none;box-sizing:border-box;text-transform:uppercase">
+          <input id="auth-sem-code" type="text" autocomplete="off" autocapitalize="characters" placeholder="e.g. FALL2026" onkeydown="if(event.key==='Enter')doRegister()" style="width:100%;padding:12px 14px;border:2px solid var(--border);border-radius:10px;font-size:14px;font-family:Outfit,sans-serif;outline:none;box-sizing:border-box;text-transform:uppercase">
         </div>
         <div id="auth-error" style="color:var(--danger);font-size:13px;margin-bottom:12px;display:none"></div>
-        <button onclick="doRegister()" style="width:100%;padding:14px;background:var(--primary);color:white;border:none;border-radius:12px;font-size:15px;font-weight:800;font-family:Outfit,sans-serif;cursor:pointer">Create Account →</button>
+        <div style="font-size:11px;color:var(--muted);line-height:1.5;margin-bottom:12px">By creating an account you agree to your name and email being stored for course administration and progress tracking.</div>
+        <button id="auth-submit" onclick="doRegister()" style="width:100%;padding:14px;background:var(--primary);color:white;border:none;border-radius:12px;font-size:15px;font-weight:800;font-family:Outfit,sans-serif;cursor:pointer">Create Account →</button>
       `}
 
       <div style="margin-top:16px;text-align:center">
@@ -12944,11 +12957,20 @@ function showAuthScreen(tab) {
 
 }
 
+function togglePasswordVisibility() {
+  const p = document.getElementById('auth-pass');
+  if (p) p.type = p.type === 'password' ? 'text' : 'password';
+}
+
 async function doLogin() {
   const email = document.getElementById('auth-email').value.trim();
   const pass = document.getElementById('auth-pass').value;
+  const btn = document.getElementById('auth-submit');
+  const setBusy = busy => { if (btn) { btn.disabled = busy; btn.textContent = busy ? 'Signing in…' : 'Sign In →'; btn.style.opacity = busy ? '0.7' : '1'; } };
+  setBusy(true);
   const result = await authLogin(email, pass);
   if (result.error) {
+    setBusy(false);
     const el = document.getElementById('auth-error');
     el.textContent = result.error; el.style.display = 'block';
     return;
@@ -12971,6 +12993,7 @@ async function doLogin() {
           if (r.ok) {
             const data = await r.json();
             if (data.suspended) {
+              setBusy(false);
               const el = document.getElementById('auth-error');
               if (el) { el.textContent = 'Your account has been suspended. Contact your teacher.'; el.style.display = 'block'; }
               authLogout(); return;
@@ -13000,22 +13023,35 @@ async function doRegister() {
   if (!name || !email || !pass) { showErr('Please fill in all required fields'); return; }
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { showErr('Please enter a valid email address'); return; }
   if (pass.length < 8) { showErr('Password must be at least 8 characters'); return; }
+  const btn = document.getElementById('auth-submit');
+  const setBusy = busy => { if (btn) { btn.disabled = busy; btn.textContent = busy ? 'Creating account…' : 'Create Account →'; btn.style.opacity = busy ? '0.7' : '1'; } };
+  setBusy(true);
   const result = await authRegister(name, email, pass);
   if (result.error) {
-    const el = document.getElementById('auth-error');
-    el.textContent = result.error; el.style.display = 'block';
+    setBusy(false);
+    showErr(result.error);
     return;
   }
   if (result.user?.role === ROLES.STUDENT) {
     await bootstrapSyncConfig();
     // Class code entered during registration takes priority over invite link
     const joinCode = semCode || sessionStorage.getItem('_invite_join');
+    let codeFailed = false;
     if (joinCode) {
       sessionStorage.removeItem('_invite_join');
       await joinSemesterWithCode(joinCode.toUpperCase(), null);
-      if (state.semesterId) return; // enrolled — enterApp() called inside joinSemesterWithCode
+      if (state.semesterId) return; // enrolled — verification/enterApp handled downstream
+      codeFailed = true;            // code typo'd, unknown, or server unreachable
     }
     showEnrollSemesterSheet(true);
+    if (codeFailed) {
+      // The sheet's static frame (incl. #enroll-code-err) exists synchronously.
+      const ce = document.getElementById('enroll-code-err');
+      if (ce) {
+        ce.textContent = 'Class code "' + joinCode.toUpperCase() + '" was not recognised — pick your class below, or skip and join later.';
+        ce.style.display = 'block';
+      }
+    }
   } else {
     enterApp();
   }
@@ -13043,7 +13079,15 @@ function showVerificationScreen() {
   document.getElementById('auth-screen')?.remove();
   document.getElementById('pending-approval-screen')?.remove();
   let el = document.getElementById('verify-screen');
-  if (el) { el.style.display = 'flex'; return; }
+  if (el) {
+    // Re-shown (e.g. after joining a class from this screen): the write token may
+    // have just become available, so clear any stale error and try sending again.
+    el.style.display = 'flex';
+    const ve = document.getElementById('verify-error');
+    if (ve) ve.textContent = '';
+    sendVerificationCode();
+    return;
+  }
   el = document.createElement('div');
   el.id = 'verify-screen';
   el.style.cssText = 'position:fixed;inset:0;background:var(--bg);z-index:900;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px;overflow-y:auto';
@@ -19381,7 +19425,9 @@ async function showEnrollSemesterSheet(auto) {
 
   const overlay = document.createElement('div');
   overlay.id = 'enroll-sem-overlay'; applyModalAttrs(overlay, 'Join Your Semester');
-  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:500;display:flex;align-items:flex-end;justify-content:center';
+  // z-index 650 so the sheet appears ABOVE the auth screen (z 600) when shown
+  // straight after registration — at 500 it was completely hidden behind it.
+  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:650;display:flex;align-items:flex-end;justify-content:center';
   overlay.innerHTML = `
     <div style="background:var(--bg);border-radius:20px 20px 0 0;padding:28px 20px 40px;width:100%;max-width:500px;max-height:92vh;overflow-y:auto">
       <div style="font-size:20px;font-weight:800;margin-bottom:4px">📅 Join Your Semester</div>
