@@ -12339,9 +12339,10 @@ async function saveEditUser(userId) {
     // Server-only student — create a local record so they're fully manageable
     const newUser = { id: userId, name, email: email || '', role, emailVerified: !!email };
     if (password) {
-      const { hash, salt } = await hashPassword(password);
+      const { hash, salt, iterations } = await hashPassword(password);
       newUser.passwordHash = hash;
       newUser.passwordSalt = salt;
+      newUser.passwordIter = iterations;
     }
     users.push(newUser);
     saveUsers(users);
@@ -12356,9 +12357,10 @@ async function saveEditUser(userId) {
   users[idx].email = email;
   users[idx].role  = role;
   if (password) {
-    const { hash, salt } = await hashPassword(password);
+    const { hash, salt, iterations } = await hashPassword(password);
     users[idx].passwordHash = hash;
     users[idx].passwordSalt = salt;
+    users[idx].passwordIter = iterations;
     delete users[idx].password;
   }
   saveUsers(users);
@@ -12721,25 +12723,66 @@ function initAuth() {
   return false;
 }
 
-async function hashPassword(plaintext) {
-  const salt = Array.from(crypto.getRandomValues(new Uint8Array(16)))
-    .map(b => b.toString(16).padStart(2, '0')).join('');
-  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(salt + plaintext));
-  const hash = Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
-  return { hash, salt };
+// Password hashing uses PBKDF2-HMAC-SHA256 (the same KDF taught in Modules 7 & 8).
+// Records carry their iteration count so the work factor can be raised over time and
+// older records upgraded transparently on next successful login.
+const PBKDF2_ITERATIONS = 210000; // OWASP 2023 floor for PBKDF2-HMAC-SHA256
+
+function _bytesToHex(buf) {
+  return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
 }
 
-async function verifyPassword(plaintext, storedHash, storedSalt) {
+function _hexToBytes(hex) {
+  const out = new Uint8Array(hex.length / 2);
+  for (let i = 0; i < out.length; i++) out[i] = parseInt(hex.substr(i * 2, 2), 16);
+  return out;
+}
+
+// Constant-time-ish hex comparison (avoids early-exit timing leak on the hash).
+function _hexEqual(a, b) {
+  if (typeof a !== 'string' || typeof b !== 'string' || a.length !== b.length) return false;
+  let diff = 0;
+  for (let i = 0; i < a.length; i++) diff |= a.charCodeAt(i) ^ b.charCodeAt(i);
+  return diff === 0;
+}
+
+// Derive a PBKDF2 hash. Returns { hash, salt, iterations } — the iterations field
+// marks the record as PBKDF2 (legacy SHA-256 records have no iterations field).
+async function hashPassword(plaintext, iterations = PBKDF2_ITERATIONS) {
+  const saltBytes = crypto.getRandomValues(new Uint8Array(16));
+  const salt = _bytesToHex(saltBytes);
+  const keyMaterial = await crypto.subtle.importKey(
+    'raw', new TextEncoder().encode(plaintext), 'PBKDF2', false, ['deriveBits']);
+  const bits = await crypto.subtle.deriveBits(
+    { name: 'PBKDF2', salt: saltBytes, iterations, hash: 'SHA-256' }, keyMaterial, 256);
+  return { hash: _bytesToHex(bits), salt, iterations };
+}
+
+// Verify a password against a stored record. Handles BOTH formats:
+//   - PBKDF2 (storedIterations is a number) - current scheme
+//   - legacy single-round SHA-256 (storedIterations undefined) - pre-upgrade records
+// Returns { valid, needsUpgrade } so callers can re-hash legacy/weak records on success.
+async function verifyPassword(plaintext, storedHash, storedSalt, storedIterations) {
+  if (typeof storedIterations === 'number') {
+    const keyMaterial = await crypto.subtle.importKey(
+      'raw', new TextEncoder().encode(plaintext), 'PBKDF2', false, ['deriveBits']);
+    const bits = await crypto.subtle.deriveBits(
+      { name: 'PBKDF2', salt: _hexToBytes(storedSalt), iterations: storedIterations, hash: 'SHA-256' },
+      keyMaterial, 256);
+    const valid = _hexEqual(_bytesToHex(bits), storedHash);
+    return { valid, needsUpgrade: valid && storedIterations < PBKDF2_ITERATIONS };
+  }
+  // Legacy SHA-256(salt + plaintext)
   const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(storedSalt + plaintext));
-  const hash = Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
-  return hash === storedHash;
+  const valid = _hexEqual(_bytesToHex(buf), storedHash);
+  return { valid, needsUpgrade: valid }; // any legacy match should upgrade to PBKDF2
 }
 
 async function authRegister(name, email, password) {
   const users = loadUsers();
   if (users.find(u => u.email === email)) return { error: 'Email already registered' };
-  const { hash, salt } = await hashPassword(password);
-  const user = { id: 'u-' + Date.now(), email, passwordHash: hash, passwordSalt: salt, name, role: ROLES.STUDENT, emailVerified: false };
+  const { hash, salt, iterations } = await hashPassword(password);
+  const user = { id: 'u-' + Date.now(), email, passwordHash: hash, passwordSalt: salt, passwordIter: iterations, name, role: ROLES.STUDENT, emailVerified: false };
   users.push(user);
   saveUsers(users);
   const token = makeToken(user);
@@ -12756,15 +12799,25 @@ async function authLogin(email, password) {
   let valid = false;
   if (user.passwordHash && user.passwordSalt) {
     if (!crypto.subtle) return { error: 'HTTPS required to log in to this account' };
-    valid = await verifyPassword(password, user.passwordHash, user.passwordSalt);
-  } else if (user.password !== undefined) {
-    // Legacy plaintext — verify then upgrade to hashed on success (only if crypto.subtle available)
-    valid = user.password === password;
-    if (valid && crypto.subtle) {
-      const { hash, salt } = await hashPassword(password);
+    const result = await verifyPassword(password, user.passwordHash, user.passwordSalt, user.passwordIter);
+    valid = result.valid;
+    if (result.needsUpgrade && crypto.subtle) {
+      const { hash, salt, iterations } = await hashPassword(password);
       const idx = users.findIndex(u => u.id === user.id);
       users[idx].passwordHash = hash;
       users[idx].passwordSalt = salt;
+      users[idx].passwordIter = iterations;
+      saveUsers(users);
+    }
+  } else if (user.password !== undefined) {
+    // Legacy plaintext — verify then upgrade to PBKDF2 on success (only if crypto.subtle available)
+    valid = user.password === password;
+    if (valid && crypto.subtle) {
+      const { hash, salt, iterations } = await hashPassword(password);
+      const idx = users.findIndex(u => u.id === user.id);
+      users[idx].passwordHash = hash;
+      users[idx].passwordSalt = salt;
+      users[idx].passwordIter = iterations;
       delete users[idx].password;
       saveUsers(users);
     }
@@ -13329,9 +13382,10 @@ async function saveForcePasswordChange(userId) {
   const users = loadUsers();
   const idx = users.findIndex(u => u.id === userId);
   if (idx === -1) return;
-  const { hash, salt } = await hashPassword(pw);
+  const { hash, salt, iterations } = await hashPassword(pw);
   users[idx].passwordHash = hash;
   users[idx].passwordSalt = salt;
+  users[idx].passwordIter = iterations;
   delete users[idx].password;
   delete users[idx].mustChangePassword;
   saveUsers(users);
