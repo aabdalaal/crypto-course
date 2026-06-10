@@ -12652,10 +12652,21 @@ function copyRowCredentials(index) {
   showXPToast(0, 'Copied to clipboard');
 }
 
+// Escape a value for safe inclusion in a CSV cell.
+// (1) RFC-4180: always quote, and double any embedded double-quotes.
+// (2) Formula-injection guard: if the value starts with a spreadsheet formula
+//     trigger ( = + - @ , TAB, CR ), prefix a single quote so Excel/Sheets/
+//     LibreOffice treat it as literal text rather than executing it.
+function _csvCell(value) {
+  let s = String(value == null ? '' : value);
+  if (/^[=+\-@\t\r]/.test(s)) s = "'" + s;
+  return '"' + s.replace(/"/g, '""') + '"';
+}
+
 function downloadInviteCSV() {
   const results = window._bulkInviteResults || [];
   const header = 'Name,Email,Temporary Password,Invite Link';
-  const rows = results.map(r => `"${r.name}","${r.email}","${r.tempPass}","${r.inviteLink || ''}"`);
+  const rows = results.map(r => [r.name, r.email, r.tempPass, r.inviteLink || ''].map(_csvCell).join(','));
   const csv = [header, ...rows].join('\n');
   const blob = new Blob([csv], { type: 'text/csv' });
   const a = document.createElement('a');
@@ -19806,7 +19817,7 @@ function exportStudentsCSV() {
     const lastTs = lastActivity[u.email];
     const lastLabel = lastTs ? lastTs.toLocaleDateString('en-GB') : '';
     const cells = [u.name, u.email, semName, s.xp || 0, lv.name, modsCompleted, s.labsCompleted || 0, perfectPct, s.streak || 0, s.diagnosticScore ?? '', lastLabel];
-    return cells.map(v => `"${String(v).replace(/"/g, '""')}"`).join(',');
+    return cells.map(_csvCell).join(',');
   });
 
   const csv = [headers.join(','), ...rows].join('\r\n');
