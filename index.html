@@ -3956,9 +3956,9 @@ Scalar multiplication: k·P = P + P + ... + P  (k times, done efficiently via do
       },
       stage4: {
         type: 'lab',
-        heading: 'Lab: RSA vs ECC Key Size Comparison — Seminar 6 Mirror',
-        scenario: '🔬 Seminar 6 Lab: Replicate the Seminar 6 OpenSSL key comparison exercise in-browser. Generate an RSA-2048 key pair and an ECDSA P-256 key pair, then compare their sizes directly — answering Seminar 6 Task 2(a): "Which key is longer and why?" Inspect the RSA key parameters (n, e, d, p, q) and the ECC key (curve, private scalar). Then perform ECDH key exchange to confirm both sides derive the same shared secret.',
-        labId: 'openssl_rsa_lab'
+        heading: 'Lab: Number Theory Playground — Seminar 6 Mirror',
+        scenario: '🧮 Seminar 6 Mirror: the four computational tools behind RSA and ECC, with the exact seminar numbers as presets. Compute modular sums and products (Task 1: 963 + 842 mod 79), evaluate the RSA trapdoor m^e mod n by square-and-multiply, find modular inverses with the extended Euclidean algorithm (Task 4: the inverse of 23 mod 899), and test primality plus elliptic-curve non-singularity (4a³ + 27b² mod p).',
+        labId: 'number_theory_lab'
       },
       stage5: {
         type: 'quiz',
@@ -4625,9 +4625,9 @@ Verifier: recompute MAC(K, r) and compare</div>
       },
       stage4: {
         type: 'lab',
-        heading: 'Lab: Sign & Verify (Authentication)',
-        scenario: '📡 Scenario: Implement a challenge–response authentication protocol. Sign a server-issued nonce with your private key and verify the signature as the server would.',
-        labId: 'sign_lab'
+        heading: 'Lab: Schnorr Zero-Knowledge Identification',
+        scenario: '🕵️ Scenario: Peggy claims to know the discrete log x of y = g^x mod p — without revealing it. Act as the verifier: receive her commitment, fire challenges of your choice, and check her responses. Then enable cheat mode and watch a Peggy who does not know x get caught within a few rounds — soundness in action. Finally, apply Fiat–Shamir to turn the interaction into a signature.',
+        labId: 'schnorr_lab'
       },
       stage5: {
         type: 'quiz',
@@ -6748,6 +6748,112 @@ function getSummary(mod) {
 // ============================================================
 function renderLab(content, mod) {
   const labs = {
+    schnorr_lab: `
+      <div class="stage-label">⚗️ Interactive Lab</div>
+      <div class="lab-scenario">${content.scenario}</div>
+      <div class="lab-container">
+        <div class="lab-header">
+          <span class="lab-icon">🕵️</span>
+          <div><div class="lab-title">${content.heading}</div><div class="lab-subtitle">Schnorr identification · p = 23, g = 5 · You are the verifier</div></div>
+        </div>
+
+        <div class="lab-field">
+          <label class="lab-label">Setup · Choose Peggy's secret x (1–21) — in real life you would never see this</label>
+          <div style="display:flex;gap:8px">
+            <input class="lab-input" id="sch-x" type="number" min="1" max="21" value="7" style="font-family:var(--mono)">
+            <button class="btn btn-primary" style="width:auto" onclick="schSetup()">Generate public y = g^x mod p</button>
+          </div>
+          <div class="lab-output" id="sch-pub" style="font-family:var(--mono);font-size:12px;margin-top:8px;white-space:pre">Public parameters will appear here...</div>
+        </div>
+
+        <div class="lab-field" style="margin-top:12px">
+          <label class="lab-label" style="display:flex;align-items:center;gap:8px">
+            <input type="checkbox" id="sch-cheat" style="width:auto;margin:0">
+            <span style="color:#DC2626;font-weight:700">Cheat mode</span> — Peggy is bluffing: she does not know x and must guess your challenge
+          </label>
+        </div>
+
+        <div class="lab-field" style="margin-top:6px">
+          <label class="lab-label">Protocol rounds — you choose the challenge</label>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+            <button class="btn btn-primary" style="width:auto" id="sch-commit-btn" onclick="schCommit()" disabled>1 · Peggy commits t = g^k</button>
+            <button class="btn btn-secondary" style="width:auto" id="sch-c0" onclick="schChallenge(0)" disabled>2 · Challenge c = 0</button>
+            <button class="btn btn-secondary" style="width:auto" id="sch-c1" onclick="schChallenge(1)" disabled>2 · Challenge c = 1</button>
+          </div>
+          <div class="lab-output" id="sch-log" style="font-family:var(--mono);font-size:11px;margin-top:8px;max-height:180px;overflow-y:auto;white-space:pre-wrap">Set up first, then run rounds...</div>
+          <div style="font-size:12px;font-weight:700;margin-top:6px" id="sch-status">Honest rounds passed: 0 · Verifier confidence: 0%</div>
+        </div>
+
+        <div class="lab-field" style="margin-top:12px">
+          <label class="lab-label">Fiat–Shamir — remove the verifier</label>
+          <button class="btn btn-secondary btn-sm" style="width:auto" onclick="schFiatShamir()">⚡ Derive c = H(t) mod 2 with SHA-256</button>
+          <div class="lab-output" id="sch-fs" style="font-size:12px;margin-top:8px;white-space:pre-wrap">After a commitment, derive the challenge from the commitment itself...</div>
+        </div>
+      </div>
+    `,
+    number_theory_lab: `
+      <div class="stage-label">⚗️ Interactive Lab — Seminar 6 Mirror</div>
+      <div class="lab-scenario">${content.scenario}</div>
+      <div class="lab-container">
+        <div class="lab-header">
+          <span class="lab-icon">🧮</span>
+          <div><div class="lab-title">${content.heading}</div><div class="lab-subtitle">Four tools · Seminar 6 numbers as presets · Run any three to complete</div></div>
+        </div>
+        <div style="font-size:12px;font-weight:700;margin-bottom:10px" id="nt-status">Tools explored: 0 / 4</div>
+
+        <div class="lab-field">
+          <label class="lab-label">Tool 1 · Modular arithmetic — Seminar 6 Task 1</label>
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">
+            <input class="lab-input" id="nt-a" value="963" style="font-family:var(--mono)" placeholder="a">
+            <input class="lab-input" id="nt-b" value="842" style="font-family:var(--mono)" placeholder="b">
+            <input class="lab-input" id="nt-n" value="79" style="font-family:var(--mono)" placeholder="n">
+          </div>
+          <div style="display:flex;gap:8px;margin-top:8px">
+            <button class="btn btn-secondary btn-sm" style="width:auto" onclick="ntCalc('add')">a + b mod n</button>
+            <button class="btn btn-secondary btn-sm" style="width:auto" onclick="ntCalc('sub')">a − b mod n</button>
+            <button class="btn btn-secondary btn-sm" style="width:auto" onclick="ntCalc('mul')">a × b mod n</button>
+          </div>
+          <div class="lab-output" id="nt-mod-out" style="font-family:var(--mono);font-size:12px;margin-top:8px">Try the seminar values: 963 + 842 mod 79...</div>
+        </div>
+
+        <div class="lab-field" style="margin-top:14px">
+          <label class="lab-label">Tool 2 · RSA trapdoor c = m^e mod n — square &amp; multiply, step by step</label>
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">
+            <input class="lab-input" id="nt-m" value="42" style="font-family:var(--mono)" placeholder="m">
+            <input class="lab-input" id="nt-e" value="17" style="font-family:var(--mono)" placeholder="e">
+            <input class="lab-input" id="nt-rsa-n" value="3233" style="font-family:var(--mono)" placeholder="n">
+          </div>
+          <button class="btn btn-secondary btn-sm" style="width:auto;margin-top:8px" onclick="ntTrapdoor()">▶ Compute</button>
+          <div class="lab-output" id="nt-rsa-out" style="font-family:var(--mono);font-size:11px;margin-top:8px;white-space:pre;max-height:160px;overflow-y:auto">Easy to compute forward — hard to invert without the trapdoor d...</div>
+        </div>
+
+        <div class="lab-field" style="margin-top:14px">
+          <label class="lab-label">Tool 3 · Modular inverse — extended Euclid (Seminar 6 Task 4: 23⁻¹ mod 899)</label>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+            <input class="lab-input" id="nt-inv-a" value="23" style="font-family:var(--mono)" placeholder="a">
+            <input class="lab-input" id="nt-inv-n" value="899" style="font-family:var(--mono)" placeholder="n">
+          </div>
+          <button class="btn btn-secondary btn-sm" style="width:auto;margin-top:8px" onclick="ntInverse()">▶ Find a⁻¹ mod n</button>
+          <div class="lab-output" id="nt-inv-out" style="font-family:var(--mono);font-size:11px;margin-top:8px;white-space:pre;max-height:160px;overflow-y:auto">The algorithm behind RSA key generation (d = e⁻¹ mod φ(n))...</div>
+        </div>
+
+        <div class="lab-field" style="margin-top:14px">
+          <label class="lab-label">Tool 4 · Primality &amp; elliptic-curve non-singularity</label>
+          <div style="display:flex;gap:8px">
+            <input class="lab-input" id="nt-p-n" value="11663" style="font-family:var(--mono)" placeholder="n">
+            <button class="btn btn-secondary btn-sm" style="width:auto" onclick="ntPrime()">Is it prime?</button>
+          </div>
+          <div class="lab-output" id="nt-prime-out" style="font-family:var(--mono);font-size:12px;margin-top:6px">Test any n up to 10¹²...</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:10px">
+            <input class="lab-input" id="nt-ec-a" value="2" style="font-family:var(--mono)" placeholder="a">
+            <input class="lab-input" id="nt-ec-b" value="3" style="font-family:var(--mono)" placeholder="b">
+            <input class="lab-input" id="nt-ec-p" value="97" style="font-family:var(--mono)" placeholder="p">
+          </div>
+          <button class="btn btn-secondary btn-sm" style="width:auto;margin-top:8px" onclick="ntEC()">Is y² = x³ + ax + b usable mod p?</button>
+          <div class="lab-output" id="nt-ec-out" style="font-family:var(--mono);font-size:12px;margin-top:6px">A curve is non-singular iff 4a³ + 27b² ≢ 0 mod p...</div>
+        </div>
+      </div>
+    `,
     challenge_response_lab: `
       <div class="stage-label">⚗️ Interactive Lab — Week 9 Mirror</div>
       <div class="lab-scenario">${content.scenario}</div>
@@ -7026,22 +7132,50 @@ function renderLab(content, mod) {
       <div class="lab-container">
         <div class="lab-header">
           <span class="lab-icon">🤝</span>
-          <div><div class="lab-title">${content.heading}</div><div class="lab-subtitle">ECDH P-256 · Simulating two-party key exchange</div></div>
+          <div><div class="lab-title">${content.heading}</div><div class="lab-subtitle">Real ECDH P-256 via Web Crypto · Ephemeral keys · STS transcript signing</div></div>
         </div>
-        <button class="btn btn-primary" onclick="runECDHLab()">▶ Simulate ECDH Key Exchange</button>
+
+        <div class="lab-field">
+          <label class="lab-label" style="display:flex;align-items:center;gap:8px">
+            <input type="checkbox" id="ecdh-mallory" style="width:auto;margin:0">
+            <span style="color:#DC2626;font-weight:700">Enable Mallory</span> — she intercepts and substitutes her own public keys
+          </label>
+        </div>
+        <button class="btn btn-primary" onclick="runECDHLab()">▶ Run Ephemeral Key Exchange</button>
+
         <div style="margin-top:14px">
-          <label class="lab-label">Alice's Public Key</label>
+          <label class="lab-label">Alice sends her ephemeral public key</label>
           <div class="lab-output" id="lab-output-ecdh-alice" style="font-size:10px">Run to see...</div>
         </div>
+        <div id="ecdh-mallory-row" style="margin-top:8px;display:none">
+          <label class="lab-label" style="color:#DC2626">Mallory substitutes her own public key — both directions</label>
+          <div class="lab-output" id="ecdh-mallory-out" style="font-size:10px;border-color:#DC2626"></div>
+        </div>
         <div style="margin-top:8px">
-          <label class="lab-label">Bob's Public Key</label>
+          <label class="lab-label">Bob sends his ephemeral public key</label>
           <div class="lab-output" id="lab-output-ecdh-bob" style="font-size:10px">Run to see...</div>
         </div>
         <div style="margin-top:8px">
-          <label class="lab-label">Shared Secret (both parties derive the same key)</label>
-          <div class="lab-output" id="lab-output-ecdh-shared">Run to derive shared secret...</div>
+          <label class="lab-label">Derived session keys</label>
+          <div class="lab-output" id="lab-output-ecdh-shared" style="white-space:pre-wrap">Run to derive shared secret...</div>
         </div>
-      </div>`,
+        <div style="margin-top:8px">
+          <label class="lab-label">Forward secrecy — compare with the previous run</label>
+          <div class="lab-output" id="ecdh-prev" style="font-size:11px;white-space:pre-wrap">Run the exchange at least twice to compare session keys...</div>
+        </div>
+
+        <div style="margin-top:18px;border-top:2px solid var(--border);padding-top:14px">
+          <div style="font-size:11px;font-weight:800;color:var(--primary);text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px">Station-to-Station: sign the transcript</div>
+          <p style="font-size:12px;color:var(--text2);margin-bottom:8px">Raw Diffie–Hellman authenticates nobody. In STS (and TLS), Alice signs the transcript of public keys with her long-term identity key, binding the exchange to her identity.</p>
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <button class="btn btn-secondary btn-sm" style="width:auto" onclick="runSTSSign()">✍️ Alice signs her transcript (ECDSA)</button>
+            <button class="btn btn-secondary btn-sm" style="width:auto" onclick="runSTSVerify()">🔎 Bob verifies against his transcript</button>
+          </div>
+          <div class="lab-output" id="sts-sig-out" style="font-size:11px;margin-top:8px;word-break:break-all">Run an exchange, then sign...</div>
+          <div class="lab-output" id="sts-verify-out" style="font-size:12px;margin-top:6px;white-space:pre-wrap">Verification result will appear here...</div>
+        </div>
+      </div>
+    `,
 
     sign_lab: `
       <div class="stage-label">⚗️ Interactive Lab</div>
@@ -7958,6 +8092,215 @@ async function runHashCompare() {
   } catch(e) { out.textContent = 'Error: ' + e.message; }
 }
 
+// ── M10: Schnorr zero-knowledge identification (p=23, g=5) ──────────────────
+const SCH_P = 23n;
+const SCH_G = 5n;
+const SCH_ORD = 22n;
+
+function schModPow(b, e, m) {
+  let r = 1n; b = b % m;
+  while (e > 0n) { if (e & 1n) r = (r * b) % m; b = (b * b) % m; e >>= 1n; }
+  return r;
+}
+
+function schRand(maxExclusive) {
+  const a = new Uint32Array(1);
+  crypto.getRandomValues(a);
+  return a[0] % maxExclusive;
+}
+
+function schSetup() {
+  const xv = parseInt(document.getElementById('sch-x').value, 10);
+  const pub = document.getElementById('sch-pub');
+  if (isNaN(xv) || xv < 1 || xv > 21) { pub.textContent = 'x must be between 1 and 21.'; return; }
+  const x = BigInt(xv);
+  const y = schModPow(SCH_G, x, SCH_P);
+  window._sch = { x: x, y: y, k: null, t: null, sPre: null, guess: null, cheat: false, honest: 0, cheatRun: false, pending: false, rounds: 0, done: false };
+  pub.textContent = 'p = 23 (prime)    g = 5 (generator, order 22)\n' +
+    'Secret  x = ' + x + '          (Peggy keeps this)\n' +
+    'Public  y = g^x mod p = 5^' + x + ' mod 23 = ' + y + '   (everyone sees this)';
+  document.getElementById('sch-log').textContent = '';
+  document.getElementById('sch-status').textContent = 'Honest rounds passed: 0 · Verifier confidence: 0%';
+  document.getElementById('sch-commit-btn').disabled = false;
+  document.getElementById('sch-c0').disabled = true;
+  document.getElementById('sch-c1').disabled = true;
+}
+
+function schCommit() {
+  const st = window._sch;
+  if (!st || st.pending) return;
+  st.cheat = !!(document.getElementById('sch-cheat') && document.getElementById('sch-cheat').checked);
+  st.k = BigInt(1 + schRand(21));
+  if (!st.cheat) {
+    st.t = schModPow(SCH_G, st.k, SCH_P);
+  } else {
+    st.guess = schRand(2);
+    if (st.guess === 0) {
+      st.sPre = st.k;
+      st.t = schModPow(SCH_G, st.k, SCH_P);
+    } else {
+      st.sPre = BigInt(1 + schRand(21));
+      const yInv = schModPow(st.y, SCH_P - 2n, SCH_P);
+      st.t = (schModPow(SCH_G, st.sPre, SCH_P) * yInv) % SCH_P;
+    }
+  }
+  st.pending = true;
+  const log = document.getElementById('sch-log');
+  log.textContent += 'Peggy' + (st.cheat ? ' (bluffing, guessed c=' + st.guess + ')' : '') + ' commits: t = ' + st.t + '\n';
+  log.scrollTop = log.scrollHeight;
+  document.getElementById('sch-c0').disabled = false;
+  document.getElementById('sch-c1').disabled = false;
+  document.getElementById('sch-commit-btn').disabled = true;
+}
+
+function schChallenge(c) {
+  const st = window._sch;
+  if (!st || !st.pending) return;
+  const cb = BigInt(c);
+  let s;
+  if (!st.cheat) {
+    s = (st.k + cb * st.x) % SCH_ORD;
+  } else {
+    s = (c === st.guess) ? st.sPre : BigInt(1 + schRand(21));
+  }
+  const lhs = schModPow(SCH_G, s, SCH_P);
+  const rhs = (st.t * schModPow(st.y, cb, SCH_P)) % SCH_P;
+  const pass = lhs === rhs;
+  st.rounds++;
+  st.pending = false;
+  if (!st.cheat && pass) st.honest++;
+  if (st.cheat) st.cheatRun = true;
+  const log = document.getElementById('sch-log');
+  log.textContent += '  You challenge c = ' + c + '  →  Peggy responds s = ' + s + '\n' +
+    '  Check: g^s = ' + lhs + '   vs   t·y^c = ' + rhs + '   →  ' +
+    (pass ? '✓ ACCEPT' : '✗ REJECT — Peggy is caught! She guessed the wrong challenge.') + '\n\n';
+  log.scrollTop = log.scrollHeight;
+  const conf = (1 - Math.pow(2, -st.honest)) * 100;
+  document.getElementById('sch-status').textContent =
+    'Honest rounds passed: ' + st.honest + ' · Verifier confidence: ' + conf.toFixed(1) + '%' +
+    (st.cheatRun ? ' · Cheat mode tested ✓' : '');
+  document.getElementById('sch-c0').disabled = true;
+  document.getElementById('sch-c1').disabled = true;
+  document.getElementById('sch-commit-btn').disabled = false;
+  if (!st.done && st.honest >= 3 && st.cheatRun) { st.done = true; completeLabStage(); }
+}
+
+async function schFiatShamir() {
+  const st = window._sch;
+  const out = document.getElementById('sch-fs');
+  if (!st || !st.pending) { out.textContent = 'Commit first (step 1), then derive the challenge here instead of choosing it.'; return; }
+  try {
+    const h = await sha256(st.t.toString());
+    const c = parseInt(h.charAt(0), 16) % 2;
+    out.textContent = 'H(t) = SHA-256("' + st.t + '") = ' + h.substring(0, 16) + '...\n' +
+      'c = H(t) mod 2 = ' + c + ' — the challenge now comes from the commitment itself.\n' +
+      'No verifier needed: prover, alone, produces (t, s) anyone can check.\n' +
+      'This transformation is exactly how Schnorr signatures (and EdDSA) are built.';
+    schChallenge(c);
+  } catch (e) { out.textContent = 'Error: ' + e.message; }
+}
+
+// ── M07: Number Theory Playground (Seminar 6 mirror) ────────────────────────
+let _ntUsed = null;
+let _ntDone = false;
+
+function ntBig(id, lo) {
+  const raw = (document.getElementById(id).value || '').trim();
+  if (!/^-?\d+$/.test(raw)) return null;
+  const v = BigInt(raw);
+  if (typeof lo !== 'undefined' && v < lo) return null;
+  return v;
+}
+
+function ntMark(tool) {
+  _ntUsed = _ntUsed || {};
+  _ntUsed[tool] = true;
+  const count = Object.keys(_ntUsed).length;
+  document.getElementById('nt-status').textContent = 'Tools explored: ' + count + ' / 4' + (count >= 3 ? ' — lab complete ✓' : '');
+  if (!_ntDone && count >= 3) { _ntDone = true; completeLabStage(); }
+}
+
+function ntCalc(op) {
+  const a = ntBig('nt-a'), b = ntBig('nt-b'), n = ntBig('nt-n', 2n);
+  const out = document.getElementById('nt-mod-out');
+  if (a === null || b === null || n === null) { out.textContent = 'Enter integers a, b and a modulus n ≥ 2.'; return; }
+  let raw, sym;
+  if (op === 'add') { raw = a + b; sym = '+'; }
+  else if (op === 'sub') { raw = a - b; sym = '−'; }
+  else { raw = a * b; sym = '×'; }
+  const r = ((raw % n) + n) % n;
+  out.textContent = a + ' ' + sym + ' ' + b + ' = ' + raw + '\n' + raw + ' mod ' + n + ' = ' + r;
+  ntMark('calc');
+}
+
+function ntTrapdoor() {
+  const m = ntBig('nt-m', 0n), e = ntBig('nt-e', 0n), n = ntBig('nt-rsa-n', 2n);
+  const out = document.getElementById('nt-rsa-out');
+  if (m === null || e === null || n === null) { out.textContent = 'Enter m ≥ 0, e ≥ 0 and n ≥ 2.'; return; }
+  if (e > 0xFFFFFFFFn) { out.textContent = 'Keep e below 2³² for a readable trace.'; return; }
+  const bits = e.toString(2);
+  let r = 1n, base = m % n;
+  let steps = 'e = ' + e + ' = ' + bits + ' in binary — scan left to right:\n';
+  for (let i = 0; i < bits.length; i++) {
+    r = (r * r) % n;
+    steps += 'bit ' + bits[i] + ':  square   → r = ' + r + '\n';
+    if (bits[i] === '1') { r = (r * base) % n; steps += '         multiply → r = ' + r + '\n'; }
+  }
+  steps += '\nc = ' + m + '^' + e + ' mod ' + n + ' = ' + r + '\n' + bits.length + ' squarings — log₂(e) work, not e multiplications.';
+  out.textContent = steps;
+  ntMark('trapdoor');
+}
+
+function ntInverse() {
+  const a0 = ntBig('nt-inv-a', 1n), n0 = ntBig('nt-inv-n', 2n);
+  const out = document.getElementById('nt-inv-out');
+  if (a0 === null || n0 === null) { out.textContent = 'Enter a ≥ 1 and n ≥ 2.'; return; }
+  let oldR = a0 % n0, r = n0, oldS = 1n, s = 0n;
+  let table = '   q        r        s\n         ' + (a0 % n0) + '        1\n         ' + n0 + '        0\n';
+  while (r !== 0n) {
+    const q = oldR / r;
+    const tr = oldR - q * r; oldR = r; r = tr;
+    const ts = oldS - q * s; oldS = s; s = ts;
+    table += '   ' + q + '        ' + oldR + '        ' + oldS + '\n';
+  }
+  if (oldR !== 1n) {
+    out.textContent = table + '\ngcd(' + a0 + ', ' + n0 + ') = ' + oldR + ' — NO inverse exists.\n(a and n must be coprime — this is why RSA needs gcd(e, φ(n)) = 1.)';
+  } else {
+    const inv = ((oldS % n0) + n0) % n0;
+    out.textContent = table + '\n' + a0 + '⁻¹ mod ' + n0 + ' = ' + inv + '\nCheck: ' + a0 + ' × ' + inv + ' mod ' + n0 + ' = ' + (a0 * inv % n0);
+  }
+  ntMark('inverse');
+}
+
+function ntPrime() {
+  const n = ntBig('nt-p-n', 2n);
+  const out = document.getElementById('nt-prime-out');
+  if (n === null) { out.textContent = 'Enter an integer n ≥ 2.'; return; }
+  if (n > 1000000000000n) { out.textContent = 'Keep n ≤ 10¹² for instant trial division.'; return; }
+  if (n % 2n === 0n) { out.textContent = n === 2n ? '2 is PRIME.' : n + ' is COMPOSITE: 2 × ' + (n / 2n); ntMark('tool4'); return; }
+  if (n % 3n === 0n) { out.textContent = n === 3n ? '3 is PRIME.' : n + ' is COMPOSITE: 3 × ' + (n / 3n); ntMark('tool4'); return; }
+  let i = 5n, ops = 2;
+  while (i * i <= n) {
+    ops++;
+    if (n % i === 0n) { out.textContent = n + ' is COMPOSITE: ' + i + ' × ' + (n / i) + '   (' + ops + ' divisions)'; ntMark('tool4'); return; }
+    ops++;
+    if (n % (i + 2n) === 0n) { out.textContent = n + ' is COMPOSITE: ' + (i + 2n) + ' × ' + (n / (i + 2n)) + '   (' + ops + ' divisions)'; ntMark('tool4'); return; }
+    i += 6n;
+  }
+  out.textContent = n + ' is PRIME   (' + ops + ' trial divisions up to √n)';
+  ntMark('tool4');
+}
+
+function ntEC() {
+  const a = ntBig('nt-ec-a'), b = ntBig('nt-ec-b'), p = ntBig('nt-ec-p', 2n);
+  const out = document.getElementById('nt-ec-out');
+  if (a === null || b === null || p === null) { out.textContent = 'Enter integers a, b and a prime p ≥ 2.'; return; }
+  const disc = ((4n * a * a * a + 27n * b * b) % p + p) % p;
+  out.textContent = '4a³ + 27b² mod p = ' + disc + ' → ' +
+    (disc !== 0n ? 'NON-SINGULAR ✓ — the curve forms a valid group for ECC.' : 'SINGULAR ✗ — the curve has a cusp or node; group law breaks down. Unusable.');
+  ntMark('tool4');
+}
+
 // ── M01 Part B: One-Time Pad lab (Week 2 challenge mirror) ──────────────────
 const OTP_WEEK2_CT = '11100011 11000100 10001010 11011110 11000010 11001111 10001010 11011010 11000101 11011010 11011111 11000110 11001011 11011000 10001010 11000011 11000111 11001011 11001101 11000011 11000100 11001011 11011110 11000011 11000101 11000100 10001010 11001001 11011000 11010011 11011010 11011110 11000101 11001101 11011000 11001011 11011010 11000010 11010011 10001010 11001111 11011011 11011111 11001011 11011110 11001111 11011001 10001010 11011110 11000101 10001010 11001111 11000100 11001001 11011000 11010011 11011010 11011110 11000011 11000101 11000100 10010001 10001010 11001011 10001010 11001001 11011000 11010011 11011010 11011110 11000101 11001101 11011000 11001011 11011010 11000010 11000011 11001001 10001010 11000111 11001111 11001001 11000010 11001011 11000100 11000011 11011001 11000111 10001010 11011010 11011000 11000101 11011100 11000011 11001110 11000011 11000100 11001101 10001010 11001001 11000101 11000100 11001100 11000011 11001110 11001111 11000100 11011110 11000011 11001011 11000110 11000011 11011110 11010011 10001010 11011001 11001111 11011000 11011100 11000011 11001001 11001111 11011001 10000100 10001010 11100011 11000100 10001010 11011000 11001111 11001011 11000110 11000011 11011110 11010011 10000110 10001010 11001001 11011000 11010011 11011010 11011110 11000101 11001101 11011000 11001011 11011010 11000010 11010011 10001010 11001101 11000101 11001111 11011001 10001010 11001100 11001011 11011000 10001010 11001000 11001111 11010011 11000101 11000100 11001110 10001010 11011110 11000010 11000011 11011001 10001010 11011110 11000101 10001010 11011010 11011000 11000101 11011100 11000011 11001110 11001111 10001010 11001011 11000100 10001010 11011111 11000100 11001110 11001111 11011000 11011010 11000011 11000100 11000100 11000011 11000100 11001101 10001010 11011110 11001111 11001001 11000010 11000100 11000101 11000110 11000101 11001101 11010011 10001010 11001100 11000101 11011000 10001010 11001000 11011111 11000011 11000110 11001110 11000011 11000100 11001101 10001010 11011001 11001111 11001001 11011111 11011000 11000011 11011110 11010011 10001010 11011001 11001111 11011000 11011100 11000011 11001001 11001111 11011001 10001010 11000111 11000101 11011000 11001111 10001010 11001000 11011000 11000101 11001011 11001110 11000110 11010011 10000100 10001010 10001010 10001010 10001010 10001010 10001010';
 
@@ -8336,24 +8679,97 @@ async function runECDHLab() {
   const outA = document.getElementById('lab-output-ecdh-alice');
   const outB = document.getElementById('lab-output-ecdh-bob');
   const outS = document.getElementById('lab-output-ecdh-shared');
+  const prevEl = document.getElementById('ecdh-prev');
+  const malRow = document.getElementById('ecdh-mallory-row');
+  const malOut = document.getElementById('ecdh-mallory-out');
+  const mallory = !!(document.getElementById('ecdh-mallory') && document.getElementById('ecdh-mallory').checked);
+  window._ecdh = window._ecdh || { lastHex: null, flags: { verified: false, mitm: false }, ecdsa: null };
+  const st = window._ecdh;
+  const b64 = function(buf) { return btoa(String.fromCharCode.apply(null, Array.from(new Uint8Array(buf)))); };
+  const hex = function(buf) { return Array.from(new Uint8Array(buf)).map(function(b) { return b.toString(16).padStart(2, '0'); }).join(''); };
   try {
-    const alice = await crypto.subtle.generateKey({name:'ECDH',namedCurve:'P-256'},true,['deriveKey']);
-    const bob = await crypto.subtle.generateKey({name:'ECDH',namedCurve:'P-256'},true,['deriveKey']);
-    const aPub = await crypto.subtle.exportKey('raw', alice.publicKey);
-    const bPub = await crypto.subtle.exportKey('raw', bob.publicKey);
-    outA.textContent = btoa(String.fromCharCode(...new Uint8Array(aPub))).substring(0,60) + '...';
-    outB.textContent = btoa(String.fromCharCode(...new Uint8Array(bPub))).substring(0,60) + '...';
-    const sharedA = await crypto.subtle.deriveKey({name:'ECDH',public:bob.publicKey},alice.privateKey,{name:'AES-GCM',length:256},true,['encrypt','decrypt']);
-    const sharedB = await crypto.subtle.deriveKey({name:'ECDH',public:alice.publicKey},bob.privateKey,{name:'AES-GCM',length:256},true,['encrypt','decrypt']);
-    const kA = await crypto.subtle.exportKey('raw', sharedA);
-    const kB = await crypto.subtle.exportKey('raw', sharedB);
-    const hexA = Array.from(new Uint8Array(kA)).map(b=>b.toString(16).padStart(2,'0')).join('');
-    const hexB = Array.from(new Uint8Array(kB)).map(b=>b.toString(16).padStart(2,'0')).join('');
-    const match = hexA === hexB;
-    outS.classList.toggle('error', !match);
-    outS.textContent = `Alice's derived key: ${hexA.substring(0,32)}...\nBob's derived key:   ${hexB.substring(0,32)}...\n\n${match ? '✓ Keys MATCH — shared secret established without transmitting it!' : '✗ Keys differ (unexpected)'}`;
-    if (match) completeLabStage();
-  } catch(e) { outS.textContent = 'Error: '+e.message; }
+    const alice = await crypto.subtle.generateKey({ name: 'ECDH', namedCurve: 'P-256' }, true, ['deriveKey']);
+    const bob = await crypto.subtle.generateKey({ name: 'ECDH', namedCurve: 'P-256' }, true, ['deriveKey']);
+    const aPub = b64(await crypto.subtle.exportKey('raw', alice.publicKey));
+    const bPub = b64(await crypto.subtle.exportKey('raw', bob.publicKey));
+    outA.textContent = aPub.substring(0, 60) + '...';
+    outB.textContent = bPub.substring(0, 60) + '...';
+    const aesParams = { name: 'AES-GCM', length: 256 };
+    let hexA, hexB, mPub = null;
+    if (mallory) {
+      const mal = await crypto.subtle.generateKey({ name: 'ECDH', namedCurve: 'P-256' }, true, ['deriveKey']);
+      mPub = b64(await crypto.subtle.exportKey('raw', mal.publicKey));
+      malRow.style.display = 'block';
+      malOut.textContent = mPub.substring(0, 60) + '...';
+      const kA = await crypto.subtle.deriveKey({ name: 'ECDH', public: mal.publicKey }, alice.privateKey, aesParams, true, ['encrypt', 'decrypt']);
+      const kB = await crypto.subtle.deriveKey({ name: 'ECDH', public: mal.publicKey }, bob.privateKey, aesParams, true, ['encrypt', 'decrypt']);
+      hexA = hex(await crypto.subtle.exportKey('raw', kA));
+      hexB = hex(await crypto.subtle.exportKey('raw', kB));
+      outS.classList.add('error');
+      outS.textContent = 'Alice derived: ' + hexA.substring(0, 32) + '...\n' +
+        'Bob derived:   ' + hexB.substring(0, 32) + '...\n\n' +
+        '✗ DIFFERENT keys — each is actually shared with Mallory. She decrypts,\n' +
+        '  reads, re-encrypts, and relays. Neither side notices. Unauthenticated\n' +
+        '  Diffie–Hellman cannot detect her — keep going to the STS step below.';
+      st.flags.mitm = true;
+      st.transcriptAlice = aPub + '|' + mPub;
+      st.transcriptBob = mPub + '|' + bPub;
+    } else {
+      malRow.style.display = 'none';
+      const kA = await crypto.subtle.deriveKey({ name: 'ECDH', public: bob.publicKey }, alice.privateKey, aesParams, true, ['encrypt', 'decrypt']);
+      const kB = await crypto.subtle.deriveKey({ name: 'ECDH', public: alice.publicKey }, bob.privateKey, aesParams, true, ['encrypt', 'decrypt']);
+      hexA = hex(await crypto.subtle.exportKey('raw', kA));
+      hexB = hex(await crypto.subtle.exportKey('raw', kB));
+      outS.classList.remove('error');
+      outS.textContent = 'Alice derived: ' + hexA.substring(0, 32) + '...\n' +
+        'Bob derived:   ' + hexB.substring(0, 32) + '...\n\n' +
+        '✓ Keys MATCH — a shared secret established without ever transmitting it.';
+      st.transcriptAlice = aPub + '|' + bPub;
+      st.transcriptBob = aPub + '|' + bPub;
+    }
+    if (st.lastHex) {
+      prevEl.textContent = 'Previous session key: ' + st.lastHex.substring(0, 32) + '...\n' +
+        'This session key:     ' + hexA.substring(0, 32) + '...\n' +
+        '→ Different every run. Ephemeral keys mean a future key compromise\n' +
+        '  cannot decrypt past sessions — this is forward secrecy.';
+    }
+    st.lastHex = hexA;
+    st.sig = null;
+    document.getElementById('sts-sig-out').textContent = 'Exchange complete — now sign the transcript...';
+    document.getElementById('sts-verify-out').textContent = 'Verification result will appear here...';
+  } catch (e) { outS.textContent = 'Error: ' + e.message; }
+}
+
+async function runSTSSign() {
+  const out = document.getElementById('sts-sig-out');
+  const st = window._ecdh;
+  if (!st || !st.transcriptAlice) { out.textContent = 'Run the key exchange first.'; return; }
+  try {
+    if (!st.ecdsa) st.ecdsa = await crypto.subtle.generateKey({ name: 'ECDSA', namedCurve: 'P-256' }, true, ['sign', 'verify']);
+    const data = new TextEncoder().encode(st.transcriptAlice);
+    const sig = await crypto.subtle.sign({ name: 'ECDSA', hash: 'SHA-256' }, st.ecdsa.privateKey, data);
+    st.sig = sig;
+    const b64sig = btoa(String.fromCharCode.apply(null, Array.from(new Uint8Array(sig))));
+    out.textContent = 'Alice signs SHA-256(pubA ‖ pubB-as-she-saw-it) with her long-term ECDSA key:\nsig = ' + b64sig.substring(0, 64) + '...';
+  } catch (e) { out.textContent = 'Error: ' + e.message; }
+}
+
+async function runSTSVerify() {
+  const out = document.getElementById('sts-verify-out');
+  const st = window._ecdh;
+  if (!st || !st.sig) { out.textContent = 'Sign the transcript first.'; return; }
+  try {
+    const data = new TextEncoder().encode(st.transcriptBob);
+    const ok = await crypto.subtle.verify({ name: 'ECDSA', hash: 'SHA-256' }, st.ecdsa.publicKey, st.sig, data);
+    out.classList.toggle('error', !ok);
+    if (ok) {
+      out.textContent = '✓ Signature VALID — the public keys Bob saw are exactly the ones Alice signed.\nThe exchange is authentically bound to Alice. Session key is trusted.';
+      st.flags.verified = true;
+    } else {
+      out.textContent = '✗ Signature INVALID — the transcript Bob received contains Mallory’s key,\nnot the key Alice signed. STS catches her substitution: the handshake aborts.';
+    }
+    if (st.flags.verified && st.flags.mitm) completeLabStage();
+  } catch (e) { out.textContent = 'Error: ' + e.message; }
 }
 
 async function runSignLab() {
