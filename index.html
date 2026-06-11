@@ -2391,6 +2391,7 @@ const INTERACTIVE_DIAGRAM_TEMPLATES = [
   {
     id: 'stream_cipher', icon: '🔐', name: 'Stream Cipher Flow',
     desc: '4-step interactive: key expansion, encryption, decryption, key-reuse attack',
+    audioDesc: 'This diagram walks through a stream cipher: a secret key seeds a keystream generator, and the keystream combines with the plaintext one bit at a time using exclusive OR to produce ciphertext. The same keystream reverses it',
     modules: [2], type: 'interactive',
     steps: [
       {
@@ -2452,6 +2453,7 @@ const INTERACTIVE_DIAGRAM_TEMPLATES = [
   {
     id: 'sym_enc_overview', icon: '🔒', name: 'Symmetric Encryption Overview',
     desc: '3-step: shared key setup, encrypt, decrypt',
+    audioDesc: 'This diagram shows symmetric encryption end to end: plaintext and a shared secret key enter the encryption algorithm to produce ciphertext, and the same key drives decryption back to the original plaintext',
     modules: [2, 3], type: 'interactive',
     steps: [
       {
@@ -2501,6 +2503,7 @@ const INTERACTIVE_DIAGRAM_TEMPLATES = [
     name: 'The Standard Cryptographic Process',
     icon: '🔐',
     desc: '3-step: key generation, encryption, decryption — the standard symmetric model',
+    audioDesc: 'This diagram shows the three algorithms of a symmetric cryptosystem: key generation produces the shared key, encryption turns plaintext into ciphertext under that key, and decryption recovers the plaintext with the same key',
     modules: [0, 2, 3],
     type: 'interactive',
     steps: [
@@ -2547,6 +2550,7 @@ const INTERACTIVE_DIAGRAM_TEMPLATES = [
   {
     id: 'security_services', icon: '🛡️', name: 'Threats, Services & Mechanisms',
     desc: '4-step interactive: four classic threats, the services that answer them, and the mechanisms that deliver each service',
+    audioDesc: 'This diagram maps the four classic threats, eavesdropping, tampering, impersonation and repudiation, to the security services that answer them, and then to the mechanisms that deliver each service',
     modules: [0], type: 'interactive',
     steps: [
       {
@@ -2614,6 +2618,7 @@ const INTERACTIVE_DIAGRAM_TEMPLATES = [
   {
     id: 'crypto_toolbox', icon: '🧰', name: 'The Toolbox So Far',
     desc: '4-step review map: confidentiality, integrity, the key distribution problem, and the public-key idea ahead',
+    audioDesc: 'This review diagram recaps the toolbox so far: A. E. S. for confidentiality, hashes and MACs for integrity, then shows why shared keys do not scale, and previews the public key idea that solves it',
     modules: [6], type: 'interactive',
     steps: [
       {
@@ -2669,6 +2674,7 @@ const INTERACTIVE_DIAGRAM_TEMPLATES = [
   {
     id: 'chain_of_trust', icon: '⛓️', name: 'PKI Chain of Trust',
     desc: '4-step interactive: trust anchor, delegation to intermediates, leaf validation, and revocation checking',
+    audioDesc: 'This diagram builds the P. K. I. chain of trust: a self-signed root in your trust store signs an intermediate authority, which signs the website certificate, with revocation checks guarding the result',
     modules: [8], type: 'interactive',
     steps: [
       {
@@ -2722,6 +2728,7 @@ const INTERACTIVE_DIAGRAM_TEMPLATES = [
   {
     id: 'challenge_response_flow', icon: '📡', name: 'Challenge–Response Protocol',
     desc: '4-step interactive: claim, fresh-nonce challenge, hashed response, and why replay attacks fail',
+    audioDesc: 'This diagram plays out challenge response authentication: a claim, a fresh random nonce, a hashed response the verifier recomputes, and a replayed old answer being rejected',
     modules: [9], type: 'interactive',
     steps: [
       {
@@ -2777,6 +2784,7 @@ const INTERACTIVE_DIAGRAM_TEMPLATES = [
   {
     id: 'schnorr_rounds', icon: '🕵️', name: 'Schnorr Identification Rounds',
     desc: '4-step interactive: commit, challenge, response-and-check, and why a cheater is caught half the time',
+    audioDesc: 'This diagram steps through one Schnorr identification round, commitment, coin-flip challenge, response and check, then shows why a cheating prover is caught half the time',
     modules: [10], type: 'interactive',
     steps: [
       {
@@ -2832,6 +2840,7 @@ const INTERACTIVE_DIAGRAM_TEMPLATES = [
   {
     id: 'tls13_handshake', icon: '🔒', name: 'TLS 1.3 Handshake',
     desc: '4-step interactive: ClientHello with key share, authenticated server flight, 1-RTT key derivation, and where a MITM fails',
+    audioDesc: 'This diagram follows the T. L. S. 1.3 handshake: a ClientHello with a key share, the authenticated server flight, traffic keys after one round trip, and the point where a key-swapping attacker is stopped',
     modules: [11], type: 'interactive',
     steps: [
       {
@@ -2893,6 +2902,7 @@ const INTERACTIVE_GRAPH_TEMPLATES = [
     name: 'Letter Frequency Analysis',
     icon: '📈',
     desc: '3 steps: English baseline, after Caesar cipher, after Vigenère — shows why frequency analysis works',
+    audioDesc: 'This chart compares letter frequencies: the tall bars show how often each letter appears in normal English, against the frequencies counted in a ciphertext, revealing which cipher letters stand in for E, T and A',
     chartType: 'bar',
     modules: [1, 12],
     steps: [
@@ -2942,6 +2952,7 @@ const INTERACTIVE_GRAPH_TEMPLATES = [
     name: 'Key Length vs Security',
     icon: '🔑',
     desc: '2 steps: key size in bits, then brute-force time — shows why 256-bit AES is unbreakable',
+    audioDesc: 'This chart shows how brute-force attack time explodes as key size grows: each added bit doubles the work, so short keys fall in seconds while 128-bit keys would outlast the age of the universe',
     chartType: 'bar',
     modules: [2, 3, 5],
     steps: [
@@ -2972,6 +2983,7 @@ const INTERACTIVE_GRAPH_TEMPLATES = [
     name: 'Avalanche Effect — SHA-256',
     icon: '🌊',
     desc: '3 steps: 1-bit change propagates through SHA-256 rounds, flipping ~50% of output bits',
+    audioDesc: 'This chart shows the avalanche effect: changing a single input bit flips roughly half of all output bits in the digest, destroying any visible relationship between similar inputs',
     chartType: 'line',
     modules: [4],
     steps: [
@@ -3015,6 +3027,7 @@ const INTERACTIVE_GRAPH_TEMPLATES = [
     name: 'Timing Attack Signal',
     icon: '⏱',
     desc: '2 steps: execution time variance reveals secret key bits — basis of side-channel attacks',
+    audioDesc: 'This chart shows a timing side channel: the response time for each guess differs measurably, and the slower bar betrays a partial match, letting an attacker recover a secret one piece at a time',
     chartType: 'bar',
     modules: [12],
     steps: [
@@ -3049,6 +3062,7 @@ const INTERACTIVE_GRAPH_TEMPLATES = [
     name: 'RSA vs ECC Key Sizes',
     icon: '📊',
     desc: '3 steps: equivalent strength at 128-bit security, the widening gap across levels, and why constrained devices choose ECC',
+    audioDesc: 'This bar chart compares key sizes at equal security: R. S. A. needs thousands of bits where elliptic curves need hundreds, and the gap grows with every security level',
     chartType: 'bar',
     modules: [7],
     steps: [
@@ -3089,6 +3103,7 @@ const INTERACTIVE_GRAPH_TEMPLATES = [
     name: 'Post-Quantum Size Costs',
     icon: '🪐',
     desc: '3 steps: public key sizes, signature sizes, and the migration trade-off behind FIPS 203/204/205',
+    audioDesc: 'This bar chart compares classical and post-quantum sizes in bytes: public keys first, then signatures, where the post-quantum schemes pay a real but manageable cost',
     chartType: 'bar',
     modules: [13],
     steps: [
@@ -6771,6 +6786,7 @@ function backFromLesson() {
 }
 
 function renderLessonStage() {
+  if (window.speechSynthesis && speechSynthesis.speaking) { speechSynthesis.cancel(); if (typeof _naReset === 'function') _naReset(); }
   const mod = MODULES[lessonState.moduleId];
   const stage = lessonState.stage;
   const totalStages = 7;
@@ -17186,6 +17202,33 @@ function preprocessSpeechText(raw) {
     .replace(/\bDoS\b/g,     'denial of service')
     .replace(/\bPKI\b/g,     'P. K. I.')
     .replace(/\bCA\b/g,      'certificate authority')
+    .replace(/\bECDSA\b/g,   'E. C. D. S. A.')
+    .replace(/\bECDHE\b/g,   'E. C. D. H. E.')
+    .replace(/\bEdDSA\b/g,   'Ed D. S. A.')
+    .replace(/\bGCM\b/g,     'G. C. M.')
+    .replace(/\bCBC\b/g,     'C. B. C.')
+    .replace(/\bCTR\b/g,     'counter mode')
+    .replace(/\bHKDF\b/g,    'H. K. D. F.')
+    .replace(/\bOTP\b/g,     'one-time pad')
+    .replace(/\bPQC\b/g,     'post-quantum cryptography')
+    .replace(/\bML-KEM\b/g,  'M. L. KEM')
+    .replace(/\bML-DSA\b/g,  'M. L. D. S. A.')
+    .replace(/\bSLH-DSA\b/g, 'S. L. H. D. S. A.')
+    .replace(/\bCRL\b/g,     'certificate revocation list')
+    .replace(/\bOCSP\b/g,    'O. C. S. P.')
+    .replace(/\bZKP\b/g,     'zero-knowledge proof')
+    .replace(/\bIoT\b/g,     'internet of things')
+    .replace(/‖/g,            ' concatenated with ')
+    .replace(/⊕/g,            ' exclusive OR ')
+    .replace(/≢/g,            ' is not congruent to ')
+    .replace(/√/g,            ' the square root of ')
+    .replace(/⁻¹/g,           ' inverse ')
+    .replace(/⁻ⁿ/g,           ' to the power of minus n ')
+    .replace(/²/g,            ' squared ')
+    .replace(/³/g,            ' cubed ')
+    .replace(/[×·]/g,         ' times ')
+    .replace(/∈/g,            ' in ')
+    .replace(/−/g,            ' minus ')
     // ── Math / code notation ─────────────────────────────
     .replace(/(\w)\s*\^\s*(\w+)/g, '$1 to the power of $2')  // a^b
     .replace(/\bmod\b/g,     'modulo')
@@ -17560,6 +17603,8 @@ function _renderGraphManagerSheet(moduleId, activeTab) {
       + '<div class="diagram-template-grid">' + templateCards + '</div>'
       + '<div id="graph-template-preview" style="margin-top:14px;display:none">'
         + '<input id="gtitle-input-t" class="lab-input" placeholder="Graph title..." style="width:100%;margin-bottom:8px;padding:9px 11px;font-size:13px">'
+        + '<textarea id="gdesc-input-t" class="lab-input" rows="2" placeholder="Audio description (optional) — students hear this when they tap 🔊" style="width:100%;margin-bottom:6px;font-size:12px;resize:vertical;padding:8px 10px"></textarea>'
+        + '<button onclick="previewAudioDesc(\'gdesc-input-t\',this)" class="btn btn-secondary btn-sm" style="width:auto;margin-bottom:8px">🔊 Preview voice</button>'
         + '<div id="graph-step-nav" style="display:flex;align-items:center;gap:8px;margin-bottom:8px;flex-wrap:wrap"></div>'
         + '<div style="background:white;border-radius:var(--radius-xs);padding:8px;border:1.5px solid var(--border);margin-bottom:10px" id="graph-preview-svg"></div>'
         + '<div id="graph-step-caption" style="font-size:12px;color:var(--text2);margin-bottom:10px;line-height:1.5"></div>'
@@ -17579,6 +17624,8 @@ function _renderGraphManagerSheet(moduleId, activeTab) {
         + '<strong>Colors:</strong> blue, green, red, yellow, purple, dark, default &nbsp;·&nbsp; <strong>hl: true</strong> = highlighted'
       + '</div>'
       + '<textarea id="graph-json-input" class="lab-input" rows="14" style="width:100%;font-family:var(--font-mono,monospace);font-size:11px;resize:vertical;padding:10px 12px">' + _escHtml(defaultJson) + '</textarea>'
+      + '<textarea id="gdesc-input-c" class="lab-input" rows="2" placeholder="Audio description (optional) — students hear this when they tap 🔊" style="width:100%;margin-top:8px;font-size:12px;resize:vertical;padding:8px 10px"></textarea>'
+      + '<button onclick="previewAudioDesc(\'gdesc-input-c\',this)" class="btn btn-secondary btn-sm" style="width:auto;margin-bottom:0">🔊 Preview voice</button>'
       + '<div style="display:flex;gap:8px;margin-top:8px">'
         + '<button onclick="previewIGraphJSON()" class="btn btn-secondary" style="flex:1">👁 Preview</button>'
         + '<button onclick="saveGraphFromSheet(' + moduleId + ',\'custom\')" class="btn btn-primary" style="flex:1">💾 ' + (isEditing ? 'Update' : 'Add') + '</button>'
@@ -17730,6 +17777,8 @@ function _renderBuilderTabHTML(moduleId, chartType) {
     + '<div style="margin-bottom:10px">'
       + '<label style="font-size:11px;font-weight:800;color:var(--text2);display:block;margin-bottom:4px">Graph Title</label>'
       + '<input id="igb-title-input" class="lab-input" style="width:100%;padding:8px 10px;font-size:13px" value="' + _escHtml(igb.title || '') + '" placeholder="e.g. AES Key Sizes" oninput="window._igb.title=this.value">'
+      + '<textarea id="igb-desc-input" class="lab-input" rows="2" placeholder="Audio description (optional) — students hear this when they tap 🔊" style="width:100%;margin-top:8px;font-size:12px;resize:vertical;padding:8px 10px"></textarea>'
+      + '<button onclick="previewAudioDesc(\'igb-desc-input\',this)" class="btn btn-secondary btn-sm" style="width:auto;margin-bottom:0">🔊 Preview voice</button>'
     + '</div>'
     + '<div style="font-size:11px;font-weight:800;color:var(--text2);margin-bottom:8px;display:flex;align-items:center;justify-content:space-between">'
       + '<span>Steps (' + steps.length + ')</span>'
@@ -17855,7 +17904,9 @@ function saveGraphFromSheet(moduleId, source) {
     if (!igb || !igb.steps || !igb.steps.length) { showToast('Add at least one step first'); return; }
     var titleB = ((document.getElementById('igb-title-input') || {}).value || igb.title || '').trim() || 'Interactive Graph';
     igb.title = titleB;
+    var descB = ((document.getElementById('igb-desc-input') || {}).value || '').trim();
     newGraph = { id: Date.now(), title: titleB, chartType: igb.chartType || pickedType, steps: igb.steps, fromTemplate: false, createdAt: new Date().toISOString() };
+    if (descB) newGraph.description = descB;
 
   } else if (source === 'custom') {
     var raw = (document.getElementById('graph-json-input') || {}).value || '';
@@ -19721,6 +19772,7 @@ function _renderDiagManagerSheet(moduleId, activeTab) {
       + '<div id="diag-template-preview" style="margin-top:12px;display:none">'
         + '<input id="diag-title-input-t" class="lab-input" placeholder="Diagram title..." style="width:100%;margin-bottom:8px;padding:8px 10px;font-size:13px">'
         + '<textarea id="diag-desc-input-t" class="lab-input" rows="2" placeholder="Audio description (optional) — students hear this when they tap 🔊" style="width:100%;margin-bottom:8px;font-size:12px;resize:vertical"></textarea>'
+        + '<button onclick="previewAudioDesc(\'diag-desc-input-t\',this)" class="btn btn-secondary btn-sm" style="width:auto;margin-bottom:8px">🔊 Preview voice</button>'
         + '<div id="diag-step-preview-info" style="font-size:11px;color:var(--secondary);font-weight:700;margin-bottom:8px"></div>'
         + '<div class="idag-wrap" style="margin-bottom:8px" id="diag-preview-idag"></div>'
         + '<button onclick="saveDiagramFromSheet(' + moduleId + ',\'template\')" class="btn btn-primary" style="width:100%">&#x1F4BE; Add to Module</button>'
@@ -19735,6 +19787,7 @@ function _renderDiagManagerSheet(moduleId, activeTab) {
       + '</div>'
       + '<textarea id="diag-json-input" class="lab-input" rows="14" style="width:100%;font-family:var(--font-mono);font-size:11px;resize:vertical;padding:10px 12px">' + _escHtml(defaultJson) + '</textarea>'
       + '<textarea id="diag-desc-input-c" class="lab-input" rows="2" placeholder="Audio description (optional) — students hear this when they tap 🔊" style="width:100%;margin-top:8px;font-size:12px;resize:vertical"></textarea>'
+      + '<button onclick="previewAudioDesc(\'diag-desc-input-c\',this)" class="btn btn-secondary btn-sm" style="width:auto;margin-bottom:0">🔊 Preview voice</button>'
       + '<div style="display:flex;gap:8px;margin-top:8px">'
         + '<button onclick="previewInteractiveDiagram()" class="btn btn-secondary" style="flex:1">&#x1F441; Preview</button>'
         + '<button onclick="saveDiagramFromSheet(' + moduleId + ',\'interactive\')" class="btn btn-primary" style="flex:1">&#x1F4BE; Add</button>'
@@ -23288,7 +23341,7 @@ function loadModuleIGraphs(moduleId) {
   // No saved graphs on this device — fall back to built-in templates for this module
   return INTERACTIVE_GRAPH_TEMPLATES
     .filter(function(t) { return t.modules && t.modules.includes(moduleId); })
-    .map(function(t) { return { id: t.id, title: t.name, steps: t.steps, fromTemplate: true, templateId: t.id }; });
+    .map(function(t) { return { id: t.id, title: t.name, steps: t.steps, description: t.audioDesc, fromTemplate: true, templateId: t.id }; });
 }
 
 function saveModuleIGraphs(moduleId, igraphs) {
@@ -23310,7 +23363,7 @@ function loadModuleDiagrams(moduleId) {
   // No saved diagrams on this device — fall back to built-in templates for this module
   return INTERACTIVE_DIAGRAM_TEMPLATES
     .filter(function(t) { return t.modules && t.modules.includes(moduleId); })
-    .map(function(t) { return { id: t.id, title: t.name, type: 'interactive', steps: t.steps, fromTemplate: true, templateId: t.id }; });
+    .map(function(t) { return { id: t.id, title: t.name, type: 'interactive', steps: t.steps, description: t.audioDesc, fromTemplate: true, templateId: t.id }; });
 }
 
 function saveModuleDiagrams(moduleId, diagrams) {
@@ -23365,9 +23418,11 @@ function renderDiagramsInLesson(moduleId) {
       var dots = d.steps.map(function(_, si) {
         return '<div class="idag-dot diag-step-dot' + (si === 0 ? ' active' : '') + '"></div>';
       }).join('');
-      var speakBtn = d.description
-        ? '<button onclick="speakDiagramDesc(\'' + key + '\',this)" title="Listen to description" style="background:none;border:none;cursor:pointer;font-size:18px;padding:2px 4px;line-height:1;flex-shrink:0" aria-label="Listen to diagram description">🔊</button>'
-        : '';
+      window._idiagTitle = window._idiagTitle || {};
+      window._idiagTitle[key] = d.title || 'Diagram';
+      var naBtnStyle = 'background:none;border:none;cursor:pointer;font-size:18px;padding:2px 4px;line-height:1;flex-shrink:0';
+      var speakBtn = '<button onclick="speakDiagramDesc(\'' + key + '\',this)" title="Listen to this step" style="' + naBtnStyle + '" aria-label="Listen to a spoken description of the current step">🔊</button>'
+        + '<button onclick="playAllDiagramSteps(\'' + key + '\',this)" title="Play all steps" style="' + naBtnStyle + ';font-size:15px" aria-label="Play spoken narration of every step in order">▶</button>';
 
       html += '<div class="idag-player diag-step-player" data-key="' + key + '" data-step="0" data-total="' + n + '">'
         + '<div class="diag-step-header">'
@@ -23394,20 +23449,102 @@ function renderDiagramsInLesson(moduleId) {
   return html;
 }
 
-function speakDiagramDesc(key, btn) {
-  if (!window.speechSynthesis) { showToast('Text-to-speech not supported on this device'); return; }
-  if (speechSynthesis.speaking) {
+// ── Unified narration engine: per-step audio for diagrams & graphs ──────────
+// Routes everything through the same pipeline as flashcards: best available
+// voice, crypto-aware pronunciation (preprocessSpeechText), rate 0.90.
+function _naReset() {
+  if (window._naBtn) { try { window._naBtn.textContent = window._naBtn.dataset.naIcon || '🔊'; } catch (e) {} }
+  window._naBtn = null;
+  window._naChain = false;
+}
+
+function _naToggleStop(btn) {
+  if (window.speechSynthesis && speechSynthesis.speaking) {
     speechSynthesis.cancel();
-    btn.textContent = '🔊';
-    return;
+    _naReset();
+    if (btn) btn.textContent = btn.dataset.naIcon || btn.textContent;
+    return true;
   }
-  var text = (window._idiagDesc || {})[key];
-  if (!text) return;
+  return false;
+}
+
+function _naSpeak(rawText, btn, xapiName, onDone) {
+  if (!window.speechSynthesis) { showToast('Text-to-speech not supported on this device'); return false; }
+  var text = (typeof preprocessSpeechText === 'function') ? preprocessSpeechText(rawText) : rawText;
   var utt = new SpeechSynthesisUtterance(text);
-  utt.onend   = function() { btn.textContent = '🔊'; };
-  utt.onerror = function() { btn.textContent = '🔊'; };
-  btn.textContent = '⏹';
+  var v = (typeof getBestVoice === 'function') ? getBestVoice() : null;
+  if (v) utt.voice = v; else utt.lang = 'en-GB';
+  utt.rate = 0.90;
+  utt.pitch = 0.97;
+  utt.volume = 1;
+  utt.onend = function() { if (onDone) onDone(); else _naReset(); };
+  utt.onerror = function() { _naReset(); };
+  if (btn) {
+    if (!btn.dataset.naIcon) btn.dataset.naIcon = btn.textContent;
+    window._naBtn = btn;
+    btn.textContent = '⏹';
+  }
+  if (xapiName && typeof emitXAPI === 'function') emitXAPI('interacted', xapiName, { tts: true });
   speechSynthesis.speak(utt);
+  return true;
+}
+
+function _naStepText(kind, key) {
+  var maps = kind === 'graph'
+    ? { data: window._igraphData, desc: window._igraphDesc, title: window._igraphTitle, sel: '.igraph-player' }
+    : { data: window._idiagData,  desc: window._idiagDesc,  title: window._idiagTitle,  sel: '.idag-player' };
+  var steps  = (maps.data || {})[key] || [];
+  var player = document.querySelector(maps.sel + '[data-key="' + key + '"]');
+  var cur    = player ? parseInt(player.dataset.step || '0') : 0;
+  var total  = steps.length || 1;
+  var caption = (steps[cur] && steps[cur].caption) || '';
+  var intro = '';
+  if (cur === 0) {
+    var d = (maps.desc || {})[key];
+    if (d) intro = d + '. ';
+  }
+  var title = ((maps.title || {})[key]) || (kind === 'graph' ? 'Graph' : 'Diagram');
+  return { text: intro + 'Step ' + (cur + 1) + ' of ' + total + '. ' + caption, title: title, cur: cur, total: total };
+}
+
+function speakDiagramDesc(key, btn) {
+  if (_naToggleStop(btn)) return;
+  var s = _naStepText('diagram', key);
+  _naSpeak(s.text, btn, 'Audio narration: ' + s.title + ' (step ' + (s.cur + 1) + '/' + s.total + ')');
+}
+
+function playAllDiagramSteps(key, btn) { _naPlayAll('diagram', key, btn); }
+function playAllGraphSteps(key, btn)   { _naPlayAll('graph', key, btn); }
+
+function _naPlayAll(kind, key, btn) {
+  if (_naToggleStop(btn)) return;
+  var sel = kind === 'graph' ? '.igraph-player' : '.idag-player';
+  var nav = kind === 'graph' ? igraphNav : idiagNav;
+  var player = document.querySelector(sel + '[data-key="' + key + '"]');
+  if (!player) return;
+  var total = parseInt(player.dataset.total || '1');
+  nav(key, -total);
+  window._naChain = true;
+  var playFrom = function() {
+    var s = _naStepText(kind, key);
+    var last = s.cur >= s.total - 1;
+    var ok = _naSpeak(s.text, btn, null, function() {
+      if (last || !window._naChain) { _naReset(); return; }
+      nav(key, 1);
+      playFrom();
+    });
+    if (!ok) _naReset();
+  };
+  if (typeof emitXAPI === 'function') emitXAPI('interacted', 'Audio narration (all steps): ' + _naStepText(kind, key).title, { steps: total, tts: true });
+  playFrom();
+}
+
+function previewAudioDesc(inputId, btn) {
+  if (_naToggleStop(btn)) return;
+  var el = document.getElementById(inputId);
+  var text = ((el && el.value) || '').trim();
+  if (!text) { showToast('Type a description first, then preview'); return; }
+  _naSpeak(text, btn, null);
 }
 
 // ── Interactive SVG diagram renderer ─────────────────────────
@@ -23557,6 +23694,7 @@ function _buildIDagSVG(step, animate) {
 
 /** Navigate an interactive diagram player. dir = +1 (next) or -1 (prev). */
 function idiagNav(key, dir) {
+  if (window.speechSynthesis && speechSynthesis.speaking) { speechSynthesis.cancel(); if (typeof _naReset === 'function') _naReset(); }
   var player = document.querySelector('.idag-player[data-key="' + key + '"]');
   if (!player) return;
   var total  = parseInt(player.dataset.total || '1');
@@ -23580,6 +23718,7 @@ function idiagNav(key, dir) {
 
 /** Navigate an interactive graph player. dir = +1 (next) or -1 (prev). */
 function igraphNav(key, dir) {
+  if (window.speechSynthesis && speechSynthesis.speaking) { speechSynthesis.cancel(); if (typeof _naReset === 'function') _naReset(); }
   var player = document.querySelector('.igraph-player[data-key="' + key + '"]');
   if (!player) return;
   var total     = parseInt(player.dataset.total || '1');
@@ -24049,9 +24188,11 @@ function renderGraphsInLesson(moduleId) {
     var dots = d.steps.map(function(_, si) {
       return '<div class="idag-dot diag-step-dot' + (si === 0 ? ' active' : '') + '"></div>';
     }).join('');
-    var speakBtn = d.description
-      ? '<button onclick="speakGraphDesc(\'' + key + '\',this)" title="Listen to description" style="background:none;border:none;cursor:pointer;font-size:18px;padding:2px 4px;line-height:1;flex-shrink:0" aria-label="Listen to graph description">🔊</button>'
-      : '';
+    window._igraphTitle = window._igraphTitle || {};
+    window._igraphTitle[key] = d.title || 'Graph';
+    var naBtnStyleG = 'background:none;border:none;cursor:pointer;font-size:18px;padding:2px 4px;line-height:1;flex-shrink:0';
+    var speakBtn = '<button onclick="speakGraphDesc(\'' + key + '\',this)" title="Listen to this step" style="' + naBtnStyleG + '" aria-label="Listen to a spoken description of the current step">🔊</button>'
+      + '<button onclick="playAllGraphSteps(\'' + key + '\',this)" title="Play all steps" style="' + naBtnStyleG + ';font-size:15px" aria-label="Play spoken narration of every step in order">▶</button>';
     var ctInfo = CHART_TYPES.find(function(c) { return c.id === chartType; });
     var ctLabel = ctInfo ? (ctInfo.icon + ' ' + ctInfo.label) : '📊';
 
@@ -24076,15 +24217,9 @@ function renderGraphsInLesson(moduleId) {
 }
 
 function speakGraphDesc(key, btn) {
-  if (!window.speechSynthesis) { showToast('Text-to-speech not supported on this device'); return; }
-  if (speechSynthesis.speaking) { speechSynthesis.cancel(); btn.textContent = '🔊'; return; }
-  var text = (window._igraphDesc || {})[key];
-  if (!text) return;
-  var utt = new SpeechSynthesisUtterance(text);
-  utt.onend   = function() { btn.textContent = '🔊'; };
-  utt.onerror = function() { btn.textContent = '🔊'; };
-  btn.textContent = '⏹';
-  speechSynthesis.speak(utt);
+  if (_naToggleStop(btn)) return;
+  var s = _naStepText('graph', key);
+  _naSpeak(s.text, btn, 'Audio narration: ' + s.title + ' (step ' + (s.cur + 1) + '/' + s.total + ')');
 }
 
 function _escHtml(str) {
