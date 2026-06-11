@@ -41,7 +41,7 @@ Never suggest splitting `index.html`. The single-file architecture is a **delibe
 All lesson body strings (`MODULES[n].content.stage*.body`) are JavaScript template literals. Any backtick character inside lesson body content **MUST** use `<code>backtick</code>` HTML — **never a raw backtick**.
 
 - The total backtick count in `index.html` must remain **even** at all times.
-- Current count: **1,586 (even ✓)**
+- Current count: **1,700 (even ✓)**
 - Every implementation session must end with a verification script that checks all changed items and confirms backtick parity.
 
 ```js
