@@ -2918,8 +2918,8 @@ Modern approach:  "Algorithm is public; only the key is secret"
       },
       stage4: {
         type: 'lab',
-        heading: 'Lab: Classical Cipher Toolkit & Frequency Analysis',
-        scenario: '🗞️ Scenario: A message was intercepted encrypted with a substitution cipher — just like the CipherPulse daily puzzle. Use the Caesar tool to encrypt and decrypt messages, then apply frequency analysis to crack a substitution cipher by mapping the most frequent ciphertext letters to common English letters.',
+        heading: 'Lab: Classical Ciphers & the One-Time Pad',
+        scenario: '🗞️ Scenario: Part A — a message was intercepted, encrypted with a substitution cipher just like the CipherPulse daily puzzle. Use the Caesar tool and frequency analysis to crack it. Part B — the Week 2 formative challenge: XOR-decrypt a real one-time-pad ciphertext, then see why reusing a pad destroys its perfect secrecy.',
         labId: 'vigenere_lab'
       },
       stage5: {
@@ -3399,8 +3399,8 @@ HMAC(K, m) = H((K ⊕ opad) ‖ H((K ⊕ ipad) ‖ m))
       },
       stage4: {
         type: 'lab',
-        heading: 'Lab: Hash Functions & Avalanche Effect — OpenSSL Mirror',
-        scenario: '🔬 Seminar 4 Lab: Replicate the Seminar 4 OpenSSL hash exercise in-browser. Compare SHA-1 vs SHA-256 digests on nearly identical messages — observe the avalanche effect (1-bit input difference → completely different digest). Demonstrate why SHA-1 is deprecated. Then compute HMAC-SHA256 and show why it resists length-extension attacks that break plain H(K‖m).',
+        heading: 'Lab: Hash Functions, Avalanche & Collision Hunt',
+        scenario: '🔬 Seminar 4 Lab: Replicate the Seminar 4 OpenSSL hash exercise in-browser. Compare SHA-1 vs SHA-256 digests on nearly identical messages — observe the avalanche effect (1-bit input difference → completely different digest). Demonstrate why SHA-1 is deprecated, and why HMAC-SHA256 resists length-extension attacks. Finally, mirror the Week 4 challenge: hunt for a collision in the additive mod-256 compression function and discover why digest size is collision resistance.',
         labId: 'openssl_hash_lab'
       },
       stage5: {
@@ -4477,9 +4477,9 @@ Verifier:  Verify(pk_prover, N, σ) → accept/reject</div>
       },
       stage4: {
         type: 'lab',
-        heading: 'Lab: Challenge–Response Authentication',
-        scenario: '📡 Scenario: Implement a challenge–response protocol. The server issues a nonce; sign it with your ECDSA private key and return the signature. The server verifies — then observe what happens when the nonce is reused (replay) or the signature is modified.',
-        labId: 'sign_lab'
+        heading: 'Lab: Challenge–Response Authentication — Week 9 Mirror',
+        scenario: '📡 Week 9 Challenge Mirror: a verifier issues the binary challenge r. Decode it, choose a message M, and compute the response h(M ‖ r) with real SHA-256 — then swap roles, act as the verifier, catch a tampered transmission, and see why a fresh nonce defeats replay attacks.',
+        labId: 'challenge_response_lab'
       },
       stage5: {
         type: 'quiz',
@@ -6426,6 +6426,12 @@ Valid iff R'.x mod n == r
 <span class="comment">// s₁ - s₂ = k⁻¹·(d₁ - d₂)  →  k = (d₁ - d₂)·(s₁ - s₂)⁻¹ mod n</span>
 <span class="comment">// then sk = (s·k - d)·r⁻¹ mod n  — private key fully exposed!</span></div>
         <p>This is exactly how the Sony PS3 master key was recovered in 2010: the firmware signing code used a constant k for every signature, making every signing event equivalent to publishing the private key.</p>`,
+    12: `<p>The Week 11 challenge asks you to factorise <strong>n = 11663</strong>. Trial division would test every prime up to √11663 ≈ 108. But look how close n sits to a perfect square:</p>
+        <div class="code-block"><span class="comment">// Fermat: search for n = a² − b², because then n = (a−b)(a+b)</span>
+Step 1: a = ⌈√11663⌉ = 108
+Step 2: a² − n = 11664 − 11663 = 1 = 1²   <span class="keyword">// perfect square — first try!</span>
+Step 3: n = (108 − 1)(108 + 1) = <strong>107 × 109</strong></div>
+        <p>One step. Fermat's method wins whenever the prime factors are close together — here they differ by only 2. This is exactly why RSA key generation must keep p and q far apart: if |p − q| is small, n sits beside a perfect square and Fermat's method factorises it almost instantly, no matter how large the key. Try 11663 in the lab and watch the three algorithms race.</p>`,
     13: `<p>Post-quantum key sizes vs classical — why PQC changes deployment considerations:</p>
         <div class="code-block"><span class="comment">// Key and signature sizes (bytes) — classical vs PQC</span>
 Algorithm         Public Key   Private Key  Signature   Security
@@ -6742,6 +6748,52 @@ function getSummary(mod) {
 // ============================================================
 function renderLab(content, mod) {
   const labs = {
+    challenge_response_lab: `
+      <div class="stage-label">⚗️ Interactive Lab — Week 9 Mirror</div>
+      <div class="lab-scenario">${content.scenario}</div>
+      <div class="lab-container">
+        <div class="lab-header">
+          <span class="lab-icon">🤝</span>
+          <div><div class="lab-title">${content.heading}</div><div class="lab-subtitle">Challenge–response · h(M ‖ r) · Real SHA-256 via Web Crypto</div></div>
+        </div>
+
+        <div class="lab-field">
+          <label class="lab-label">Step 1 · Decode the challenge r — tap each 7-bit block to reveal its ASCII character</label>
+          <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:6px">
+            <button class="btn btn-secondary btn-sm" style="width:auto;font-family:var(--mono);font-size:11px" id="cr-bit-0" onclick="crRevealBit(0)">1110010</button>
+            <button class="btn btn-secondary btn-sm" style="width:auto;font-family:var(--mono);font-size:11px" id="cr-bit-1" onclick="crRevealBit(1)">1100001</button>
+            <button class="btn btn-secondary btn-sm" style="width:auto;font-family:var(--mono);font-size:11px" id="cr-bit-2" onclick="crRevealBit(2)">1101110</button>
+            <button class="btn btn-secondary btn-sm" style="width:auto;font-family:var(--mono);font-size:11px" id="cr-bit-3" onclick="crRevealBit(3)">1100100</button>
+            <button class="btn btn-secondary btn-sm" style="width:auto;font-family:var(--mono);font-size:11px" id="cr-bit-4" onclick="crRevealBit(4)">1101111</button>
+            <button class="btn btn-secondary btn-sm" style="width:auto;font-family:var(--mono);font-size:11px" id="cr-bit-5" onclick="crRevealBit(5)">1101101</button>
+          </div>
+          <label class="lab-label" style="margin-top:10px">What does r spell?</label>
+          <div style="display:flex;gap:8px">
+            <input class="lab-input" id="cr-decode-input" placeholder="6 letters..." maxlength="6" style="font-family:var(--mono)">
+            <button class="btn btn-primary" style="width:auto" onclick="crCheckDecode()">Check</button>
+          </div>
+          <div class="lab-output" id="cr-decode-out" style="margin-top:8px;font-size:12px">Decode the six blocks (7-bit ASCII)...</div>
+        </div>
+
+        <div class="lab-field" style="margin-top:14px">
+          <label class="lab-label">Step 2 · Compute your response h(M ‖ r)</label>
+          <input class="lab-input" id="cr-msg-input" value="Hello from Module 9" placeholder="Your message M...">
+          <button class="btn btn-primary" style="margin-top:8px" onclick="crComputeResponse()">▶ Concatenate &amp; Hash (SHA-256)</button>
+          <div class="lab-output" id="cr-concat-out" style="font-family:var(--mono);font-size:11px;margin-top:8px">M ‖ r will appear here...</div>
+          <div class="lab-output" id="cr-hash-out" style="font-family:var(--mono);font-size:11px;margin-top:6px;word-break:break-all">h(M ‖ r) will appear here...</div>
+        </div>
+
+        <div class="lab-field" style="margin-top:14px">
+          <label class="lab-label">Step 3 · Swap roles — you are now the verifier</label>
+          <p style="font-size:12px;color:var(--text2);margin:4px 0 8px">Three transmissions arrive, each claiming a hash. Recompute h(M ‖ r) for each and compare — one was modified in transit.</p>
+          <button class="btn btn-secondary btn-sm" style="width:auto" onclick="crStartVerification()">📨 Receive transmissions</button>
+          <div id="cr-rounds" style="margin-top:8px"></div>
+          <div id="cr-summary" style="display:none;margin-top:10px;background:#ECFDF5;border:1px solid #10B981;border-radius:var(--radius-xs);padding:12px;font-size:12px">
+            <strong style="color:#047857">✓ Protocol complete.</strong> Hashing M together with a verifier-chosen r proves the response was computed <em>after</em> the challenge was issued — and any tampering with M changes the hash. One caveat: if r is ever reused, an attacker can replay an old response. Nonces must be fresh, every time.
+          </div>
+        </div>
+      </div>
+    `,
     hash_lab: `
       <div class="stage-label">⚗️ Interactive Lab</div>
       <div class="lab-scenario">${content.scenario}</div>
@@ -7083,6 +7135,32 @@ function renderLab(content, mod) {
             <div class="lab-output" id="lab-output-freq" style="font-size:12px">Run analysis to see frequency ranking...</div>
           </div>
         </div>
+        <div style="margin-top:24px;border-top:2px solid var(--border);padding-top:18px">
+          <div style="font-size:11px;font-weight:800;color:var(--primary);text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px">Part B · One-Time Pad — Week 2 Challenge</div>
+          <p style="font-size:13px;color:var(--text2);margin-bottom:14px">The one-time pad XORs each plaintext byte with a key byte. With a truly random, never-reused key as long as the message it is provably unbreakable — but here the key is a single repeating byte, exactly as in the Week 2 formative challenge.</p>
+
+          <div class="lab-field">
+            <label class="lab-label">1 · XOR Playground — type a short message to see the bits</label>
+            <input class="lab-input" id="otp-play-input" value="HI" maxlength="6" oninput="runOtpPlayground()" style="font-family:var(--mono)">
+            <div class="lab-output" id="otp-play-out" style="font-family:var(--mono);font-size:11px;line-height:1.9;margin-top:8px;white-space:pre">Type a message above...</div>
+          </div>
+
+          <div class="lab-field" style="margin-top:14px">
+            <label class="lab-label">2 · The Week 2 Challenge — recover the plaintext</label>
+            <button class="btn btn-secondary btn-sm" style="width:auto" onclick="otpLoadChallenge()">📡 Load challenge ciphertext (259 blocks)</button>
+            <div class="lab-output" id="otp-ct-display" style="font-family:var(--mono);font-size:10px;max-height:90px;overflow-y:auto;margin-top:8px;display:none"></div>
+            <label class="lab-label" style="margin-top:10px">Enter the 8-bit key</label>
+            <input class="lab-input" id="otp-key-input" placeholder="e.g. 11110000" maxlength="8" style="font-family:var(--mono)">
+            <button class="btn btn-primary" style="margin-top:8px" onclick="runOtpDecrypt()">▶ XOR-Decrypt</button>
+            <div class="lab-output" id="otp-decrypt-out" style="margin-top:8px;font-size:12px;white-space:pre-wrap">Load the ciphertext, then try a key...</div>
+          </div>
+
+          <div class="lab-field" style="margin-top:14px">
+            <label class="lab-label">3 · Why one-time? Reuse the key and it collapses</label>
+            <button class="btn btn-secondary btn-sm" style="width:auto" onclick="runTwoTimePad()">⚠️ XOR two ciphertexts that share a key</button>
+            <div class="lab-output" id="otp-ttp-out" style="font-family:var(--mono);font-size:11px;line-height:1.9;margin-top:8px;white-space:pre">Run to see the key cancel out...</div>
+          </div>
+        </div>
       </div>`,
 
     openssl_hash_lab: `
@@ -7251,6 +7329,32 @@ function renderLab(content, mod) {
               <label class="lab-label">Comparison: H₁ (direct) vs H₃ (chained) — are they the same?</label>
               <div class="lab-output" id="chain-comparison" style="font-size:12px">Run to see comparison...</div>
             </div>
+          </div>
+        </div>
+        <div style="margin-top:24px;border-top:2px solid var(--border);padding-top:18px">
+          <div style="font-size:11px;font-weight:800;color:var(--primary);text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px">Collision Hunt — Week 4 Challenge</div>
+          <p style="font-size:13px;color:var(--text2);margin-bottom:14px">The Week 4 challenge compression function splits the input into 8-bit blocks and simply adds them mod 256 — a 1-byte digest. Your mission: find two <em>different</em> messages with the <em>same</em> digest.</p>
+
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+            <div class="lab-field">
+              <label class="lab-label">Message A</label>
+              <textarea class="lab-input" id="ch-input-a" rows="2" oninput="updateCollisionDigests()" placeholder="First message..."></textarea>
+              <div class="lab-output" id="ch-digest-a" style="font-family:var(--mono);font-size:12px;margin-top:6px">digest = —</div>
+            </div>
+            <div class="lab-field">
+              <label class="lab-label">Message B</label>
+              <textarea class="lab-input" id="ch-input-b" rows="2" oninput="updateCollisionDigests()" placeholder="Different message, same digest..."></textarea>
+              <div class="lab-output" id="ch-digest-b" style="font-family:var(--mono);font-size:12px;margin-top:6px">digest = —</div>
+            </div>
+          </div>
+          <div style="display:flex;align-items:center;gap:10px;margin-top:8px">
+            <div style="font-size:12px;color:var(--text2)" id="ch-attempts">Keystrokes: 0</div>
+            <button class="btn btn-secondary btn-sm" style="width:auto" onclick="chShowHint()">💡 Hint</button>
+          </div>
+          <div id="ch-hint" style="display:none;font-size:12px;color:var(--text2);margin-top:6px;background:var(--bg);border:1px solid var(--border);border-radius:var(--radius-xs);padding:8px">Addition is order-blind: the function cannot tell <strong>listen</strong> from <strong>silent</strong>. Any anagram collides instantly. Or pad with bytes summing to 256 — adding 256 mod 256 changes nothing.</div>
+          <div id="ch-success" style="display:none;margin-top:10px;background:#ECFDF5;border:1px solid #10B981;border-radius:var(--radius-xs);padding:12px;font-size:13px">
+            <strong style="color:#047857">🎉 Collision found!</strong> Two different messages, one digest — this function is broken.
+            <div style="margin-top:8px;font-size:12px;color:var(--text2)">With only 256 possible digests, the birthday bound says roughly 20 random messages give a better-than-even chance of a collision. SHA-256 has 2<sup>256</sup> digests, pushing the birthday bound to ~2<sup>128</sup> attempts — beyond any conceivable computation. Digest size <em>is</em> collision resistance.</div>
           </div>
         </div>
 
@@ -7449,7 +7553,8 @@ function renderLab(content, mod) {
             <div style="display:flex;flex-direction:column;gap:6px;margin-bottom:8px">
               <button onclick="document.getElementById('factor-n').value='143'" style="background:var(--bg);border:1px solid var(--border);border-radius:var(--radius-xs);padding:7px;text-align:left;cursor:pointer;font-family:var(--font);font-size:12px">143 = 11 × 13 (tiny — 8-bit)</button>
               <button onclick="document.getElementById('factor-n').value='1763'" style="background:var(--bg);border:1px solid var(--border);border-radius:var(--radius-xs);padding:7px;text-align:left;cursor:pointer;font-family:var(--font);font-size:12px">1763 = 41 × 43 (11-bit)</button>
-              <button onclick="document.getElementById('factor-n').value='15251'" style="background:var(--bg);border:1px solid var(--border);border-radius:var(--radius-xs);padding:7px;text-align:left;cursor:pointer;font-family:var(--font);font-size:12px">15251 = 113 × 135 → 15251 (14-bit)</button>
+              <button onclick="document.getElementById('factor-n').value='11663'" style="background:var(--bg);border:1px solid var(--border);border-radius:var(--radius-xs);padding:7px;text-align:left;cursor:pointer;font-family:var(--font);font-size:12px">11663 = 107 × 109 (14-bit — Week 11 challenge: Fermat in one step)</button>
+              <button onclick="document.getElementById('factor-n').value='15251'" style="background:var(--bg);border:1px solid var(--border);border-radius:var(--radius-xs);padding:7px;text-align:left;cursor:pointer;font-family:var(--font);font-size:12px">15251 = 101 × 151 (14-bit)</button>
               <button onclick="document.getElementById('factor-n').value='9999991'" style="background:var(--bg);border:1px solid var(--border);border-radius:var(--radius-xs);padding:7px;text-align:left;cursor:pointer;font-family:var(--font);font-size:12px">9999991 (23-bit — watch algorithm time differences)</button>
               <button onclick="document.getElementById('factor-n').value='48567227'" style="background:var(--bg);border:1px solid var(--border);border-radius:var(--radius-xs);padding:7px;text-align:left;cursor:pointer;font-family:var(--font);font-size:12px">48567227 = 6967 × 6971 (26-bit — Pollard's rho advantage)</button>
             </div>
@@ -7851,6 +7956,179 @@ async function runHashCompare() {
     out.classList.toggle('error', !match);
     out.textContent = `Hash 1: ${h1.substring(0,32)}...\nHash 2: ${h2.substring(0,32)}...\n\n${match ? '✓ Hashes MATCH — message unchanged' : '✗ Hashes DIFFER — avalanche effect demonstrated!'}`;
   } catch(e) { out.textContent = 'Error: ' + e.message; }
+}
+
+// ── M01 Part B: One-Time Pad lab (Week 2 challenge mirror) ──────────────────
+const OTP_WEEK2_CT = '11100011 11000100 10001010 11011110 11000010 11001111 10001010 11011010 11000101 11011010 11011111 11000110 11001011 11011000 10001010 11000011 11000111 11001011 11001101 11000011 11000100 11001011 11011110 11000011 11000101 11000100 10001010 11001001 11011000 11010011 11011010 11011110 11000101 11001101 11011000 11001011 11011010 11000010 11010011 10001010 11001111 11011011 11011111 11001011 11011110 11001111 11011001 10001010 11011110 11000101 10001010 11001111 11000100 11001001 11011000 11010011 11011010 11011110 11000011 11000101 11000100 10010001 10001010 11001011 10001010 11001001 11011000 11010011 11011010 11011110 11000101 11001101 11011000 11001011 11011010 11000010 11000011 11001001 10001010 11000111 11001111 11001001 11000010 11001011 11000100 11000011 11011001 11000111 10001010 11011010 11011000 11000101 11011100 11000011 11001110 11000011 11000100 11001101 10001010 11001001 11000101 11000100 11001100 11000011 11001110 11001111 11000100 11011110 11000011 11001011 11000110 11000011 11011110 11010011 10001010 11011001 11001111 11011000 11011100 11000011 11001001 11001111 11011001 10000100 10001010 11100011 11000100 10001010 11011000 11001111 11001011 11000110 11000011 11011110 11010011 10000110 10001010 11001001 11011000 11010011 11011010 11011110 11000101 11001101 11011000 11001011 11011010 11000010 11010011 10001010 11001101 11000101 11001111 11011001 10001010 11001100 11001011 11011000 10001010 11001000 11001111 11010011 11000101 11000100 11001110 10001010 11011110 11000010 11000011 11011001 10001010 11011110 11000101 10001010 11011010 11011000 11000101 11011100 11000011 11001110 11001111 10001010 11001011 11000100 10001010 11011111 11000100 11001110 11001111 11011000 11011010 11000011 11000100 11000100 11000011 11000100 11001101 10001010 11011110 11001111 11001001 11000010 11000100 11000101 11000110 11000101 11001101 11010011 10001010 11001100 11000101 11011000 10001010 11001000 11011111 11000011 11000110 11001110 11000011 11000100 11001101 10001010 11011001 11001111 11001001 11011111 11011000 11000011 11011110 11010011 10001010 11011001 11001111 11011000 11011100 11000011 11001001 11001111 11011001 10001010 11000111 11000101 11011000 11001111 10001010 11001000 11011000 11000101 11001011 11001110 11000110 11010011 10000100 10001010 10001010 10001010 10001010 10001010 10001010';
+
+function otpByteToBin(n) { return n.toString(2).padStart(8, '0'); }
+
+function runOtpPlayground() {
+  const msg = (document.getElementById('otp-play-input').value || '').slice(0, 6);
+  const out = document.getElementById('otp-play-out');
+  if (!msg) { out.textContent = 'Type a message above...'; return; }
+  let rows = 'char  ASCII  plaintext   key        ciphertext\n';
+  for (let i = 0; i < msg.length; i++) {
+    const c = msg.charCodeAt(i) & 0xFF;
+    rows += (msg[i] + '     ').slice(0, 6) + (String(c) + '     ').slice(0, 7) +
+            otpByteToBin(c) + '    10101010   ' + otpByteToBin(c ^ 0xAA) + '\n';
+  }
+  out.textContent = rows;
+}
+
+function otpLoadChallenge() {
+  const el = document.getElementById('otp-ct-display');
+  el.style.display = 'block';
+  el.textContent = OTP_WEEK2_CT;
+}
+
+function runOtpDecrypt() {
+  const keyStr = (document.getElementById('otp-key-input').value || '').trim();
+  const out = document.getElementById('otp-decrypt-out');
+  if (!/^[01]{8}$/.test(keyStr)) {
+    out.classList.add('error');
+    out.textContent = 'The key must be exactly 8 binary digits, e.g. 11110000';
+    return;
+  }
+  out.classList.remove('error');
+  const key = parseInt(keyStr, 2);
+  const blocks = OTP_WEEK2_CT.split(' ');
+  let pt = '';
+  for (let i = 0; i < blocks.length; i++) pt += String.fromCharCode(parseInt(blocks[i], 2) ^ key);
+  if (pt.indexOf('In the popular') === 0) {
+    out.textContent = '✓ KEY FOUND — plaintext recovered:\n\n' + pt.trim();
+    completeLabStage();
+  } else {
+    out.textContent = '✗ Key ' + keyStr + ' produces noise:\n\n' + pt.substring(0, 80) +
+      '...\n\nHint: the Week 2 brief states the key — or brute-force all 256 keys, as in seminar Task 2.';
+  }
+}
+
+function runTwoTimePad() {
+  const p1 = 'MEET AT DAWN';
+  const p2 = 'CODE IS SAFE';
+  const out = document.getElementById('otp-ttp-out');
+  const k = new Uint8Array(p1.length);
+  crypto.getRandomValues(k);
+  let cx = '', px = '';
+  for (let i = 0; i < 6; i++) {
+    const c1 = p1.charCodeAt(i) ^ k[i];
+    const c2 = p2.charCodeAt(i) ^ k[i];
+    cx += otpByteToBin(c1 ^ c2) + ' ';
+    px += otpByteToBin(p1.charCodeAt(i) ^ p2.charCodeAt(i)) + ' ';
+  }
+  out.textContent =
+    'P1 = "' + p1 + '"   P2 = "' + p2 + '"\n' +
+    'A fresh RANDOM key k was just generated — you never see it.\n\n' +
+    'C1 ⊕ C2 (first 6 bytes): ' + cx + '\n' +
+    'P1 ⊕ P2 (first 6 bytes): ' + px + '\n\n' +
+    '→ Identical. The key cancelled out: an attacker holding two\n' +
+    '  ciphertexts learns P1 ⊕ P2 without ever knowing k.\n' +
+    '  Crib-dragging then recovers both messages. NEVER reuse a pad.';
+}
+
+// ── M04: Collision Hunt (Week 4 challenge mirror) ───────────────────────────
+let _chKeystrokes = 0;
+let _chDone = false;
+
+function ch256Digest(s) {
+  let sum = 0;
+  for (let i = 0; i < s.length; i++) sum = (sum + (s.charCodeAt(i) & 0xFF)) % 256;
+  return sum;
+}
+
+function chFmt(d) { return 'digest = ' + d + '  (0x' + d.toString(16).padStart(2, '0').toUpperCase() + ')'; }
+
+function updateCollisionDigests() {
+  const a = document.getElementById('ch-input-a').value;
+  const b = document.getElementById('ch-input-b').value;
+  _chKeystrokes++;
+  document.getElementById('ch-attempts').textContent = 'Keystrokes: ' + _chKeystrokes;
+  document.getElementById('ch-digest-a').textContent = a ? chFmt(ch256Digest(a)) : 'digest = —';
+  document.getElementById('ch-digest-b').textContent = b ? chFmt(ch256Digest(b)) : 'digest = —';
+  if (!_chDone && a && b && a !== b && ch256Digest(a) === ch256Digest(b)) {
+    _chDone = true;
+    document.getElementById('ch-success').style.display = 'block';
+    completeLabStage();
+  }
+}
+
+function chShowHint() { document.getElementById('ch-hint').style.display = 'block'; }
+
+// ── M09: Challenge–Response lab (Week 9 challenge mirror) ───────────────────
+const CR_BITS = ['1110010', '1100001', '1101110', '1100100', '1101111', '1101101'];
+const CR_R = 'random';
+let _crRounds = null;
+
+function crRevealBit(i) {
+  const btn = document.getElementById('cr-bit-' + i);
+  const ch = String.fromCharCode(parseInt(CR_BITS[i], 2));
+  if (btn.textContent.indexOf('→') === -1) btn.textContent = CR_BITS[i] + ' → ' + ch;
+}
+
+function crCheckDecode() {
+  const guess = (document.getElementById('cr-decode-input').value || '').trim().toLowerCase();
+  const out = document.getElementById('cr-decode-out');
+  if (guess === CR_R) {
+    out.classList.remove('error');
+    out.textContent = '✓ Correct — r = "random" (each block is a 7-bit ASCII code). This is the nonce the verifier chose.';
+  } else {
+    out.classList.add('error');
+    out.textContent = '✗ Not quite. Convert each 7-bit block to decimal, then look up the ASCII character.';
+  }
+}
+
+async function crComputeResponse() {
+  const m = document.getElementById('cr-msg-input').value || '';
+  const concatOut = document.getElementById('cr-concat-out');
+  const hashOut = document.getElementById('cr-hash-out');
+  if (!m) { concatOut.textContent = 'Enter a message M first.'; return; }
+  concatOut.textContent = 'M ‖ r = "' + m + '" + "' + CR_R + '"  →  "' + m + CR_R + '"';
+  try {
+    const h = await sha256(m + CR_R);
+    hashOut.textContent = 'h(M ‖ r) = ' + h;
+  } catch (e) {
+    hashOut.textContent = 'Error: ' + e.message;
+  }
+}
+
+async function crStartVerification() {
+  const m1 = 'SEND 100 COINS TO BOB';
+  const m2 = 'MEET AT THE BRIDGE 9PM';
+  const honest1 = await sha256(m1 + CR_R);
+  const honest2 = await sha256(m2 + CR_R);
+  _crRounds = [
+    { m: m1, claimed: honest1, verified: false },
+    { m: 'SEND 900 COINS TO EVE', claimed: honest1, verified: false },
+    { m: m2, claimed: honest2, verified: false }
+  ];
+  let html = '';
+  for (let i = 0; i < 3; i++) {
+    html += '<div style="border:1px solid var(--border);border-radius:var(--radius-xs);padding:10px;margin-top:6px">' +
+      '<div style="font-size:12px"><strong>Transmission ' + (i + 1) + ':</strong> M = "' + _crRounds[i].m + '"</div>' +
+      '<div style="font-family:var(--mono);font-size:10px;color:var(--text2);margin:4px 0;word-break:break-all">claimed h = ' + _crRounds[i].claimed + '</div>' +
+      '<button class="btn btn-secondary btn-sm" style="width:auto" onclick="crVerifyRound(' + i + ')">Recompute &amp; compare</button>' +
+      '<div id="cr-round-out-' + i + '" style="font-size:12px;margin-top:6px"></div>' +
+      '</div>';
+  }
+  document.getElementById('cr-rounds').innerHTML = html;
+  document.getElementById('cr-summary').style.display = 'none';
+}
+
+async function crVerifyRound(i) {
+  if (!_crRounds) return;
+  const r = _crRounds[i];
+  const actual = await sha256(r.m + CR_R);
+  const ok = actual === r.claimed;
+  const el = document.getElementById('cr-round-out-' + i);
+  el.innerHTML = ok
+    ? '<span style="color:#047857;font-weight:700">✓ AUTHENTIC</span> — recomputed hash matches the claim.'
+    : '<span style="color:var(--danger);font-weight:700">✗ TAMPERED</span> — recomputed h(M ‖ r) does not match. The message was altered after hashing.';
+  r.verified = true;
+  if (_crRounds.every(function(x) { return x.verified; })) {
+    document.getElementById('cr-summary').style.display = 'block';
+    completeLabStage();
+  }
 }
 
 async function sha256(message) {
