@@ -2049,6 +2049,18 @@ body.high-contrast {
           </div>
         </div>
 
+        <!-- Audio & Accessibility (narration speed) -->
+        <div class="section-card">
+          <div class="section-card-header">🔊 Audio &amp; Accessibility</div>
+          <div style="padding:4px 14px 14px">
+            <div style="font-size:12px;color:var(--muted);margin-bottom:8px">Narration speed for diagram, graph and flashcard audio. Saved on this device.</div>
+            <div style="display:flex;gap:8px">
+              <button id="tts-rate-075" class="btn btn-secondary btn-sm" style="flex:1" onclick="setTTSRate(0.75,this)">🐢 Slower</button>
+              <button id="tts-rate-090" class="btn btn-secondary btn-sm" style="flex:1" onclick="setTTSRate(0.90,this)">Normal</button>
+              <button id="tts-rate-110" class="btn btn-secondary btn-sm" style="flex:1" onclick="setTTSRate(1.10,this)">🐇 Faster</button>
+            </div>
+          </div>
+        </div>
         <!-- Sign Out -->
         <div class="section-card">
           <div class="section-card-header" data-i18n="account_header">🔑 Account</div>
@@ -12127,6 +12139,7 @@ function renderAccountEmail() {
 }
 
 function renderProfile() {
+  if (typeof _syncTTSRateUI === 'function') _syncTTSRateUI();
   document.getElementById('profile-avatar').textContent = (currentUser?.name || 'L')[0].toUpperCase();
   document.getElementById('profile-name').textContent = currentUser?.name || 'Learner';
 
@@ -17218,6 +17231,7 @@ function preprocessSpeechText(raw) {
     .replace(/\bOCSP\b/g,    'O. C. S. P.')
     .replace(/\bZKP\b/g,     'zero-knowledge proof')
     .replace(/\bIoT\b/g,     'internet of things')
+    .replace(/\b(www)\.([a-z0-9-]+)\.([a-z]{2,})/gi, '$1 dot $2 dot $3')
     .replace(/‖/g,            ' concatenated with ')
     .replace(/⊕/g,            ' exclusive OR ')
     .replace(/≢/g,            ' is not congruent to ')
@@ -17304,7 +17318,7 @@ function speakDiagramDescription(key, btn) {
   const voice = getBestVoice();
   if (voice) utterance.voice = voice;
 
-  utterance.rate   = 0.90;   // slightly slower than natural — clearer for learning
+  utterance.rate   = (typeof _naGetRate === 'function') ? _naGetRate() : 0.90;   // slightly slower than natural — clearer for learning
   utterance.pitch  = 0.97;   // fractionally lower = warmer, less robotic
   utterance.volume = 1;
 
@@ -22604,6 +22618,32 @@ function renderAnalyticsTab() {
       </div>`;
     })()}
 
+
+    <!-- Audio narration usage (accessibility engagement, device-local) -->
+    ${(() => {
+      let naStats = {};
+      try { naStats = JSON.parse(localStorage.getItem('cc_narration_stats') || '{}'); } catch (e) {}
+      const naKeys = Object.keys(naStats);
+      if (naKeys.length === 0) return '';
+      naKeys.sort(function(a, b) { return (naStats[b].count || 0) - (naStats[a].count || 0); });
+      const naMax = naStats[naKeys[0]].count || 1;
+      const naTotal = naKeys.reduce(function(acc, k) { return acc + (naStats[k].count || 0); }, 0);
+      let naRows = '';
+      naKeys.slice(0, 8).forEach(function(k) {
+        const c = naStats[k].count || 0;
+        const pct = Math.round(c / naMax * 100);
+        naRows += '<div style="display:flex;align-items:center;gap:8px;padding:5px 0">'
+          + '<div style="flex:1;min-width:0;font-size:12px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + _escHtml(k) + '</div>'
+          + '<div style="width:90px;height:8px;background:var(--border);border-radius:100px;overflow:hidden;flex-shrink:0"><div style="width:' + pct + '%;height:100%;background:var(--primary);border-radius:100px"></div></div>'
+          + '<div style="width:30px;text-align:right;font-size:12px;font-weight:800;color:var(--primary);flex-shrink:0">' + c + '</div>'
+          + '</div>';
+      });
+      return '<div class="section-card" style="margin-top:12px">'
+        + '<div class="section-card-header" style="justify-content:space-between"><span>🔊 Audio Narration Usage</span><span style="font-size:11px;color:var(--muted);font-weight:600">' + naTotal + ' listens · this device</span></div>'
+        + '<div style="padding:4px 12px 10px">' + naRows
+        + '<div style="font-size:10px;color:var(--muted);margin-top:6px">Listens per diagram or graph — accessibility engagement evidence for the audio-description feature.</div>'
+        + '</div></div>';
+    })()}
   `;
 }
 
@@ -23449,9 +23489,8 @@ function renderDiagramsInLesson(moduleId) {
   return html;
 }
 
-// ── Unified narration engine: per-step audio for diagrams & graphs ──────────
-// Routes everything through the same pipeline as flashcards: best available
-// voice, crypto-aware pronunciation (preprocessSpeechText), rate 0.90.
+// ── Unified narration engine v2: per-step audio + structure descriptions, ───
+// user speech-rate preference, and listen statistics for the teacher dashboard.
 function _naReset() {
   if (window._naBtn) { try { window._naBtn.textContent = window._naBtn.dataset.naIcon || '🔊'; } catch (e) {} }
   window._naBtn = null;
@@ -23468,13 +23507,49 @@ function _naToggleStop(btn) {
   return false;
 }
 
+function _naGetRate() {
+  var r = parseFloat(localStorage.getItem('cc_tts_rate') || '0.90');
+  if (isNaN(r)) r = 0.90;
+  return Math.min(1.4, Math.max(0.6, r));
+}
+
+function setTTSRate(rate, btn) {
+  try { localStorage.setItem('cc_tts_rate', String(rate)); } catch (e) {}
+  _syncTTSRateUI();
+  if (window.speechSynthesis && speechSynthesis.speaking) speechSynthesis.cancel();
+  _naSpeak('This is your narration speed.', null);
+}
+
+function _syncTTSRateUI() {
+  var r = _naGetRate();
+  [['tts-rate-075', 0.75], ['tts-rate-090', 0.90], ['tts-rate-110', 1.10]].forEach(function(p) {
+    var el = document.getElementById(p[0]);
+    if (!el) return;
+    var on = Math.abs(r - p[1]) < 0.01;
+    el.style.background = on ? 'var(--primary)' : '';
+    el.style.color = on ? '#fff' : '';
+  });
+}
+
+function _naBumpStat(title) {
+  if (!title) return;
+  try {
+    var s = JSON.parse(localStorage.getItem('cc_narration_stats') || '{}');
+    var e = s[title] || { count: 0 };
+    e.count = (e.count || 0) + 1;
+    e.last = new Date().toISOString();
+    s[title] = e;
+    localStorage.setItem('cc_narration_stats', JSON.stringify(s));
+  } catch (err) {}
+}
+
 function _naSpeak(rawText, btn, xapiName, onDone) {
   if (!window.speechSynthesis) { showToast('Text-to-speech not supported on this device'); return false; }
   var text = (typeof preprocessSpeechText === 'function') ? preprocessSpeechText(rawText) : rawText;
   var utt = new SpeechSynthesisUtterance(text);
   var v = (typeof getBestVoice === 'function') ? getBestVoice() : null;
   if (v) utt.voice = v; else utt.lang = 'en-GB';
-  utt.rate = 0.90;
+  utt.rate = _naGetRate();
   utt.pitch = 0.97;
   utt.volume = 1;
   utt.onend = function() { if (onDone) onDone(); else _naReset(); };
@@ -23487,6 +23562,33 @@ function _naSpeak(rawText, btn, xapiName, onDone) {
   if (xapiName && typeof emitXAPI === 'function') emitXAPI('interacted', xapiName, { tts: true });
   speechSynthesis.speak(utt);
   return true;
+}
+
+function _naStructure(kind, step) {
+  if (!step) return '';
+  if (kind === 'graph') {
+    var bars = step.bars || [];
+    if (!bars.length) return '';
+    var parts = bars.map(function(b) { return b.label + ' at ' + b.value; });
+    var hlb = bars.filter(function(b) { return b.hl; }).map(function(b) { return b.label; });
+    var sg = 'The chart shows ' + (step.yLabel ? step.yLabel + ' as bars: ' : 'bars: ') + parts.join(', ') + '.';
+    if (hlb.length) sg += ' Highlighted: ' + hlb.join(' and ') + '.';
+    return sg;
+  }
+  var nodes = (step.nodes || []).slice().sort(function(a, b) { return (a.y - b.y) || (a.x - b.x); });
+  if (!nodes.length) return '';
+  var lab = {};
+  nodes.forEach(function(n) { lab[n.id] = String(n.label || n.id).replace(/\n/g, ' '); });
+  var names = nodes.map(function(n) { return lab[n.id]; });
+  var sd = 'The diagram shows ' + names.length + (names.length === 1 ? ' element: ' : ' elements: ') + names.join(', ') + '.';
+  var edges = step.edges || [];
+  if (edges.length) {
+    var conns = edges.map(function(e) { return lab[e.from] + ' to ' + lab[e.to]; });
+    sd += ' Arrows flow from ' + conns.join('; ') + '.';
+  }
+  var hln = nodes.filter(function(n) { return n.hl; }).map(function(n) { return lab[n.id]; });
+  if (hln.length) sd += ' Highlighted: ' + hln.join(' and ') + '.';
+  return sd;
 }
 
 function _naStepText(kind, key) {
@@ -23503,13 +23605,15 @@ function _naStepText(kind, key) {
     var d = (maps.desc || {})[key];
     if (d) intro = d + '. ';
   }
+  var structure = _naStructure(kind, steps[cur]);
   var title = ((maps.title || {})[key]) || (kind === 'graph' ? 'Graph' : 'Diagram');
-  return { text: intro + 'Step ' + (cur + 1) + ' of ' + total + '. ' + caption, title: title, cur: cur, total: total };
+  return { text: intro + 'Step ' + (cur + 1) + ' of ' + total + '. ' + caption + (structure ? ' ' + structure : ''), title: title, cur: cur, total: total };
 }
 
 function speakDiagramDesc(key, btn) {
   if (_naToggleStop(btn)) return;
   var s = _naStepText('diagram', key);
+  _naBumpStat(s.title);
   _naSpeak(s.text, btn, 'Audio narration: ' + s.title + ' (step ' + (s.cur + 1) + '/' + s.total + ')');
 }
 
@@ -23535,7 +23639,9 @@ function _naPlayAll(kind, key, btn) {
     });
     if (!ok) _naReset();
   };
-  if (typeof emitXAPI === 'function') emitXAPI('interacted', 'Audio narration (all steps): ' + _naStepText(kind, key).title, { steps: total, tts: true });
+  var meta = _naStepText(kind, key);
+  _naBumpStat(meta.title);
+  if (typeof emitXAPI === 'function') emitXAPI('interacted', 'Audio narration (all steps): ' + meta.title, { steps: total, tts: true });
   playFrom();
 }
 
@@ -24219,6 +24325,7 @@ function renderGraphsInLesson(moduleId) {
 function speakGraphDesc(key, btn) {
   if (_naToggleStop(btn)) return;
   var s = _naStepText('graph', key);
+  _naBumpStat(s.title);
   _naSpeak(s.text, btn, 'Audio narration: ' + s.title + ' (step ' + (s.cur + 1) + '/' + s.total + ')');
 }
 
