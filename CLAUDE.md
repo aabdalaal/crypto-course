@@ -174,6 +174,11 @@ All 14 modules have at least one learner-facing interactive visual (auto-loaded 
 
 Modules M01, M04, M05 have visuals via lesson HTML (concept-boxes, code-blocks, worked examples).
 
+**Audio narration** — every diagram and graph player exposes two always-on buttons: 🔊 (current step) and ▶ (play all steps in sequence, advancing the visuals). Narration is per-step: step 1 prefixes the diagram's `description` / `audioDesc` field, subsequent steps speak only the step caption. The unified engine (`_naSpeak`, `_naStepText`, `_naPlayAll`) routes through `preprocessSpeechText` (crypto-aware pronunciation dictionary) and `getBestVoice` — the same pipeline as flashcards. Speech cancels on stage change (`renderLessonStage`) and on manual step navigation (`idiagNav`, `igraphNav`). xAPI emits one `interacted · Audio narration: <title> (step N/M)` event per listen.
+
+- **Template field for narration intros:** `audioDesc` (string on the template object). All 15 built-in templates carry `audioDesc`. Teacher-authored diagrams use the `description` field already saved by the content editor.
+- **Teacher preview:** every audio-description textarea in the diagram/graph sheet has a "🔊 Preview voice" button (`previewAudioDesc(inputId, btn)`) — identical pipeline to the learner side.
+
 **Quiz bank pool depths** (stage5.bank): M01, M02, M04, M06, M10 → 10 questions each (increased from 6 in Tier 3). All other modules remain at 6. All entries carry `why` + `concept` fields (PR4).
 
 ---
