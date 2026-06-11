@@ -2543,6 +2543,346 @@ const INTERACTIVE_DIAGRAM_TEMPLATES = [
         ]
       }
     ]
+  },
+  {
+    id: 'security_services', icon: '🛡️', name: 'Threats, Services & Mechanisms',
+    desc: '4-step interactive: four classic threats, the services that answer them, and the mechanisms that deliver each service',
+    modules: [0], type: 'interactive',
+    steps: [
+      {
+        caption: 'Step 1 — Four classic threats: an attacker can read, modify, impersonate, or later deny. Every cryptographic mechanism in this course exists to defeat one of these.',
+        nodes: [
+          { id: 'T1', label: 'Eavesdrop',   x: 110, y: 70,  w: 130, h: 38, color: 'red' },
+          { id: 'T2', label: 'Tamper',      x: 290, y: 70,  w: 130, h: 38, color: 'red' },
+          { id: 'T3', label: 'Impersonate', x: 110, y: 165, w: 130, h: 38, color: 'red' },
+          { id: 'T4', label: 'Deny sending\n(repudiate)', x: 290, y: 165, w: 130, h: 42, color: 'red' }
+        ],
+        edges: []
+      },
+      {
+        caption: 'Step 2 — Each threat is answered by a security service: confidentiality, integrity, authentication and non-repudiation.',
+        nodes: [
+          { id: 'T1', label: 'Eavesdrop',       x: 65,  y: 60,  w: 100, h: 36, color: 'red' },
+          { id: 'T2', label: 'Tamper',          x: 175, y: 60,  w: 100, h: 36, color: 'red' },
+          { id: 'T3', label: 'Impersonate',     x: 285, y: 60,  w: 100, h: 36, color: 'red' },
+          { id: 'T4', label: 'Repudiate',       x: 395, y: 60,  w: 100, h: 36, color: 'red' },
+          { id: 'S1', label: 'Confidentiality', x: 65,  y: 160, w: 100, h: 36, color: 'blue',   hl: true },
+          { id: 'S2', label: 'Integrity',       x: 175, y: 160, w: 100, h: 36, color: 'green',  hl: true },
+          { id: 'S3', label: 'Authentication',  x: 285, y: 160, w: 100, h: 36, color: 'yellow', hl: true },
+          { id: 'S4', label: 'Non-repudiation', x: 395, y: 160, w: 100, h: 36, color: 'purple', hl: true }
+        ],
+        edges: [
+          { from: 'T1', to: 'S1', hl: true, color: 'blue' },
+          { from: 'T2', to: 'S2', hl: true, color: 'green' },
+          { from: 'T3', to: 'S3', hl: true, color: 'yellow' },
+          { from: 'T4', to: 'S4', hl: true, color: 'purple' }
+        ]
+      },
+      {
+        caption: 'Step 3 — Services map to mechanisms: encryption for confidentiality, hashes and MACs for integrity, MACs and signatures for authentication — and only signatures give non-repudiation.',
+        nodes: [
+          { id: 'S1', label: 'Confidentiality', x: 65,  y: 60,  w: 100, h: 36, color: 'blue' },
+          { id: 'S2', label: 'Integrity',       x: 175, y: 60,  w: 100, h: 36, color: 'green' },
+          { id: 'S3', label: 'Authentication',  x: 285, y: 60,  w: 100, h: 36, color: 'yellow' },
+          { id: 'S4', label: 'Non-repudiation', x: 395, y: 60,  w: 100, h: 36, color: 'purple' },
+          { id: 'M1', label: 'Encryption\n(AES)',      x: 65,  y: 165, w: 100, h: 42, color: 'default' },
+          { id: 'M2', label: 'Hash / MAC\n(SHA-256)',  x: 175, y: 165, w: 100, h: 42, color: 'default' },
+          { id: 'M3', label: 'MAC /\nSignature',       x: 285, y: 165, w: 100, h: 42, color: 'default' },
+          { id: 'M4', label: 'Digital\nSignature',     x: 395, y: 165, w: 100, h: 42, color: 'purple', hl: true }
+        ],
+        edges: [
+          { from: 'S1', to: 'M1', hl: true, color: 'blue' },
+          { from: 'S2', to: 'M2', hl: true, color: 'green' },
+          { from: 'S3', to: 'M3', hl: true, color: 'yellow' },
+          { from: 'S4', to: 'M4', hl: true, color: 'purple' }
+        ]
+      },
+      {
+        caption: 'Step 4 — The design mindset: name the threat, choose the service, deploy the mechanism. You will repeat this mapping in every module that follows.',
+        nodes: [
+          { id: 'TH', label: 'Threat:\nEavesdropping',     x: 200, y: 55,  w: 160, h: 42, color: 'red' },
+          { id: 'SV', label: 'Service:\nConfidentiality',  x: 200, y: 140, w: 160, h: 42, color: 'blue' },
+          { id: 'ME', label: 'Mechanism:\nAES-256-GCM',    x: 200, y: 225, w: 160, h: 42, color: 'green', hl: true }
+        ],
+        edges: [
+          { from: 'TH', to: 'SV', hl: true, color: 'blue' },
+          { from: 'SV', to: 'ME', hl: true, color: 'green' }
+        ]
+      }
+    ]
+  },
+  {
+    id: 'crypto_toolbox', icon: '🧰', name: 'The Toolbox So Far',
+    desc: '4-step review map: confidentiality, integrity, the key distribution problem, and the public-key idea ahead',
+    modules: [6], type: 'interactive',
+    steps: [
+      {
+        caption: 'Step 1 — Confidentiality so far: a shared secret key K turns plaintext into ciphertext with AES, in a mode such as CBC, CTR or GCM.',
+        nodes: [
+          { id: 'PT',  label: 'Plaintext',              x: 200, y: 55,  w: 130, h: 36, color: 'blue' },
+          { id: 'AES', label: 'AES with\nshared key K', x: 200, y: 140, w: 150, h: 42, color: 'default' },
+          { id: 'CT',  label: 'Ciphertext',             x: 200, y: 225, w: 130, h: 36, color: 'yellow', hl: true }
+        ],
+        edges: [
+          { from: 'PT',  to: 'AES', hl: true, color: 'blue' },
+          { from: 'AES', to: 'CT',  hl: true, color: 'yellow' }
+        ]
+      },
+      {
+        caption: 'Step 2 — Integrity so far: a hash gives a fingerprint anyone can compute; add a shared key and it becomes a MAC that an attacker cannot forge.',
+        nodes: [
+          { id: 'MSG', label: 'Message',                 x: 200, y: 55,  w: 130, h: 36, color: 'blue' },
+          { id: 'H',   label: 'SHA-256 /\nHMAC with K', x: 200, y: 140, w: 150, h: 42, color: 'default' },
+          { id: 'TAG', label: 'Digest / Tag',            x: 200, y: 225, w: 130, h: 36, color: 'green', hl: true }
+        ],
+        edges: [
+          { from: 'MSG', to: 'H',   hl: true, color: 'blue' },
+          { from: 'H',   to: 'TAG', hl: true, color: 'green' }
+        ]
+      },
+      {
+        caption: 'Step 3 — The catch: every tool so far needs a SHARED secret. Pairwise channels for n people need n(n−1)/2 keys — 1225 keys for just 50 users. This is the key distribution problem.',
+        nodes: [
+          { id: 'A', label: 'Alice', x: 110, y: 70,  w: 110, h: 36, color: 'blue' },
+          { id: 'B', label: 'Bob',   x: 290, y: 70,  w: 110, h: 36, color: 'blue' },
+          { id: 'K', label: 'Shared key K —\nbut how to agree?', x: 200, y: 170, w: 180, h: 42, color: 'red', hl: true }
+        ],
+        edges: [
+          { from: 'A', to: 'K', hl: true, color: 'red' },
+          { from: 'B', to: 'K', hl: true, color: 'red' }
+        ]
+      },
+      {
+        caption: 'Step 4 — The answer ahead: key pairs. Anyone may know the public key; only the owner holds the private key. The next modules build RSA, Diffie–Hellman and ECC on this single idea.',
+        nodes: [
+          { id: 'PUB', label: 'Public key\n(share freely)', x: 110, y: 70,  w: 140, h: 42, color: 'blue' },
+          { id: 'PRV', label: 'Private key\n(keep secret)', x: 290, y: 70,  w: 140, h: 42, color: 'purple' },
+          { id: 'SOL', label: 'Key pairs solve\ndistribution', x: 200, y: 170, w: 170, h: 42, color: 'green', hl: true }
+        ],
+        edges: [
+          { from: 'PUB', to: 'SOL', hl: true, color: 'blue' },
+          { from: 'PRV', to: 'SOL', hl: true, color: 'purple' }
+        ]
+      }
+    ]
+  },
+  {
+    id: 'chain_of_trust', icon: '⛓️', name: 'PKI Chain of Trust',
+    desc: '4-step interactive: trust anchor, delegation to intermediates, leaf validation, and revocation checking',
+    modules: [8], type: 'interactive',
+    steps: [
+      {
+        caption: 'Step 1 — The trust anchor: a root CA certificate is self-signed and pre-installed in your OS and browser trust store. All certificate trust flows from here.',
+        nodes: [
+          { id: 'TS',   label: 'OS / browser\ntrust store',  x: 200, y: 65,  w: 160, h: 42, color: 'default' },
+          { id: 'ROOT', label: 'Root CA cert\n(self-signed)', x: 200, y: 165, w: 160, h: 42, color: 'dark', hl: true }
+        ],
+        edges: [
+          { from: 'TS', to: 'ROOT', hl: true, color: 'dark' }
+        ]
+      },
+      {
+        caption: 'Step 2 — Delegation: the root signs an intermediate CA certificate. Root keys stay offline in vaults; intermediates do the day-to-day issuing, limiting the damage if one is compromised.',
+        nodes: [
+          { id: 'ROOT', label: 'Root CA',         x: 200, y: 60,  w: 150, h: 38, color: 'dark' },
+          { id: 'INT',  label: 'Intermediate CA', x: 200, y: 160, w: 150, h: 38, color: 'blue', hl: true }
+        ],
+        edges: [
+          { from: 'ROOT', to: 'INT', hl: true, color: 'blue' }
+        ]
+      },
+      {
+        caption: 'Step 3 — Issuance and validation: the intermediate signs the website leaf certificate. Your browser validates the chain signature-by-signature until it reaches a root it already trusts.',
+        nodes: [
+          { id: 'ROOT', label: 'Root CA',                x: 200, y: 50,  w: 150, h: 36, color: 'dark' },
+          { id: 'INT',  label: 'Intermediate CA',        x: 200, y: 135, w: 150, h: 36, color: 'blue' },
+          { id: 'LEAF', label: 'Leaf:\nwww.example.com', x: 200, y: 222, w: 170, h: 42, color: 'green', hl: true }
+        ],
+        edges: [
+          { from: 'ROOT', to: 'INT',  hl: true, color: 'blue' },
+          { from: 'INT',  to: 'LEAF', hl: true, color: 'green' }
+        ]
+      },
+      {
+        caption: 'Step 4 — Trust can be withdrawn: before accepting a leaf, the CA also publishes revocation data; clients check the leaf against CRL or OCSP and reject expired certificates. A valid signature chain is necessary but not sufficient.',
+        nodes: [
+          { id: 'ROOT', label: 'Root CA',                x: 150, y: 50,  w: 140, h: 36, color: 'dark' },
+          { id: 'INT',  label: 'Intermediate CA',        x: 150, y: 135, w: 140, h: 36, color: 'blue' },
+          { id: 'CRL',  label: 'CRL / OCSP\npublished by CA', x: 360, y: 222, w: 150, h: 42, color: 'red', hl: true },
+          { id: 'LEAF', label: 'Leaf:\nwww.example.com', x: 150, y: 222, w: 170, h: 42, color: 'green' }
+        ],
+        edges: [
+          { from: 'ROOT', to: 'INT',  hl: false, color: 'blue' },
+          { from: 'INT',  to: 'LEAF', hl: false, color: 'green' },
+          { from: 'INT',  to: 'CRL',  hl: true,  color: 'red' }
+        ]
+      }
+    ]
+  },
+  {
+    id: 'challenge_response_flow', icon: '📡', name: 'Challenge–Response Protocol',
+    desc: '4-step interactive: claim, fresh-nonce challenge, hashed response, and why replay attacks fail',
+    modules: [9], type: 'interactive',
+    steps: [
+      {
+        caption: 'Step 1 — The claim: a claimant announces an identity. Anyone can say they are Alice — the verifier needs proof tied to a shared secret.',
+        nodes: [
+          { id: 'CL', label: 'Claimant',           x: 200, y: 55,  w: 130, h: 36, color: 'blue' },
+          { id: 'MS', label: 'Claim:\nI am Alice', x: 200, y: 140, w: 140, h: 42, color: 'yellow', hl: true },
+          { id: 'VF', label: 'Verifier',            x: 200, y: 225, w: 130, h: 36, color: 'dark' }
+        ],
+        edges: [
+          { from: 'CL', to: 'MS', hl: true, color: 'yellow' },
+          { from: 'MS', to: 'VF', hl: true, color: 'yellow' }
+        ]
+      },
+      {
+        caption: 'Step 2 — The challenge: the verifier replies with a fresh random nonce r. Because r is new every time, captured answers from old sessions become useless.',
+        nodes: [
+          { id: 'VF', label: 'Verifier',                 x: 200, y: 55,  w: 130, h: 36, color: 'dark' },
+          { id: 'CH', label: 'Challenge r\n(fresh nonce)', x: 200, y: 140, w: 150, h: 42, color: 'yellow', hl: true },
+          { id: 'CL', label: 'Claimant',                  x: 200, y: 225, w: 130, h: 36, color: 'blue' }
+        ],
+        edges: [
+          { from: 'VF', to: 'CH', hl: true, color: 'yellow' },
+          { from: 'CH', to: 'CL', hl: true, color: 'yellow' }
+        ]
+      },
+      {
+        caption: 'Step 3 — The response: the claimant returns h(M ‖ r). The verifier recomputes and compares — a match proves the secret was used AFTER r was issued. You built exactly this in the lab.',
+        nodes: [
+          { id: 'CL', label: 'Claimant',                       x: 200, y: 55,  w: 130, h: 36, color: 'blue' },
+          { id: 'RS', label: 'Response\nh(M ‖ r)',             x: 200, y: 140, w: 150, h: 42, color: 'green', hl: true },
+          { id: 'VF', label: 'Verifier:\nrecompute + compare', x: 200, y: 225, w: 180, h: 42, color: 'dark' }
+        ],
+        edges: [
+          { from: 'CL', to: 'RS', hl: true, color: 'green' },
+          { from: 'RS', to: 'VF', hl: true, color: 'green' }
+        ]
+      },
+      {
+        caption: 'Step 4 — Replay defeated: an eavesdropper replays an old response, but the verifier has issued a NEW nonce — the recomputed hash cannot match, and the impostor is rejected.',
+        nodes: [
+          { id: 'AT', label: 'Attacker replays\nold h(M ‖ r)',  x: 200, y: 55,  w: 170, h: 42, color: 'red' },
+          { id: 'CK', label: 'Verifier checks vs\nfresh nonce', x: 200, y: 140, w: 170, h: 42, color: 'default' },
+          { id: 'RJ', label: 'REJECTED',                          x: 200, y: 225, w: 130, h: 36, color: 'red', hl: true }
+        ],
+        edges: [
+          { from: 'AT', to: 'CK', hl: true, color: 'red' },
+          { from: 'CK', to: 'RJ', hl: true, color: 'red' }
+        ]
+      }
+    ]
+  },
+  {
+    id: 'schnorr_rounds', icon: '🕵️', name: 'Schnorr Identification Rounds',
+    desc: '4-step interactive: commit, challenge, response-and-check, and why a cheater is caught half the time',
+    modules: [10], type: 'interactive',
+    steps: [
+      {
+        caption: 'Step 1 — Commitment: Peggy picks a random k and sends t = g^k mod p. The randomness of k is exactly what will keep her secret x hidden later.',
+        nodes: [
+          { id: 'PG', label: 'Peggy\n(knows x)',  x: 200, y: 55,  w: 140, h: 42, color: 'purple' },
+          { id: 'CM', label: 't = g^k mod p',      x: 200, y: 140, w: 150, h: 38, color: 'blue', hl: true },
+          { id: 'VC', label: 'Victor',              x: 200, y: 225, w: 130, h: 36, color: 'default' }
+        ],
+        edges: [
+          { from: 'PG', to: 'CM', hl: true, color: 'blue' },
+          { from: 'CM', to: 'VC', hl: true, color: 'blue' }
+        ]
+      },
+      {
+        caption: 'Step 2 — Challenge: Victor flips a coin and sends c ∈ {0, 1}. Peggy could not have predicted it when she committed — that is the whole point.',
+        nodes: [
+          { id: 'VC', label: 'Victor',      x: 200, y: 55,  w: 130, h: 36, color: 'default' },
+          { id: 'CH', label: 'c ∈ {0, 1}', x: 200, y: 140, w: 130, h: 38, color: 'yellow', hl: true },
+          { id: 'PG', label: 'Peggy',       x: 200, y: 225, w: 130, h: 36, color: 'purple' }
+        ],
+        edges: [
+          { from: 'VC', to: 'CH', hl: true, color: 'yellow' },
+          { from: 'CH', to: 'PG', hl: true, color: 'yellow' }
+        ]
+      },
+      {
+        caption: 'Step 3 — Response and check: Peggy sends s = k + c·x mod (p−1); Victor accepts iff g^s = t·y^c. Knowing x makes BOTH possible challenges answerable from the same commitment.',
+        nodes: [
+          { id: 'PG', label: 'Peggy',                      x: 200, y: 55,  w: 130, h: 36, color: 'purple' },
+          { id: 'RS', label: 's = k + c·x',                x: 200, y: 140, w: 140, h: 38, color: 'green', hl: true },
+          { id: 'VC', label: 'Victor checks\ng^s = t · y^c', x: 200, y: 225, w: 160, h: 42, color: 'default' }
+        ],
+        edges: [
+          { from: 'PG', to: 'RS', hl: true, color: 'green' },
+          { from: 'RS', to: 'VC', hl: true, color: 'green' }
+        ]
+      },
+      {
+        caption: 'Step 4 — Soundness: a cheater must guess c while committing. A wrong guess means she cannot answer — caught. Each round halves her odds: after n rounds, 2^−n. And the transcript reveals nothing about x: zero-knowledge.',
+        nodes: [
+          { id: 'GS', label: 'Cheater guesses c\nbefore committing', x: 200, y: 55,  w: 180, h: 42, color: 'red' },
+          { id: 'CT', label: 'Wrong guess:\ncaught (50%)',           x: 200, y: 140, w: 150, h: 42, color: 'red', hl: true },
+          { id: 'NR', label: 'n rounds →\ncheat odds 2^−n',          x: 200, y: 225, w: 160, h: 42, color: 'green', hl: true }
+        ],
+        edges: [
+          { from: 'GS', to: 'CT', hl: true, color: 'red' },
+          { from: 'CT', to: 'NR', hl: true, color: 'green' }
+        ]
+      }
+    ]
+  },
+  {
+    id: 'tls13_handshake', icon: '🔒', name: 'TLS 1.3 Handshake',
+    desc: '4-step interactive: ClientHello with key share, authenticated server flight, 1-RTT key derivation, and where a MITM fails',
+    modules: [11], type: 'interactive',
+    steps: [
+      {
+        caption: 'Step 1 — ClientHello: the client opens with its ciphersuites AND an ephemeral ECDHE key share. TLS 1.3 commits to forward secrecy from the very first flight.',
+        nodes: [
+          { id: 'CLI', label: 'Client',                          x: 200, y: 55,  w: 130, h: 36, color: 'blue' },
+          { id: 'CH',  label: 'ClientHello +\nECDHE key share',  x: 200, y: 140, w: 170, h: 42, color: 'yellow', hl: true },
+          { id: 'SRV', label: 'Server',                           x: 200, y: 225, w: 130, h: 36, color: 'default' }
+        ],
+        edges: [
+          { from: 'CLI', to: 'CH',  hl: true, color: 'yellow' },
+          { from: 'CH',  to: 'SRV', hl: true, color: 'yellow' }
+        ]
+      },
+      {
+        caption: 'Step 2 — Server flight: ServerHello carries the server key share, its certificate chain, and CertificateVerify — a signature over the handshake transcript binding the exchange to its identity.',
+        nodes: [
+          { id: 'SRV', label: 'Server',                                       x: 200, y: 55,  w: 130, h: 36, color: 'default' },
+          { id: 'SH',  label: 'ServerHello + key share\nCertificate + CertVerify', x: 200, y: 140, w: 210, h: 42, color: 'blue', hl: true },
+          { id: 'CLI', label: 'Client',                                        x: 200, y: 225, w: 130, h: 36, color: 'blue' }
+        ],
+        edges: [
+          { from: 'SRV', to: 'SH',  hl: true, color: 'blue' },
+          { from: 'SH',  to: 'CLI', hl: true, color: 'blue' }
+        ]
+      },
+      {
+        caption: 'Step 3 — One round trip: both sides feed the ECDHE secret through the HKDF key schedule and derive the traffic keys. Application data flows after just 1-RTT.',
+        nodes: [
+          { id: 'SS',  label: 'ECDHE\nshared secret',   x: 200, y: 55,  w: 160, h: 42, color: 'green' },
+          { id: 'KDF', label: 'HKDF key schedule',        x: 200, y: 140, w: 160, h: 38, color: 'default' },
+          { id: 'TK',  label: 'Traffic keys\n(both sides)', x: 200, y: 225, w: 150, h: 42, color: 'green', hl: true }
+        ],
+        edges: [
+          { from: 'SS',  to: 'KDF', hl: true, color: 'green' },
+          { from: 'KDF', to: 'TK',  hl: true, color: 'green' }
+        ]
+      },
+      {
+        caption: 'Step 4 — Where Mallory loses: she can substitute key shares, but she cannot forge CertificateVerify over a transcript containing her keys — exactly the failed attack you ran in the lab.',
+        nodes: [
+          { id: 'MAL', label: 'Mallory swaps\nkey shares',        x: 200, y: 55,  w: 160, h: 42, color: 'red' },
+          { id: 'CV',  label: 'CertVerify checked\nover transcript', x: 200, y: 140, w: 180, h: 42, color: 'default' },
+          { id: 'AB',  label: 'Handshake\nABORTED',                x: 200, y: 225, w: 140, h: 42, color: 'red', hl: true }
+        ],
+        edges: [
+          { from: 'MAL', to: 'CV', hl: true, color: 'red' },
+          { from: 'CV',  to: 'AB', hl: true, color: 'red' }
+        ]
+      }
+    ]
   }
 ];
 
@@ -2700,6 +3040,85 @@ const INTERACTIVE_GRAPH_TEMPLATES = [
           { label: 'Bit 3', value: 79, color: 'red',    hl: true  },
           { label: 'Bit 4', value: 43, color: 'green',  hl: false },
           { label: 'Bit 5', value: 77, color: 'red',    hl: true  }
+        ]
+      }
+    ]
+  },
+  {
+    id: 'rsa_vs_ecc_sizes',
+    name: 'RSA vs ECC Key Sizes',
+    icon: '📊',
+    desc: '3 steps: equivalent strength at 128-bit security, the widening gap across levels, and why constrained devices choose ECC',
+    chartType: 'bar',
+    modules: [7],
+    steps: [
+      {
+        caption: 'Step 1 — Same strength, very different sizes: at the 128-bit security level RSA needs a 3072-bit modulus while elliptic-curve cryptography needs only 256 bits — Seminar 6 Task 2(a).',
+        yLabel: 'Key size (bits)',
+        bars: [
+          { label: 'RSA-3072', value: 3072, color: 'red',   hl: true },
+          { label: 'ECC P-256', value: 256, color: 'green', hl: true }
+        ]
+      },
+      {
+        caption: 'Step 2 — The gap widens with security level: sub-exponential attacks (number field sieve) force RSA sizes to grow super-linearly, while only generic attacks are known against well-chosen curves.',
+        yLabel: 'Key size (bits)',
+        bars: [
+          { label: 'RSA@80',  value: 1024, color: 'red',   hl: false },
+          { label: 'ECC@80',  value: 160,  color: 'green', hl: false },
+          { label: 'RSA@112', value: 2048, color: 'red',   hl: false },
+          { label: 'ECC@112', value: 224,  color: 'green', hl: false },
+          { label: 'RSA@128', value: 3072, color: 'red',   hl: true },
+          { label: 'ECC@128', value: 256,  color: 'green', hl: true }
+        ]
+      },
+      {
+        caption: 'Step 3 — Why it matters: at the 256-bit level RSA would need 15360-bit keys — impractical for phones, smart cards and IoT. This is why modern TLS defaults to ECDHE and ECDSA or EdDSA.',
+        yLabel: 'Key size (bits)',
+        bars: [
+          { label: 'RSA-3072',  value: 3072,  color: 'default', hl: false },
+          { label: 'ECC-256',   value: 256,   color: 'default', hl: false },
+          { label: 'RSA-15360', value: 15360, color: 'red',     hl: true },
+          { label: 'ECC-512',   value: 512,   color: 'green',   hl: true }
+        ]
+      }
+    ]
+  },
+  {
+    id: 'pqc_size_costs',
+    name: 'Post-Quantum Size Costs',
+    icon: '🪐',
+    desc: '3 steps: public key sizes, signature sizes, and the migration trade-off behind FIPS 203/204/205',
+    chartType: 'bar',
+    modules: [13],
+    steps: [
+      {
+        caption: 'Step 1 — Public keys in bytes: post-quantum keys (FIPS 203/204) are larger than ECDSA, but smaller than you might fear — an ML-KEM-768 key still fits comfortably in one TLS record.',
+        yLabel: 'Public key (bytes)',
+        bars: [
+          { label: 'ECDSA P-256', value: 65,   color: 'blue',   hl: false },
+          { label: 'RSA-2048',    value: 270,  color: 'blue',   hl: false },
+          { label: 'ML-KEM-768',  value: 1184, color: 'purple', hl: true },
+          { label: 'ML-DSA-65',   value: 1952, color: 'purple', hl: true }
+        ]
+      },
+      {
+        caption: 'Step 2 — Signatures are the real cost: an ML-DSA-65 signature is ~52× an ECDSA one, and hash-based SLH-DSA pays even more in exchange for its very conservative security assumptions.',
+        yLabel: 'Signature (bytes)',
+        bars: [
+          { label: 'ECDSA',        value: 64,   color: 'blue',   hl: false },
+          { label: 'RSA-2048',     value: 256,  color: 'blue',   hl: false },
+          { label: 'ML-DSA-65',    value: 3309, color: 'purple', hl: true },
+          { label: 'SLH-DSA-128s', value: 7856, color: 'red',    hl: true }
+        ]
+      },
+      {
+        caption: 'Step 3 — The migration trade-off: bigger keys and signatures buy security against quantum attackers. Real deployments run HYBRID (ECDHE + ML-KEM) today, so breaking either scheme alone still leaves the session safe.',
+        yLabel: 'Signature (bytes)',
+        bars: [
+          { label: 'ECDSA',        value: 64,   color: 'blue',   hl: false },
+          { label: 'ML-DSA-65',    value: 3309, color: 'purple', hl: true },
+          { label: 'SLH-DSA-128s', value: 7856, color: 'red',    hl: false }
         ]
       }
     ]
@@ -2955,6 +3374,50 @@ Modern approach:  "Algorithm is public; only the key is secret"
             ],
             why: 'When an algorithm is kept secret, only its designers look for weaknesses. When it is made public (as AES, SHA-256, and RSA are), thousands of researchers worldwide probe it for years. Flaws found by researchers become fixes; flaws found only by adversaries become breaches. Security through obscurity has repeatedly failed in practice.',
             concept: 'Kerckhoffs\'s principle — Module 1'
+          },
+          {
+            question: 'In the one-time pad, the very same XOR operation both encrypts and decrypts. Which property of XOR makes this possible?',
+            options: [
+              { text: 'XOR is commutative, so the order of operands never matters', correct: false },
+              { text: 'XOR is self-inverse: applying the same key twice cancels out, since X ⊕ K ⊕ K = X', correct: true },
+              { text: 'XOR irreversibly mixes the plaintext and key bits together', correct: false },
+              { text: 'XOR always produces uniformly random output', correct: false },
+            ],
+            why: 'For any bit, K ⊕ K = 0 and X ⊕ 0 = X. So encrypting (P ⊕ K) and then XOR-ing with K again returns P exactly. This self-inverse property is why one circuit, one function, and one lab tool handle both directions — and it also explains why XOR-ing two ciphertexts that share a key cancels the key out.',
+            concept: 'XOR properties — Module 1'
+          },
+          {
+            question: 'A Caesar cipher key is unknown. Why can the cipher nonetheless be broken in well under a second?',
+            options: [
+              { text: 'Frequency analysis instantly reveals the shift from a single letter', correct: false },
+              { text: 'The keyspace has only 25 usable shifts, so an attacker simply tries them all and reads the one candidate that makes sense', correct: true },
+              { text: 'Modern hardware can factor the key', correct: false },
+              { text: 'The ciphertext always leaks the key in its first character', correct: false },
+            ],
+            why: 'With a 26-letter alphabet there are only 25 non-trivial shifts. Exhaustive search — trying every key — is the most basic attack in cryptography, and a keyspace of 25 offers no resistance at all. This is the first lesson in key-space sizing: security requires the number of keys to be astronomically large.',
+            concept: 'Exhaustive key search — Module 1'
+          },
+          {
+            question: 'A random substitution cipher has 26! ≈ 4 × 10²⁶ possible keys — more than a brute-force attack on AES-128 could ever try. Why is it still weak?',
+            options: [
+              { text: 'The keyspace estimate is wrong; there are far fewer keys', correct: false },
+              { text: 'Letter-frequency structure survives the substitution, so the cipher is broken by statistics rather than by key search', correct: true },
+              { text: 'Computers can enumerate 10²⁶ keys in hours', correct: false },
+              { text: 'Substitution ciphers cannot encrypt spaces or punctuation', correct: false },
+            ],
+            why: 'A huge keyspace defends only against exhaustive search. Substitution preserves the frequency fingerprint of the language — E maps to one symbol that still appears ~12.7% of the time — so the analyst attacks the structure, not the key. Keyspace size is necessary for security, but never sufficient.',
+            concept: 'Keyspace vs structural weakness — Module 1'
+          },
+          {
+            question: 'Shannon proved a strict requirement for ANY cipher that achieves perfect secrecy. Which is it?',
+            options: [
+              { text: 'The cipher must use at least 128 rounds of substitution and permutation', correct: false },
+              { text: 'The key must contain at least as much entropy as the message, be truly random, and never be reused', correct: true },
+              { text: 'The algorithm must be kept secret from the attacker', correct: false },
+              { text: 'The ciphertext must be longer than the plaintext', correct: false },
+            ],
+            why: 'Perfect secrecy means the ciphertext gives an attacker no information about the plaintext. Shannon showed this forces the key space to be at least as large as the message space — in practice a truly random key as long as the message, used once. Every practical cipher trades this absolute guarantee for computational security with short reusable keys.',
+            concept: 'Perfect secrecy — Module 1'
           }
         ],
         // ── Phase 2: Tiered questions ──
@@ -3076,6 +3539,50 @@ Decrypt:    1 1 0 1 1 XOR 0 1 1 0 1 = 1 0 1 1 0  <span class="comment">// origin
             ],
             why: 'A secure PRG is computationally indistinguishable from a truly random source — no polynomial-time distinguisher can tell the difference with probability meaningfully above ½. This is a computational (not information-theoretic) definition.',
             concept: 'PRG security — Module 3'
+          },
+          {
+            question: 'AES-CTR is used to encrypt two different messages with the same key AND the same nonce. What is the consequence?',
+            options: [
+              { text: 'Nothing — CTR mode is designed to tolerate nonce reuse', correct: false },
+              { text: 'The keystream repeats, so XOR-ing the two ciphertexts cancels it out — the classic two-time-pad failure', correct: true },
+              { text: 'Decryption becomes impossible for both messages', correct: false },
+              { text: 'The cipher falls back to ECB mode automatically', correct: false },
+            ],
+            why: 'CTR turns a block cipher into a stream cipher: keystream = AES(K, nonce ‖ counter). Same key and nonce → identical keystream, so C₁ ⊕ C₂ = P₁ ⊕ P₂, exactly the two-time-pad break from the lab. This is why nonce uniqueness is a hard requirement in every CTR-based mode, including GCM.',
+            concept: 'CTR nonce reuse — Module 3'
+          },
+          {
+            question: 'Why are stream ciphers such as ChaCha20 often preferred for low-latency, real-time media like voice calls?',
+            options: [
+              { text: 'They are mathematically more secure than block ciphers', correct: false },
+              { text: 'They encrypt byte-by-byte with no padding and no need to buffer a full block, so data flows with minimal delay', correct: true },
+              { text: 'They do not require a secret key', correct: false },
+              { text: 'They compress the data while encrypting it', correct: false },
+            ],
+            why: 'A block cipher mode must assemble (and possibly pad) full 16-byte blocks before encrypting. A stream cipher XORs each byte with keystream the moment it arrives — no buffering, no padding, constant tiny latency. Security being comparable, the operational fit decides: real-time streams suit stream ciphers.',
+            concept: 'Stream vs block cipher selection — Module 3'
+          },
+          {
+            question: 'An attacker flips a single bit of a stream-cipher ciphertext in transit. What happens when it is decrypted?',
+            options: [
+              { text: 'The whole message decrypts to garbage', correct: false },
+              { text: 'Exactly the corresponding plaintext bit flips, predictably — the attacker can make targeted edits without knowing the key', correct: true },
+              { text: 'Decryption fails with an error', correct: false },
+              { text: 'Only the final block is corrupted', correct: false },
+            ],
+            why: 'Because C = P ⊕ KS, flipping a ciphertext bit flips precisely that plaintext bit. An attacker who knows the message format can turn "pay £10" into "pay £90" without breaking the cipher. Stream ciphers are malleable: confidentiality alone is not integrity, which is why a MAC or an AEAD mode is mandatory.',
+            concept: 'Malleability and the need for integrity — Module 3'
+          },
+          {
+            question: 'RC4 was once the most widely deployed stream cipher on the web. Why was it banned from TLS (RFC 7465)?',
+            options: [
+              { text: 'It was too slow for modern servers', correct: false },
+              { text: 'Statistical biases in its keystream allow portions of repeatedly-sent plaintext, such as cookies, to be recovered', correct: true },
+              { text: 'Its 40-bit key was too short for export regulations', correct: false },
+              { text: 'It cannot run on 64-bit processors', correct: false },
+            ],
+            why: 'RC4 keystream bytes are measurably biased — certain values appear more often at certain positions. When the same secret (a session cookie) is encrypted millions of times, the biases let an attacker reconstruct it. The lesson: a PRG whose output is statistically distinguishable from random is broken, even if no key-recovery attack exists.',
+            concept: 'RC4 biases and PRG quality — Module 3'
           }
         ],
         // ── Phase 2: Tiered questions ──
@@ -3436,6 +3943,50 @@ HMAC(K, m) = H((K ⊕ opad) ‖ H((K ⊕ ipad) ‖ m))
             ],
             why: 'The sponge construction does not expose an internal state that can be continued by an external attacker, so length-extension attacks do not apply to SHA-3. This is one of the primary motivations for the SHA-3 design competition.',
             concept: 'Sponge construction — Module 5'
+          },
+          {
+            question: 'Changing a single input bit to SHA-256 flips, on average, about half of the 256 output bits. Why is this avalanche behaviour essential?',
+            options: [
+              { text: 'It makes the hash run faster on similar inputs', correct: false },
+              { text: 'It destroys any correlation between similar inputs, so digests leak nothing about how two messages are related', correct: true },
+              { text: 'It guarantees that collisions can never occur', correct: false },
+              { text: 'It compresses the message more efficiently', correct: false },
+            ],
+            why: 'Without avalanche, similar inputs would give similar digests, and an attacker could home in on a target preimage by gradient-style search, or infer that two messages differ only slightly. Flipping ~50% of output bits per input-bit change makes the digest behave like a fresh random value — you saw this live in the avalanche lab.',
+            concept: 'Avalanche effect — Module 5'
+          },
+          {
+            question: 'Which attack does SECOND-preimage resistance specifically prevent?',
+            options: [
+              { text: 'Finding any two messages that hash to the same value', correct: false },
+              { text: 'Given a specific message m₁, finding a different m₂ with H(m₂) = H(m₁)', correct: true },
+              { text: 'Recovering a message from its digest alone', correct: false },
+              { text: 'Predicting the next output of the hash', correct: false },
+            ],
+            why: 'The three resistances target different attacker goals: preimage — invert a digest; second preimage — forge a substitute for a GIVEN message; collision — find ANY colliding pair. Second-preimage resistance is what protects a published file against a crafted malicious replacement that matches its checksum.',
+            concept: 'Second-preimage vs collision vs preimage — Module 5'
+          },
+          {
+            question: 'A system truncates SHA-256 digests to 64 bits to make identifiers shorter. Roughly how much work is a collision now?',
+            options: [
+              { text: 'Still 2¹²⁸ — truncation does not affect collision resistance', correct: false },
+              { text: 'About 2³² hash evaluations, by the birthday bound on a 64-bit output', correct: true },
+              { text: 'About 2⁶⁴ evaluations', correct: false },
+              { text: 'Collisions become impossible because SHA-256 is collision-resistant', correct: false },
+            ],
+            why: 'Collision resistance is governed by the OUTPUT length actually used: the birthday bound is ~2^(n/2). Truncating to 64 bits drops the collision cost to ~2³² ≈ 4 billion hashes — minutes on a GPU. Truncation is sometimes acceptable for non-adversarial identifiers, but never where collisions have security consequences.',
+            concept: 'Birthday bound and truncation — Module 5'
+          },
+          {
+            question: 'A message travels over an insecure channel together with its plain SHA-256 digest. Why does this NOT provide message authentication?',
+            options: [
+              { text: 'SHA-256 is too weak for authentication purposes', correct: false },
+              { text: 'The hash is unkeyed: an attacker who modifies the message simply recomputes the digest, and the forgery verifies perfectly', correct: true },
+              { text: 'Hashes can only authenticate messages shorter than the digest', correct: false },
+              { text: 'The digest reveals the message content', correct: false },
+            ],
+            why: 'A hash proves integrity only against ACCIDENTAL corruption. Any active attacker recomputes H(m′) for their modified m′ — the receiver has no way to tell. Authentication requires a secret the attacker lacks: a key, giving HMAC, or a private signing key. Hash alone, MAC, and signature form a deliberate ladder of guarantees.',
+            concept: 'Why authentication needs a key — Module 5'
           }
         ],
         // ── Phase 2: Tiered questions ──
@@ -3832,6 +4383,50 @@ ECC-384:  ~192-bit security  ← P-384</div>
             ],
             why: 'Breaking RSA requires factoring the modulus N = p × q. The General Number Field Sieve (GNFS) — the best classical factoring algorithm — runs in L[1/3, 1.923] sub-exponential time, far faster than brute-force. This is why RSA-2048 gives only ~112 bits of classical security, and RSA-3072 is needed for 128 bits. ECC achieves the same 128-bit security with only a 256-bit key because ECDLP has no known sub-exponential algorithm.',
             concept: 'RSA security vs. key size — Module 5 review'
+          },
+          {
+            question: 'A company of 50 employees wants every pair to share a symmetric key. How many keys are required, and what does this motivate?',
+            options: [
+              { text: '50 keys — one per employee', correct: false },
+              { text: '1225 keys (50 × 49 ÷ 2) — quadratic growth that motivates public-key cryptography and key-establishment protocols', correct: true },
+              { text: '2500 keys — one per ordered pair', correct: false },
+              { text: '100 keys — two per employee', correct: false },
+            ],
+            why: 'Pairwise channels need n(n−1)/2 keys: 1225 for 50 users, ~half a million for 1000. Generating, distributing, storing and rotating that many secrets securely is unmanageable — the key distribution problem. The next modules answer it with key pairs and protocols like Diffie–Hellman, where n users need only n key pairs.',
+            concept: 'Key distribution problem — Module 3 review'
+          },
+          {
+            question: 'Alice sends Bob a message with a MAC computed under their shared key. Why can Bob NOT use this tag to prove to a judge that Alice sent it?',
+            options: [
+              { text: 'MACs are too short to be legally binding', correct: false },
+              { text: 'Bob holds the same key, so he could have computed the identical tag himself — a MAC authenticates between the parties but gives no non-repudiation', correct: true },
+              { text: 'MACs do not depend on the message content', correct: false },
+              { text: 'Judges only accept RSA signatures', correct: false },
+            ],
+            why: 'A MAC key is symmetric: anything Alice can compute, Bob can too. To a third party, a valid tag only proves that SOMEONE holding the key made it. Non-repudiation needs asymmetry — a private signing key only Alice holds — which is exactly what digital signatures provide.',
+            concept: 'MAC vs signature: non-repudiation — Module 5 review'
+          },
+          {
+            question: 'Which trio of algorithms offers roughly EQUIVALENT security strength?',
+            options: [
+              { text: 'AES-128, RSA-1024, ECC P-192', correct: false },
+              { text: 'AES-128, RSA-3072, ECC P-256', correct: true },
+              { text: 'AES-256, RSA-2048, ECC P-224', correct: false },
+              { text: 'AES-128, RSA-2048, ECC P-521', correct: false },
+            ],
+            why: 'Equivalence tables (NIST SP 800-57) align AES-128 with RSA-3072 and 256-bit elliptic curves, because the best attacks differ per family: brute force for AES, the sub-exponential number field sieve for RSA, and only generic √n attacks for ECC. This is why RSA keys are so much longer than the security they deliver.',
+            concept: 'Comparable key strengths — Module 5 review'
+          },
+          {
+            question: 'TLS uses ECDH or RSA only to establish a session key, then switches to AES for all the data. Why this hybrid design?',
+            options: [
+              { text: 'Asymmetric ciphers cannot encrypt more than one block', correct: false },
+              { text: 'Asymmetric operations are thousands of times slower than AES, so they are reserved for the one job symmetric crypto cannot do: agreeing a key with a stranger', correct: true },
+              { text: 'AES is more secure than RSA at any key size', correct: false },
+              { text: 'Regulations forbid encrypting bulk data with RSA', correct: false },
+            ],
+            why: 'Public-key operations cost milliseconds and scale poorly with data size; AES with hardware support encrypts gigabytes per second. Hybrid encryption assigns each family its strength: asymmetric solves key establishment, symmetric does the bulk work. Every secure channel you use — TLS, Signal, SSH — is built this way.',
+            concept: 'Hybrid encryption — Module 6 review'
           }
         ],
         // ── Phase 2: Tiered questions ──
@@ -4662,6 +5257,50 @@ Verifier: recompute MAC(K, r) and compare</div>
             ],
             why: 'Soundness means a prover without the actual secret cannot convince the verifier except with negligible probability. Completeness is the guarantee that an honest prover always succeeds. Zero-knowledge is the guarantee that the verifier learns nothing beyond the fact that the statement is true.',
             concept: 'ZKP soundness — Module 11'
+          },
+          {
+            question: 'In a zero-knowledge proof, which property guarantees that an HONEST prover always convinces an honest verifier?',
+            options: [
+              { text: 'Soundness', correct: false },
+              { text: 'Completeness', correct: true },
+              { text: 'Zero-knowledge', correct: false },
+              { text: 'Non-repudiation', correct: false },
+            ],
+            why: 'The three defining properties divide the work: completeness protects the honest prover (a true statement always verifies), soundness protects the verifier (a cheater succeeds only with negligible probability), and zero-knowledge protects the secret (the verifier learns nothing beyond validity). All three must hold simultaneously.',
+            concept: 'ZKP completeness — Module 11'
+          },
+          {
+            question: 'After watching a full Schnorr identification run, what has the verifier learned about the secret x?',
+            options: [
+              { text: 'The value of x, encrypted under the commitment', correct: false },
+              { text: 'Nothing beyond the fact that the prover knows x — an indistinguishable transcript could be produced WITHOUT knowing x', correct: true },
+              { text: 'Half of the bits of x per round', correct: false },
+              { text: 'The hash of x', correct: false },
+            ],
+            why: 'The zero-knowledge property is proved by simulation: anyone can fabricate (t, c, s) triples with the right distribution by choosing s first — no x required. Since real transcripts are indistinguishable from simulated ones, the transcript itself carries zero information about x. The verifier gains conviction, not knowledge.',
+            concept: 'Zero-knowledge and simulation — Module 11'
+          },
+          {
+            question: 'Why does repeating a binary-challenge protocol like Schnorr n times reduce a cheating prover to success probability 2⁻ⁿ?',
+            options: [
+              { text: 'Each round doubles the key length', correct: false },
+              { text: 'A cheater must guess the coming challenge at commitment time; each independent round is a fresh ½ chance, and the chances multiply', correct: true },
+              { text: 'The verifier becomes more suspicious with every round', correct: false },
+              { text: 'The modulus p grows with each round', correct: false },
+            ],
+            why: 'A prover without x can prepare a commitment that answers c = 0 or c = 1, but never both. Surviving a round therefore means guessing the coin flip in advance: probability ½, independent each round, so ½ⁿ overall. Twenty rounds push cheating below one in a million — you watched this collapse happen in the lab.',
+            concept: 'Soundness amplification 2⁻ⁿ — Module 11'
+          },
+          {
+            question: 'What does the Fiat–Shamir heuristic accomplish?',
+            options: [
+              { text: 'It doubles the soundness of each round', correct: false },
+              { text: 'It replaces the verifier-chosen challenge with a hash of the commitment, turning the interactive proof into a non-interactive one — the basis of Schnorr signatures', correct: true },
+              { text: 'It encrypts the transcript so eavesdroppers learn nothing', correct: false },
+              { text: 'It lets the verifier skip the final check', correct: false },
+            ],
+            why: 'Setting c = H(t, message) removes the need for a live verifier: the prover cannot choose t after seeing c, because c is determined BY t through the hash. The resulting (t, s) pair is checkable by anyone — an interactive identification protocol becomes a digital signature. EdDSA is built on exactly this transform.',
+            concept: 'Fiat–Shamir transform — Module 11'
           }
         ],
         // ── Phase 2: Tiered questions ──

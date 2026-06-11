@@ -164,6 +164,20 @@ seqLocked = m.id > 1
 
 ---
 
+## INTERACTIVE VISUALS COVERAGE
+
+All 14 modules have at least one learner-facing interactive visual (auto-loaded via `loadModuleDiagrams` / `loadModuleIGraphs` template fallback; teacher-saved diagrams take precedence per device).
+
+**Diagram templates** (`INTERACTIVE_DIAGRAM_TEMPLATES`): `sym_enc_system` (M02/M03), `security_services` (M00), `crypto_toolbox` (M06), `chain_of_trust` (M08), `challenge_response_flow` (M09), `schnorr_rounds` (M10), `tls13_handshake` (M11).
+
+**Graph templates** (`INTERACTIVE_GRAPH_TEMPLATES`): `timing_attack` (M12), `rsa_vs_ecc_sizes` (M07), `pqc_size_costs` (M13).
+
+Modules M01, M04, M05 have visuals via lesson HTML (concept-boxes, code-blocks, worked examples).
+
+**Quiz bank pool depths** (stage5.bank): M01, M02, M04, M06, M10 → 10 questions each (increased from 6 in Tier 3). All other modules remain at 6. All entries carry `why` + `concept` fields (PR4).
+
+---
+
 ## DAILY_MCQ_BANK SCHEMA
 
 37 entries. Schema:
@@ -213,7 +227,7 @@ Characters: Alice, Bob, Eve, Mallory.
 | PR1 | Done | `state.moduleTimes`, Research tab bar charts |
 | PR2 | Done | By design — `level` field, concept-boxes in every stage |
 | PR3 | Done | `showNasaTLX()`, `state.nasaTLX`, Research tab aggregate |
-| PR4 | Done | All 125 module questions + all 37 MCQ bank entries: why + concept |
+| PR4 | Done | All 145 module questions + all 37 MCQ bank entries: why + concept |
 | PR5 | Done | Research tab `measurePR5()` panel |
 | PR6 | Done | All 14 modules: pool depth 6-8, cross-revisit deduplication |
 | PR7 | Done | `--muted` #64748B, focus rings, ARIA progressbar |
