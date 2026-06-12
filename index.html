@@ -2035,7 +2035,26 @@ body.high-contrast {
                 <input id="cfg-teacher-token" type="text" placeholder="t_…" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"
                   style="width:100%;padding:8px 10px;border:1.5px solid var(--border);border-radius:8px;font-size:11px;font-family:var(--mono);box-sizing:border-box;background:var(--bg);color:var(--text)">
               </div>
-              <button class="btn btn-primary btn-sm" onclick="saveSyncConfig()" style="width:auto">Save & Sync</button>
+              <div style="margin-top:14px;border-top:1px solid var(--border);padding-top:12px">
+                <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:8px">EmailJS — Student Verification</div>
+                <div style="margin-bottom:8px">
+                  <label style="font-size:11px;font-weight:700;color:var(--text2);display:block;margin-bottom:4px">Service ID</label>
+                  <input id="cfg-ejs-service" type="text" placeholder="service_xxxxxxx" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"
+                    style="width:100%;padding:8px 10px;border:1.5px solid var(--border);border-radius:8px;font-size:11px;font-family:var(--mono);box-sizing:border-box;background:var(--bg);color:var(--text)">
+                </div>
+                <div style="margin-bottom:8px">
+                  <label style="font-size:11px;font-weight:700;color:var(--text2);display:block;margin-bottom:4px">Template ID</label>
+                  <input id="cfg-ejs-template" type="text" placeholder="template_xxxxxxx" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"
+                    style="width:100%;padding:8px 10px;border:1.5px solid var(--border);border-radius:8px;font-size:11px;font-family:var(--mono);box-sizing:border-box;background:var(--bg);color:var(--text)">
+                </div>
+                <div style="margin-bottom:8px">
+                  <label style="font-size:11px;font-weight:700;color:var(--text2);display:block;margin-bottom:4px">Public Key</label>
+                  <input id="cfg-ejs-pubkey" type="text" placeholder="xxxxxxxxxxxxxxx" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"
+                    style="width:100%;padding:8px 10px;border:1.5px solid var(--border);border-radius:8px;font-size:11px;font-family:var(--mono);box-sizing:border-box;background:var(--bg);color:var(--text)">
+                </div>
+                <div style="font-size:10px;color:var(--muted);line-height:1.5">Template must include variables: <code>to_email</code>, <code>to_name</code>, <code>code</code></div>
+              </div>
+              <button class="btn btn-primary btn-sm" onclick="saveSyncConfig()" style="width:auto;margin-top:12px">Save & Sync</button>
             </div>
           </div>
         </div>
@@ -12290,6 +12309,12 @@ function renderProfile() {
   if (trEl)  trEl.style.display = canAccess(ROLES.TEACHER) ? '' : 'none';
   const syncCfgBlock = document.getElementById('sync-config-block');
   if (syncCfgBlock) syncCfgBlock.style.display = canAccess(ROLES.TEACHER) ? '' : 'none';
+  const ejsServiceEl  = document.getElementById('cfg-ejs-service');
+  const ejsTemplateEl = document.getElementById('cfg-ejs-template');
+  const ejsPubkeyEl   = document.getElementById('cfg-ejs-pubkey');
+  if (ejsServiceEl)  ejsServiceEl.value  = localStorage.getItem('cc_ejs_service')  || '';
+  if (ejsTemplateEl) ejsTemplateEl.value = localStorage.getItem('cc_ejs_template') || '';
+  if (ejsPubkeyEl)   ejsPubkeyEl.value   = localStorage.getItem('cc_ejs_pubkey')   || '';
 
   const isStudent = currentUser?.role === ROLES.STUDENT;
 
@@ -12347,6 +12372,15 @@ function saveSyncConfig() {
   else     localStorage.removeItem('crypto_course_write_token');
   if (tt)  localStorage.setItem('crypto_course_teacher_token', tt);
   else     localStorage.removeItem('crypto_course_teacher_token');
+  const ejsService  = (document.getElementById('cfg-ejs-service')?.value  || '').trim();
+  const ejsTemplate = (document.getElementById('cfg-ejs-template')?.value || '').trim();
+  const ejsPubkey   = (document.getElementById('cfg-ejs-pubkey')?.value   || '').trim();
+  if (ejsService)  localStorage.setItem('cc_ejs_service',  ejsService);
+  else             localStorage.removeItem('cc_ejs_service');
+  if (ejsTemplate) localStorage.setItem('cc_ejs_template', ejsTemplate);
+  else             localStorage.removeItem('cc_ejs_template');
+  if (ejsPubkey)   localStorage.setItem('cc_ejs_pubkey',   ejsPubkey);
+  else             localStorage.removeItem('cc_ejs_pubkey');
   showToast('✓ Sync config saved');
   triggerSync();
 }
@@ -14511,25 +14545,71 @@ function showVerificationScreen() {
 }
 
 async function sendVerificationCode() {
-  const base = getSyncEndpoint();
-  const wt   = localStorage.getItem('crypto_course_write_token');
+  const base  = getSyncEndpoint();
+  const wt    = localStorage.getItem('crypto_course_write_token');
   const errEl = document.getElementById('verify-error');
-  if (!base || !wt) {
+
+  // ── Path A: server-based send (when sync server is configured) ─────────────
+  if (base && wt) {
+    try {
+      const resp = await fetchWithTimeout(base + '/verify/send', {
+        method: 'POST',
+        headers: { 'Authorization': 'Bearer ' + wt, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId: currentUser?.sub, email: currentUser?.email, name: currentUser?.name }),
+      }, 10000);
+      if (resp.ok) return 'server';
+      // Server error — fall through to EmailJS
+    } catch(e) {
+      // Network error — fall through to EmailJS
+    }
+  }
+
+  // ── Path B: EmailJS direct send ────────────────────────────────────────────
+  const svcId  = localStorage.getItem('cc_ejs_service');
+  const tplId  = localStorage.getItem('cc_ejs_template');
+  const pubKey = localStorage.getItem('cc_ejs_pubkey');
+  if (!svcId || !tplId || !pubKey) {
     if (errEl) errEl.textContent = 'Join a class first so we know where to send your code.';
     return false;
   }
+
+  // Generate cryptographically random 6-digit code
+  const arr  = new Uint32Array(1);
+  crypto.getRandomValues(arr);
+  const code = String(100000 + (arr[0] % 900000));
+
+  // Hash code and store with 10-minute expiry (raw code is never persisted)
+  const hashBuf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(code));
+  const hashHex = Array.from(new Uint8Array(hashBuf)).map(function(b) { return b.toString(16).padStart(2, '0'); }).join('');
+  localStorage.setItem('cc_verify_code_hash',   hashHex);
+  localStorage.setItem('cc_verify_code_expiry', String(Date.now() + 10 * 60 * 1000));
+
   try {
-    const resp = await fetchWithTimeout(`${base}/verify/send`, {
+    const r = await fetchWithTimeout('https://api.emailjs.com/api/v1.0/email/send', {
       method: 'POST',
-      headers: { 'Authorization': 'Bearer ' + wt, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ userId: currentUser?.sub, email: currentUser?.email, name: currentUser?.name }),
-    }, 10000);
-    if (!resp.ok) {
-      if (errEl) errEl.textContent = 'Could not send verification code. Try again.';
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        service_id: svcId,
+        template_id: tplId,
+        user_id: pubKey,
+        template_params: {
+          to_email: currentUser?.email,
+          to_name:  currentUser?.name || currentUser?.email,
+          code:     code,
+          app_name: 'Crypto-Course',
+        },
+      }),
+    }, 15000);
+    if (!r.ok) {
+      localStorage.removeItem('cc_verify_code_hash');
+      localStorage.removeItem('cc_verify_code_expiry');
+      if (errEl) errEl.textContent = 'Could not send verification code — check EmailJS settings.';
       return false;
     }
-    return true;
+    return 'emailjs';
   } catch(e) {
+    localStorage.removeItem('cc_verify_code_hash');
+    localStorage.removeItem('cc_verify_code_expiry');
     if (errEl) errEl.textContent = 'No internet connection — connect and tap Resend.';
     return false;
   }
@@ -14552,6 +14632,19 @@ function resendVerificationCode() {
   });
 }
 
+function _markVerified() {
+  const users = loadUsers();
+  const idx = users.findIndex(function(u) { return u.id === currentUser?.sub; });
+  if (idx >= 0) { users[idx].emailVerified = true; saveUsers(users); }
+  if (currentUser) currentUser.emailVerified = true;
+  localStorage.removeItem('cc_verify_code_hash');
+  localStorage.removeItem('cc_verify_code_expiry');
+  document.getElementById('verify-screen')?.remove();
+  showToast('✓ Email verified — welcome!');
+  pushRegistration();
+  enterApp();
+}
+
 async function checkVerificationCode() {
   const codeEl = document.getElementById('verify-code-input');
   const errEl  = document.getElementById('verify-error');
@@ -14560,34 +14653,53 @@ async function checkVerificationCode() {
     if (errEl) errEl.textContent = 'Please enter the full 6-digit code.';
     return;
   }
-  const base = getSyncEndpoint();
-  if (!base) { if (errEl) errEl.textContent = 'Sync server not configured.'; return; }
   if (errEl) errEl.textContent = '';
-  try {
-    const resp = await fetchWithTimeout(`${base}/verify/check`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ userId: currentUser?.sub, code }),
-    }, 8000);
-    const data = await resp.json().catch(() => ({}));
-    if (!resp.ok) {
+
+  const base = getSyncEndpoint();
+
+  // ── Path A: server-based check ─────────────────────────────────────────────
+  if (base) {
+    try {
+      const resp = await fetchWithTimeout(base + '/verify/check', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId: currentUser?.sub, code: code }),
+      }, 8000);
+      const data = await resp.json().catch(function() { return {}; });
+      if (resp.ok) { _markVerified(); return; }
       if (errEl) errEl.textContent =
         data.error === 'code expired' ? 'Code has expired — tap Resend to get a new one.' :
-        data.attemptsLeft != null    ? `Incorrect code. ${data.attemptsLeft} attempt${data.attemptsLeft !== 1 ? 's' : ''} remaining.` :
+        data.attemptsLeft != null     ? 'Incorrect code. ' + data.attemptsLeft + ' attempt' + (data.attemptsLeft !== 1 ? 's' : '') + ' remaining.' :
         data.error || 'Incorrect code.';
       return;
+    } catch(e) {
+      // Network error — fall through to local hash check
     }
-    // Mark verified locally
-    const users = loadUsers();
-    const idx = users.findIndex(u => u.id === currentUser?.sub);
-    if (idx >= 0) { users[idx].emailVerified = true; saveUsers(users); }
-    if (currentUser) currentUser.emailVerified = true; // keep in-memory token in sync
-    document.getElementById('verify-screen')?.remove();
-    showToast('✓ Email verified — welcome!');
-    pushRegistration(); // push name + email to KV now that write token is available
-    enterApp();
+  }
+
+  // ── Path B: local hash check (EmailJS path) ────────────────────────────────
+  const storedHash   = localStorage.getItem('cc_verify_code_hash');
+  const storedExpiry = parseInt(localStorage.getItem('cc_verify_code_expiry') || '0', 10);
+  if (!storedHash) {
+    if (errEl) errEl.textContent = 'No pending code — tap Resend to get a new one.';
+    return;
+  }
+  if (Date.now() > storedExpiry) {
+    localStorage.removeItem('cc_verify_code_hash');
+    localStorage.removeItem('cc_verify_code_expiry');
+    if (errEl) errEl.textContent = 'Code has expired — tap Resend to get a new one.';
+    return;
+  }
+  try {
+    const inputBuf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(code));
+    const inputHex = Array.from(new Uint8Array(inputBuf)).map(function(b) { return b.toString(16).padStart(2, '0'); }).join('');
+    if (inputHex !== storedHash) {
+      if (errEl) errEl.textContent = 'Incorrect code — check your email and try again.';
+      return;
+    }
+    _markVerified();
   } catch(e) {
-    if (errEl) errEl.textContent = 'No internet connection — check connection and try again.';
+    if (errEl) errEl.textContent = 'Verification error — try again.';
   }
 }
 
