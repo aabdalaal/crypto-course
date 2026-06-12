@@ -1746,7 +1746,7 @@ body.high-contrast {
       <div style="padding:0 20px 12px">
         <div style="position:relative">
           <span style="position:absolute;left:14px;top:50%;transform:translateY(-50%);font-size:16px;pointer-events:none">🔍</span>
-          <input id="module-search-input" type="search" placeholder="Search modules…"
+          <input id="module-search-input" type="search" placeholder="Search modules…" data-i18n-placeholder="ph_search_modules"
             oninput="onModuleSearch(this.value)"
             style="width:100%;padding:12px 14px 12px 40px;border:1.5px solid var(--border);border-radius:12px;font-size:14px;font-family:var(--font);background:var(--surface);color:var(--text1);outline:none;box-sizing:border-box"
             onfocus="this.style.borderColor='var(--primary)'" onblur="this.style.borderColor='var(--border)'" />
@@ -1995,12 +1995,12 @@ body.high-contrast {
           <div class="section-card-body">
             <!-- Student-friendly view -->
             <div id="sync-student-view">
-              <div style="font-size:14px;color:var(--text2);line-height:1.5;margin-bottom:14px">
+              <div style="font-size:14px;color:var(--text2);line-height:1.5;margin-bottom:14px" data-i18n="sync_student_expl">
                 Your progress is saved on this device. When you have internet, tap below to back it up so it's safe even if you switch devices.
               </div>
               <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px">
-                <button class="btn btn-primary btn-sm" onclick="triggerSync()" style="width:auto">📤 Back up now</button>
-                <div id="sync-time-student" style="font-size:12px;color:var(--muted)">Checking…</div>
+                <button class="btn btn-primary btn-sm" onclick="triggerSync()" style="width:auto" data-i18n="backup_now_btn">📤 Back up now</button>
+                <div id="sync-time-student" style="font-size:12px;color:var(--muted)" data-i18n="checking">Checking…</div>
               </div>
             </div>
             <!-- Teacher/admin technical view -->
@@ -2273,7 +2273,7 @@ function saveState() {
     // Warn the learner once so silent data loss is visible.
     if (!_quotaWarned && (e.name === 'QuotaExceededError' || /quota/i.test(e.message || ''))) {
       _quotaWarned = true;
-      try { showToast('⚠️ Storage full — your progress may not be saved. Free up space or contact your teacher.'); } catch(_) {}
+      try { showToast(t('toast_storage_full')); } catch(_) {}
     }
   }
 }
@@ -2393,7 +2393,7 @@ function joinLeaderboardFromSheet() {
   const toggle = document.getElementById('toggle-leaderboard');
   if (toggle) { toggle.classList.add('on'); toggle.setAttribute('aria-checked', 'true'); }
   dismissLBOptinSheet(true);
-  showToast('✓ You\'re on the leaderboard — good luck!');
+  showToast(t('toast_lb_joined'));
 }
 
 // ── Leaderboard leave sheet ──
@@ -2414,7 +2414,7 @@ function leaveLeaderboard() {
   const toggle = document.getElementById('toggle-leaderboard');
   if (toggle) { toggle.classList.remove('on'); toggle.setAttribute('aria-checked', 'false'); }
   dismissLBLeaveSheet();
-  showToast('You\'ve left the leaderboard — your progress is kept.');
+  showToast(t('toast_lb_left'));
   renderLeaderboard();
 }
 
@@ -6337,7 +6337,7 @@ function launchConfetti() {
 }
 
 function useFreezeToken() {
-  if (state.freezeTokens <= 0) { alert('No freeze tokens available. You earn 1 per 7 days.'); return; }
+  if (state.freezeTokens <= 0) { alert(t('no_freeze_tokens')); return; }
   const sub = document.getElementById('freeze-sheet-sub');
   if (sub) sub.textContent = `This will protect your streak for today. You have ${state.freezeTokens} remaining.`;
   const sheet = document.getElementById('freeze-confirm-sheet');
@@ -6464,8 +6464,8 @@ function renderHome() {
           </div>
         </div>
         <div style="display:flex;gap:8px;margin-top:14px">
-          <button class="btn btn-primary" style="flex:1;padding:11px 14px;font-size:14px;border-radius:var(--radius-xs)" onclick="startDiagnostic()">Start Assessment</button>
-          <button style="padding:11px 14px;font-size:13px;font-weight:600;background:rgba(255,255,255,0.12);border:1px solid rgba(255,255,255,0.2);color:rgba(255,255,255,0.8);border-radius:var(--radius-xs);cursor:pointer;font-family:var(--font)" onclick="dismissDiagCard()">Skip</button>
+          <button class="btn btn-primary" style="flex:1;padding:11px 14px;font-size:14px;border-radius:var(--radius-xs)" onclick="startDiagnostic()">${t('start_assessment')}</button>
+          <button style="padding:11px 14px;font-size:13px;font-weight:600;background:rgba(255,255,255,0.12);border:1px solid rgba(255,255,255,0.2);color:rgba(255,255,255,0.8);border-radius:var(--radius-xs);cursor:pointer;font-family:var(--font)" onclick="dismissDiagCard()">${t('skip_btn')}</button>
         </div>
       </div>`;
   }
@@ -6476,20 +6476,20 @@ function renderHome() {
   const continueBtn = document.getElementById('continue-btn');
   if (continueBtn) {
     if (courseComplete) {
-      continueBtn.textContent = '🏆 View Course Certificate';
+      continueBtn.textContent = t('view_course_cert');
       continueBtn.onclick = showCourseCompleteCertModal;
     } else if (state.lessonsCompleted === 0) {
-      continueBtn.textContent = '🚀 Start First Module';
+      continueBtn.textContent = t('start_first_module');
       continueBtn.onclick = () => openModule(0);
     } else {
-      continueBtn.textContent = '▶ Continue Learning';
+      continueBtn.textContent = t('continue_learning');
       continueBtn.onclick = continueLastLesson;
     }
   }
 
   // Home module section heading
   const heading = document.getElementById('home-modules-heading');
-  if (heading) heading.textContent = courseComplete ? '✅ All Modules Complete' : completedMods === 0 && state.lessonsCompleted === 0 ? 'Get Started' : 'In Progress';
+  if (heading) heading.textContent = courseComplete ? t('all_modules_complete') : completedMods === 0 && state.lessonsCompleted === 0 ? t('get_started') : t('in_progress');
 
   // Show 3 prioritised modules: in-progress first, then next unlocked
   renderHomeModules();
@@ -6756,7 +6756,7 @@ function showLockedSheet(modId) {
     const d = getModuleUnlockDate(modId);
     subEl.textContent = `This module unlocks on ${d.toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'})}.`;
     progEl.innerHTML  = '';
-    ctaBtn.textContent = 'Got it';
+    ctaBtn.textContent = t('got_it');
     ctaBtn.onclick     = dismissLockedSheet;
   } else {
     subEl.textContent = prereqMod
@@ -6858,7 +6858,7 @@ function renderLessonStage() {
   const prevBtn = document.getElementById('lesson-prev-btn');
   nextBtn.disabled = false;
   nextBtn.onclick = lessonNext;
-  nextBtn.textContent = stage < totalStages ? 'Continue →' : (lessonState.quizPassed ? '✓ Complete Lesson' : '🔒 Complete Lesson');
+  nextBtn.textContent = stage < totalStages ? t('continue_arrow') : (lessonState.quizPassed ? t('complete_lesson') : t('complete_lesson_locked'));
   if (prevBtn) prevBtn.style.display = stage > 1 ? '' : 'none';
 
   // Determine content for this stage
@@ -6882,7 +6882,7 @@ function renderLessonStage() {
     const diagramsHTML   = stage === diagStage  ? renderDiagramsInLesson(lessonState.moduleId) : '';
     body.innerHTML = `
       <div class="stage-label">📖 ${stageLabels[stage-1]}</div>
-      <div class="lesson-content">${content.body}${graphsHTML}${igraphsHTML}${flowchartsHTML}${diagramsHTML}</div>
+      <div class="lesson-content" lang="en">${content.body}${graphsHTML}${igraphsHTML}${flowchartsHTML}${diagramsHTML}</div>
     `;
     if (stage === graphStage) {
       if (graphsHTML)     requestAnimationFrame(() => initModuleCharts(lessonState.moduleId));
@@ -6893,7 +6893,7 @@ function renderLessonStage() {
     // Lab stage
     body.innerHTML = renderLab(content, mod);
     nextBtn.disabled = true;
-    nextBtn.textContent = 'Run Lab to Continue →';
+    nextBtn.textContent = t('run_lab_continue');
     // Initialise CipherPulse lab if it's a caesar_lab — run freq bars + initial decrypt
     if (content.labId === 'caesar_lab' || content.labId === 'vigenere_lab') {
       requestAnimationFrame(() => {
@@ -6914,7 +6914,7 @@ function renderLessonStage() {
     const adaptiveNoticeHtml = (content.tiers && lessonState.currentTier !== 'core')
       ? renderAdaptiveTierNotice(lessonState.currentTier) : '';
     body.innerHTML = adaptiveNoticeHtml + renderTierSelector(content) + renderQuiz(getActiveTierQuestion(content));
-    nextBtn.textContent = 'Submit Answer';
+    nextBtn.textContent = t('submit_answer');
     nextBtn.disabled = true;
     nextBtn.onclick = submitQuiz;
     lessonState.quizAnswered = false;
@@ -6937,19 +6937,19 @@ function renderLessonStage() {
         <div style="font-size:14px;color:var(--text2)">You've completed all 7 stages of this module. Progress saved offline.</div>
       </div>
     `;
-    nextBtn.textContent = lessonState.quizPassed ? '🏠 Back to Home' : '🔒 Back to Home';
+    nextBtn.textContent = lessonState.quizPassed ? t('back_home') : t('back_home_locked');
   } else {
     // Filler stages (2, 3, 6)
     const fillerContent = {
       2: `<div class="stage-label">🔍 ${stageLabels[1]}</div>
-          <div class="lesson-content">
+          <div class="lesson-content" lang="en">
             <h2>Worked Example</h2>
             <p>Let's walk through a concrete example to see the concepts from Stage 1 in action.</p>
             ${getWorkedExample(mod.id)}
             ${renderVideoPlayer(lessonState.moduleId)}
           </div>`,
       3: `<div class="stage-label">✏️ ${stageLabels[2]}</div>
-          <div class="lesson-content">
+          <div class="lesson-content" lang="en">
             <h2>Guided Practice</h2>
             <p>Apply what you have learned with this guided exercise. Read each step carefully — the interactive lab in the next stage will put this into practice.</p>
             ${getGuidedPractice(mod.id)}
@@ -6958,7 +6958,7 @@ function renderLessonStage() {
             ${renderFlashcards(lessonState.moduleId)}
           </div>`,
       6: `<div class="stage-label">📋 ${stageLabels[5]}</div>
-          <div class="lesson-content">
+          <div class="lesson-content" lang="en">
             <h2>Summary</h2>
             ${getSummary(mod)}
             <div class="concept-box">
@@ -10366,7 +10366,7 @@ function runChainVerification() {
 function completeLabStage() {
   const nextBtn = document.getElementById('lesson-next-btn');
   nextBtn.disabled = false;
-  nextBtn.textContent = 'Lab Complete! Continue →';
+  nextBtn.textContent = t('lab_complete_continue');
   const mid = lessonState.moduleId;
   if (lessonState.labCompleted || (state.labsDone && state.labsDone[mid])) return;
   lessonState.labCompleted = true;
@@ -10515,7 +10515,7 @@ function switchTier(tierId) {
   body.innerHTML = renderTierSelector(content) + renderQuiz(getActiveTierQuestion(content));
 
   const nextBtn = document.getElementById('lesson-next-btn');
-  nextBtn.textContent = 'Submit Answer';
+  nextBtn.textContent = t('submit_answer');
   nextBtn.disabled = true;
   nextBtn.onclick = submitQuiz;
 
@@ -10607,7 +10607,7 @@ function renderQuiz(activeQ) {
       <div class="feedback-why" id="fb-why">${activeQ.why}</div>
       <div class="feedback-xp" id="fb-xp">+5 XP</div>
       <div class="feedback-ref">📖 Revisit: <a href="#" onclick="return false">${activeQ.concept}</a></div>
-      <button id="fb-next-btn" class="btn btn-primary" onclick="closeFeedback()" aria-label="Continue to next stage">Next →</button>
+      <button id="fb-next-btn" class="btn btn-primary" onclick="closeFeedback()" aria-label="${t('aria_continue_next')}">${t('next_arrow')}</button>
       <div id="fb-retry-actions" style="display:none;gap:8px;margin-top:0">
         <button class="btn btn-primary" onclick="tryAgainQuiz()" style="flex:1">↩ Try Again</button>
       </div>
@@ -10627,7 +10627,7 @@ function selectQuizOption(idx, correct) {
   });
   const nextBtn = document.getElementById('lesson-next-btn');
   nextBtn.disabled = false;
-  nextBtn.setAttribute('aria-label', 'Submit answer');
+  nextBtn.setAttribute('aria-label', t('submit_answer'));
 }
 
 function submitQuiz() {
@@ -10663,7 +10663,7 @@ function submitQuiz() {
   const sheet = document.getElementById('feedback-sheet');
   sheet.classList.add('show', correct ? 'correct' : 'incorrect');
   document.getElementById('fb-icon').textContent = correct ? '✓' : '✗';
-  document.getElementById('fb-text').textContent = correct ? 'Correct! 🎉' : 'Not quite…';
+  document.getElementById('fb-text').textContent = correct ? t('correct_celebrate') : t('not_quite');
   document.getElementById('fb-text').style.color = correct ? 'var(--secondary)' : 'var(--danger)';
 
   if (correct) {
@@ -10788,12 +10788,12 @@ function expandHintVideo(ytId, title) {
 function closeFeedback() {
   const sheet = document.getElementById('feedback-sheet');
   sheet.classList.remove('show', 'correct', 'incorrect');
-  document.getElementById('fb-next-btn').textContent = 'Next →';
+  document.getElementById('fb-next-btn').textContent = t('next_arrow');
   document.getElementById('fb-next-btn').style.display = '';
   document.getElementById('fb-retry-actions').style.display = 'none';
   const nextBtn = document.getElementById('lesson-next-btn');
   nextBtn.disabled = false;
-  nextBtn.textContent = 'Continue →';
+  nextBtn.textContent = t('continue_arrow');
   nextBtn.onclick = lessonNext;
 }
 
@@ -11234,7 +11234,7 @@ function startRevisitQuiz(modId, interval) {
     ${renderQuiz(q)}`;
 
   const nextBtn = document.getElementById('lesson-next-btn');
-  nextBtn.textContent = 'Submit Answer';
+  nextBtn.textContent = t('submit_answer');
   nextBtn.disabled = true;
   nextBtn.onclick = submitRevisitQuiz;
   document.getElementById('screen-container').scrollTop = 0;
@@ -11283,7 +11283,7 @@ function submitRevisitQuiz() {
     if (correct) {
       const nextBtn = document.getElementById('lesson-next-btn');
       nextBtn.disabled = false;
-      nextBtn.textContent = '✓ Complete Revisit';
+      nextBtn.textContent = t('complete_revisit');
       nextBtn.onclick = completeRevisit;
     }
     // Wrong answer: tryAgainQuiz already wired by submitQuiz; they must answer correctly
@@ -11509,8 +11509,8 @@ function _renderMCQPanel() {
     <div class="cp-mcq-xp-display" id="mcq-xp-display"></div>
     <div style="display:flex;flex-direction:column;gap:8px;margin-top:18px" id="mcq-actions">
       ${mcqDone
-        ? `<button class="btn" style="width:100%;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);color:rgba(255,255,255,0.5);padding:14px" onclick="closeCPOverlay()">Close</button>`
-        : `<button class="btn btn-primary" style="width:100%;padding:14px;font-size:15px" id="mcq-submit-btn" onclick="cpSubmitMCQ()">Submit Answer</button>
+        ? `<button class="btn" style="width:100%;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);color:rgba(255,255,255,0.5);padding:14px" onclick="closeCPOverlay()">${t('close_btn')}</button>`
+        : `<button class="btn btn-primary" style="width:100%;padding:14px;font-size:15px" id="mcq-submit-btn" onclick="cpSubmitMCQ()">${t('submit_answer')}</button>
            <button class="btn" style="width:100%;background:rgba(245,158,11,0.06);border:1px solid rgba(245,158,11,0.2);color:#FDE68A;padding:11px;font-size:13px" id="mcq-hint-btn" onclick="cpShowMCQHint()">💡 Show Hint (−1 XP)</button>`
       }
     </div>`;
@@ -11701,7 +11701,7 @@ function _renderCPContent() {
       </div>
     </div>
 
-    <button class="btn btn-ghost" onclick="closeCPOverlay()" style="width:100%;margin-top:10px;color:rgba(255,255,255,0.4);border-color:rgba(255,255,255,0.1)">Maybe later</button>`;
+    <button class="btn btn-ghost" onclick="closeCPOverlay()" style="width:100%;margin-top:10px;color:rgba(255,255,255,0.4);border-color:rgba(255,255,255,0.1)">${t('maybe_later')}</button>`;
 
   // Inject cipher letters safely after DOM is ready
   const cipherEl = document.getElementById('cp-cipher-text-el');
@@ -12058,7 +12058,7 @@ function solveMetroPuzzle() {
   checkBadges();
   saveState();
   const btn = document.getElementById('metro-solved-btn');
-  if (btn) { btn.textContent = '🎉 +10 XP & Badge Earned!'; btn.disabled = true; }
+  if (btn) { btn.textContent = t('xp_badge_earned'); btn.disabled = true; }
   const nextBtn = document.getElementById('lesson-next-btn');
   if (nextBtn) { nextBtn.disabled = false; nextBtn.textContent = 'Continue →'; }
 }
@@ -12149,7 +12149,7 @@ function renderProgress() {
     } else {
       const group = getUserCohortGroup();
       if (!group) {
-        preview.textContent = 'No cohort group assigned yet';
+        preview.textContent = t('no_cohort_group');
       } else if (group.members.length < LEADERBOARD_MIN_SIZE) {
         preview.textContent = `Group has ${group.members.length} members — needs ${LEADERBOARD_MIN_SIZE} to unlock`;
       } else {
@@ -12299,11 +12299,11 @@ function renderProfile() {
       : diffDays === 1 ? 'Yesterday'
       : diffDays + ' days ago';
     const el = document.getElementById('sync-time-student');
-    if (el) el.textContent = 'Last backed up: ' + friendlyTime;
-    document.getElementById('sync-time').textContent = 'Last sync: ' + new Date(state.lastSync).toLocaleTimeString();
+    if (el) el.textContent = t('last_backed_up') + ' ' + friendlyTime;
+    document.getElementById('sync-time').textContent = t('last_sync') + ' ' + new Date(state.lastSync).toLocaleTimeString();
   } else {
     const el = document.getElementById('sync-time-student');
-    if (el) el.textContent = 'Never backed up';
+    if (el) el.textContent = t('never_backed_up');
   }
 
   // Pre-fill sync config inputs
@@ -12488,6 +12488,67 @@ const i18n = {
     take_diagnostic_btn: 'Take Diagnostic (10 Questions)',
     // Language selector
     ltr_label: 'Left-to-Right', rtl_label: 'Right-to-Left (RTL)',
+    // — Phase 2: buttons & toasts (auth) —
+    auth_tagline: 'Offline-first cryptography education',
+    sign_in_tab: 'Sign In', register_tab: 'Register',
+    sign_in_btn: 'Sign In →', signing_in: 'Signing in…',
+    create_account_btn: 'Create Account →', creating_account: 'Creating account…',
+    guest_btn: 'Continue as Guest (local only)',
+    lbl_email: 'Email', lbl_password: 'Password', lbl_name: 'Name', lbl_class_code: 'Class Code',
+    class_code_optional: '(optional — given by your teacher)',
+    ph_full_name: 'Your full name', ph_min8: 'Min 8 characters', ph_class_code: 'e.g. FALL2026',
+    ph_choose_pw: 'Choose a password…', ph_repeat_pw: 'Repeat password…',
+    set_pw_btn: 'Set Password & Continue →',
+    pw_too_short: 'Password must be at least 6 characters.', pw_mismatch: 'Passwords do not match.',
+    code_enter_full: 'Please enter the full 6-digit code.',
+    code_expired: 'Code has expired — tap Resend to get a new one.',
+    code_incorrect: 'Incorrect code — check your email and try again.',
+    code_error: 'Verification error — try again.',
+    code_none: 'No pending code found — tap Resend to get a new one.',
+    no_internet: 'No internet connection — check connection and try again.',
+    email_verified: '✓ Email verified — welcome!',
+    account_suspended: 'Your account has been suspended. Contact your teacher.',
+    class_code_not_found: 'Code not found — check your code or ask your teacher.',
+    // — Phase 2: lesson navigation & quiz —
+    start_assessment: 'Start Assessment', skip_btn: 'Skip',
+    view_course_cert: '🏆 View Course Certificate', start_first_module: '🚀 Start First Module',
+    all_modules_complete: '✅ All Modules Complete', get_started: 'Get Started',
+    complete_lesson: '✓ Complete Lesson', complete_lesson_locked: '🔒 Complete Lesson',
+    run_lab_continue: 'Run Lab to Continue →', submit_answer: 'Submit Answer',
+    back_home: '🏠 Back to Home', back_home_locked: '🔒 Back to Home',
+    next_arrow: 'Next →', next_chevron: 'Next ›', prev_chevron: '‹ Prev', done_check: 'Done ✓',
+    aria_continue_next: 'Continue to next stage',
+    correct_celebrate: 'Correct! 🎉', not_quite: 'Not quite…', close_btn: 'Close',
+    lab_complete_continue: 'Lab Complete! Continue →', complete_revisit: '✓ Complete Revisit',
+    explore_modules_first: 'Explore all modules first',
+    continue_arrow: 'Continue →', continue_learning_arrow: 'Continue Learning →',
+    got_it: 'Got it', got_it_check: 'Got it ✓', maybe_later: 'Maybe later',
+    // — Phase 2: toasts & engagement —
+    toast_storage_full: '⚠️ Storage full — your progress may not be saved. Free up space or contact your teacher.',
+    toast_lb_joined: '✓ You\'re on the leaderboard — good luck!',
+    toast_lb_left: 'You\'ve left the leaderboard — your progress is kept.',
+    no_freeze_tokens: 'No freeze tokens available. You earn 1 per 7 days.',
+    xp_badge_earned: '🎉 +10 XP & Badge Earned!',
+    tts_unsupported: 'Text-to-speech is not supported in this browser.',
+    tts_unsupported_device: 'Text-to-speech not supported on this device',
+    enter_plaintext: 'Please enter the plaintext', mark_read: 'Mark as Read ✓',
+    // — Phase 2: sync & backup —
+    sync_unavailable: 'Sync unavailable (no server)', syncing: 'Syncing…',
+    synced_just_now: 'Synced just now ✓', offline_saved_local: 'Offline — progress saved locally',
+    last_backed_up: 'Last backed up:', last_sync: 'Last sync:', never_backed_up: 'Never backed up',
+    backup_now_btn: '📤 Back up now', checking: 'Checking…',
+    sync_student_expl: 'Your progress is saved on this device. When you have internet, tap below to back it up so it\'s safe even if you switch devices.',
+    // — Phase 2: semester (student) —
+    join_semester_btn: 'Join Semester', leave_semester_btn: 'Leave Semester',
+    skip_for_now: 'Skip for now', ph_join_code: 'Enter join code', join_btn: 'Join',
+    join_code_empty: 'Enter the join code first.',
+    join_code_wrong: 'Wrong code — check with your teacher and try again.',
+    server_unreachable: 'Could not connect to server — check your connection.',
+    semester_not_found: 'Semester not found', enrolled_in: '📅 Enrolled in',
+    left_semester: 'Left semester', no_cohort_group: 'No cohort group assigned yet',
+    // — Phase 2: surveys & misc —
+    submit_rating: 'Submit Rating →', skip_no_record: 'Skip (data will not be recorded)',
+    ph_search_modules: 'Search modules…',
   },
   ar: {
     // Navigation
@@ -12542,6 +12603,67 @@ const i18n = {
     take_diagnostic_btn: 'ابدأ التقييم التشخيصي (١٠ أسئلة)',
     // Language selector
     ltr_label: 'من اليسار إلى اليمين', rtl_label: 'من اليمين إلى اليسار (RTL)',
+    // — Phase 2: buttons & toasts (auth) —
+    auth_tagline: 'تعليم التشفير دون اتصال بالإنترنت',
+    sign_in_tab: 'تسجيل الدخول', register_tab: 'إنشاء حساب',
+    sign_in_btn: 'تسجيل الدخول ←', signing_in: 'جارٍ تسجيل الدخول…',
+    create_account_btn: 'إنشاء الحساب ←', creating_account: 'جارٍ إنشاء الحساب…',
+    guest_btn: 'المتابعة كضيف (على هذا الجهاز فقط)',
+    lbl_email: 'البريد الإلكتروني', lbl_password: 'كلمة المرور', lbl_name: 'الاسم', lbl_class_code: 'رمز الصف',
+    class_code_optional: '(اختياري — يقدّمه معلمك)',
+    ph_full_name: 'اسمك الكامل', ph_min8: '٨ أحرف على الأقل', ph_class_code: 'مثال: FALL2026',
+    ph_choose_pw: 'اختر كلمة مرور…', ph_repeat_pw: 'أعد كتابة كلمة المرور…',
+    set_pw_btn: 'تعيين كلمة المرور والمتابعة ←',
+    pw_too_short: 'يجب ألا تقل كلمة المرور عن ٦ أحرف.', pw_mismatch: 'كلمتا المرور غير متطابقتين.',
+    code_enter_full: 'الرجاء إدخال الرمز المكوَّن من ٦ أرقام كاملاً.',
+    code_expired: 'انتهت صلاحية الرمز — اضغط «إعادة الإرسال» للحصول على رمز جديد.',
+    code_incorrect: 'الرمز غير صحيح — تحقق من بريدك الإلكتروني وحاول مجددًا.',
+    code_error: 'خطأ في التحقق — حاول مجددًا.',
+    code_none: 'لا يوجد رمز قيد الانتظار — اضغط «إعادة الإرسال» للحصول على رمز جديد.',
+    no_internet: 'لا يوجد اتصال بالإنترنت — تحقق من الاتصال وحاول مجددًا.',
+    email_verified: '✓ تم التحقق من البريد الإلكتروني — أهلاً بك!',
+    account_suspended: 'تم إيقاف حسابك. تواصل مع معلمك.',
+    class_code_not_found: 'الرمز غير موجود — تحقق من الرمز أو اسأل معلمك.',
+    // — Phase 2: lesson navigation & quiz —
+    start_assessment: 'ابدأ التقييم', skip_btn: 'تخطٍّ',
+    view_course_cert: '🏆 عرض شهادة الدورة', start_first_module: '🚀 ابدأ الوحدة الأولى',
+    all_modules_complete: '✅ اكتملت جميع الوحدات', get_started: 'ابدأ الآن',
+    complete_lesson: '✓ إنهاء الدرس', complete_lesson_locked: '🔒 إنهاء الدرس',
+    run_lab_continue: 'شغّل المختبر للمتابعة ←', submit_answer: 'إرسال الإجابة',
+    back_home: '🏠 العودة للرئيسية', back_home_locked: '🔒 العودة للرئيسية',
+    next_arrow: 'التالي ←', next_chevron: 'التالي ›', prev_chevron: '‹ السابق', done_check: 'تم ✓',
+    aria_continue_next: 'المتابعة إلى المرحلة التالية',
+    correct_celebrate: 'إجابة صحيحة! 🎉', not_quite: 'ليست الإجابة الصحيحة…', close_btn: 'إغلاق',
+    lab_complete_continue: 'اكتمل المختبر! تابع ←', complete_revisit: '✓ إنهاء المراجعة',
+    explore_modules_first: 'استكشف جميع الوحدات أولاً',
+    continue_arrow: 'متابعة ←', continue_learning_arrow: 'تابع التعلم ←',
+    got_it: 'فهمت', got_it_check: 'فهمت ✓', maybe_later: 'لاحقًا ربما',
+    // — Phase 2: toasts & engagement —
+    toast_storage_full: '⚠️ مساحة التخزين ممتلئة — قد لا يُحفَظ تقدمك. حرّر مساحة أو تواصل مع معلمك.',
+    toast_lb_joined: '✓ أنت الآن على لوحة المتصدرين — حظًا موفقًا!',
+    toast_lb_left: 'غادرت لوحة المتصدرين — تقدمك محفوظ.',
+    no_freeze_tokens: 'لا توجد رموز تجميد متاحة. تحصل على رمز واحد كل ٧ أيام.',
+    xp_badge_earned: '🎉 +١٠ نقاط ووسام جديد!',
+    tts_unsupported: 'تحويل النص إلى كلام غير مدعوم في هذا المتصفح.',
+    tts_unsupported_device: 'تحويل النص إلى كلام غير مدعوم على هذا الجهاز',
+    enter_plaintext: 'الرجاء إدخال النص الأصلي', mark_read: 'وضع علامة كمقروء ✓',
+    // — Phase 2: sync & backup —
+    sync_unavailable: 'المزامنة غير متاحة (لا يوجد خادم)', syncing: 'جارٍ المزامنة…',
+    synced_just_now: 'تمت المزامنة للتو ✓', offline_saved_local: 'غير متصل — تقدمك محفوظ على الجهاز',
+    last_backed_up: 'آخر نسخ احتياطي:', last_sync: 'آخر مزامنة:', never_backed_up: 'لم يتم النسخ الاحتياطي بعد',
+    backup_now_btn: '📤 انسخ احتياطيًا الآن', checking: 'جارٍ التحقق…',
+    sync_student_expl: 'يُحفَظ تقدمك على هذا الجهاز. عند توفر الإنترنت، اضغط أدناه لنسخه احتياطيًا حتى يبقى آمنًا حتى لو غيّرت جهازك.',
+    // — Phase 2: semester (student) —
+    join_semester_btn: 'الانضمام للفصل الدراسي', leave_semester_btn: 'مغادرة الفصل الدراسي',
+    skip_for_now: 'تخطَّ الآن', ph_join_code: 'أدخل رمز الانضمام', join_btn: 'انضمام',
+    join_code_empty: 'أدخل رمز الانضمام أولاً.',
+    join_code_wrong: 'الرمز خاطئ — راجع معلمك وحاول مجددًا.',
+    server_unreachable: 'تعذّر الاتصال بالخادم — تحقق من اتصالك.',
+    semester_not_found: 'الفصل الدراسي غير موجود', enrolled_in: '📅 تم التسجيل في',
+    left_semester: 'غادرت الفصل الدراسي', no_cohort_group: 'لم تُعيَّن مجموعة بعد',
+    // — Phase 2: surveys & misc —
+    submit_rating: 'إرسال التقييم ←', skip_no_record: 'تخطٍّ (لن تُسجَّل البيانات)',
+    ph_search_modules: 'ابحث في الوحدات…',
   }
 };
 
@@ -12569,6 +12691,12 @@ function setLanguage(lang) {
     const str = (i18n[lang] && i18n[lang][key]) || i18n.en[key];
     if (str !== undefined) el.textContent = str;
   });
+  // Placeholder translations (Phase 2)
+  document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+    const key = el.getAttribute('data-i18n-placeholder');
+    const str = (i18n[lang] && i18n[lang][key]) || i18n.en[key];
+    if (str !== undefined) el.setAttribute('placeholder', str);
+  });
 
   // Nav labels (backward-compat with existing nav structure)
   ['home','modules','progress','profile'].forEach(l => {
@@ -12585,7 +12713,11 @@ function setLanguage(lang) {
   }
 
   // Re-render the active screen so JS-generated content picks up the new language (PR11)
-  if (typeof currentScreen !== 'undefined' && typeof navigate === 'function') {
+  // Re-render: auth screen if visible (pre-login), else active screen (PR11)
+  const _authEl = document.getElementById('auth-screen');
+  if (_authEl && _authEl.style.display !== 'none' && typeof showAuthScreen === 'function') {
+    showAuthScreen(window._authTab || 'login');
+  } else if (typeof currentScreen !== 'undefined' && typeof navigate === 'function') {
     navigate(currentScreen);
   }
 }
@@ -12951,11 +13083,11 @@ async function triggerSync() {
   const base   = getSyncEndpoint();
 
   if (!userId || !base) {
-    if (syncEl) syncEl.textContent = 'Sync unavailable (no server)';
+    if (syncEl) syncEl.textContent = t('sync_unavailable');
     return;
   }
 
-  if (syncEl) syncEl.textContent = 'Syncing…';
+  if (syncEl) syncEl.textContent = t('syncing');
 
   // PR13 payload: exactly 6 field categories — no free-text, device ID, geolocation, or behavioural sequences
   const payload = {
@@ -12993,13 +13125,13 @@ async function triggerSync() {
     if (resp.ok) {
       // Pull any content updates the teacher has published (YouTube URLs, flowcharts, etc.)
       await pullContentFromServer();
-      if (syncEl) syncEl.textContent = 'Synced just now ✓';
+      if (syncEl) syncEl.textContent = t('synced_just_now');
       showXPToast(0, 'Sync complete');
     } else {
       if (syncEl) syncEl.textContent = `Sync failed (${resp.status})`;
     }
   } catch (e) {
-    if (syncEl) syncEl.textContent = 'Offline — progress saved locally';
+    if (syncEl) syncEl.textContent = t('offline_saved_local');
     showXPToast(0, 'Offline — progress saved locally');
   }
 }
@@ -13326,7 +13458,7 @@ function finishDiagnostic() {
         onclick="${bypass ? 'applyBypassAndStart()' : 'startAtModule(0)'}">
         Let's Go →
       </button>
-      ${bypass ? `<button class="btn btn-ghost" style="width:100%;margin-top:10px;padding:12px" onclick="closeDiagnostic()">Explore all modules first</button>` : ''}
+      ${bypass ? `<button class="btn btn-ghost" style="width:100%;margin-top:10px;padding:12px" onclick="closeDiagnostic()">${t('explore_modules_first')}</button>` : ''}
     </div>`;
 }
 
@@ -13469,8 +13601,8 @@ function showNasaTLX(moduleId) {
             aria-label="${d.name}" aria-valuemin="0" aria-valuemax="100">
           <div class="tlx-endpoints"><span>${d.lo}</span><span>${d.hi}</span></div>
         </div>`).join('')}
-      <button class="btn btn-primary tlx-submit" onclick="submitNasaTLX(${moduleId})">Submit Rating →</button>
-      <button class="btn btn-ghost tlx-skip" onclick="closeNasaTLX()">Skip (data will not be recorded)</button>
+      <button class="btn btn-primary tlx-submit" onclick="submitNasaTLX(${moduleId})">${t('submit_rating')}</button>
+      <button class="btn btn-ghost tlx-skip" onclick="closeNasaTLX()">${t('skip_no_record')}</button>
     </div>`;
   document.body.appendChild(overlay);
 }
@@ -14339,6 +14471,8 @@ function exitPreviewMode() {
 // AUTH SCREEN — Login / Register
 // ============================================================
 function showAuthScreen(tab) {
+  window._authTab = tab || window._authTab || 'login';
+  tab = window._authTab;
   // Hide main app
   document.getElementById('app').style.display = 'none';
   document.getElementById('screen-splash').style.display = 'none';
@@ -14364,56 +14498,60 @@ function showAuthScreen(tab) {
     <div style="text-align:center;margin-bottom:32px;margin-top:auto">
       <div style="font-size:56px;margin-bottom:12px">🔐</div>
       <div style="font-size:28px;font-weight:800;color:white;margin-bottom:4px">Crypto<span style="color:var(--blue-l)">Course</span></div>
-      <div style="font-size:13px;color:var(--muted)">Offline-first cryptography education</div>
+      <div style="font-size:13px;color:var(--muted)">${t('auth_tagline')}</div>
+      <div style="margin-top:12px;display:flex;gap:8px;justify-content:center">
+        <button onclick="setLanguage('en')" style="padding:5px 14px;border-radius:14px;border:1px solid rgba(255,255,255,0.25);font-size:12px;font-weight:700;cursor:pointer;font-family:var(--font);background:${(state.language||'en')==='en'?'rgba(255,255,255,0.92)':'transparent'};color:${(state.language||'en')==='en'?'var(--text)':'rgba(255,255,255,0.75)'}">EN</button>
+        <button onclick="setLanguage('ar')" style="padding:5px 14px;border-radius:14px;border:1px solid rgba(255,255,255,0.25);font-size:12px;font-weight:700;cursor:pointer;font-family:'Segoe UI',Tahoma,sans-serif;background:${state.language==='ar'?'rgba(255,255,255,0.92)':'transparent'};color:${state.language==='ar'?'var(--text)':'rgba(255,255,255,0.75)'}">العربية</button>
+      </div>
     </div>
     <div style="width:100%;max-width:360px;background:white;border-radius:20px;padding:28px;box-shadow:0 20px 60px rgba(0,0,0,0.4);margin-bottom:auto">
       <!-- Tab switcher -->
       <div style="display:flex;border-radius:10px;background:var(--surface2);padding:4px;margin-bottom:24px">
-        <button onclick="showAuthScreen('login')" style="flex:1;padding:10px;border:none;border-radius:8px;font-weight:700;font-size:14px;cursor:pointer;font-family:Outfit,sans-serif;transition:all 0.2s;background:${isLogin?'white':'transparent'};color:${isLogin?'var(--text)':'var(--muted)'};box-shadow:${isLogin?'0 1px 4px rgba(0,0,0,0.1)':'none'}">Sign In</button>
-        <button onclick="showAuthScreen('register')" style="flex:1;padding:10px;border:none;border-radius:8px;font-weight:700;font-size:14px;cursor:pointer;font-family:Outfit,sans-serif;transition:all 0.2s;background:${!isLogin?'white':'transparent'};color:${!isLogin?'var(--text)':'var(--muted)'};box-shadow:${!isLogin?'0 1px 4px rgba(0,0,0,0.1)':'none'}">Register</button>
+        <button onclick="showAuthScreen('login')" style="flex:1;padding:10px;border:none;border-radius:8px;font-weight:700;font-size:14px;cursor:pointer;font-family:Outfit,sans-serif;transition:all 0.2s;background:${isLogin?'white':'transparent'};color:${isLogin?'var(--text)':'var(--muted)'};box-shadow:${isLogin?'0 1px 4px rgba(0,0,0,0.1)':'none'}">${t('sign_in_tab')}</button>
+        <button onclick="showAuthScreen('register')" style="flex:1;padding:10px;border:none;border-radius:8px;font-weight:700;font-size:14px;cursor:pointer;font-family:Outfit,sans-serif;transition:all 0.2s;background:${!isLogin?'white':'transparent'};color:${!isLogin?'var(--text)':'var(--muted)'};box-shadow:${!isLogin?'0 1px 4px rgba(0,0,0,0.1)':'none'}">${t('register_tab')}</button>
       </div>
 
       ${isLogin ? `
         <div style="margin-bottom:14px">
-          <label class="form-label">Email</label>
+          <label class="form-label">${t('lbl_email')}</label>
           <input id="auth-email" type="email" autocomplete="email" placeholder="you@example.com" onkeydown="if(event.key==='Enter')doLogin()" style="width:100%;padding:12px 14px;border:2px solid var(--border);border-radius:10px;font-size:14px;font-family:Outfit,sans-serif;outline:none;box-sizing:border-box">
         </div>
         <div style="margin-bottom:20px">
-          <label class="form-label">Password</label>
+          <label class="form-label">${t('lbl_password')}</label>
           <div style="position:relative">
             <input id="auth-pass" type="password" autocomplete="current-password" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin()" style="width:100%;padding:12px 44px 12px 14px;border:2px solid var(--border);border-radius:10px;font-size:14px;font-family:Outfit,sans-serif;outline:none;box-sizing:border-box">
             <button type="button" onclick="togglePasswordVisibility()" aria-label="Show or hide password" style="position:absolute;right:8px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:17px;padding:4px;line-height:1">👁</button>
           </div>
         </div>
         <div id="auth-error" style="color:var(--danger);font-size:13px;margin-bottom:12px;display:none"></div>
-        <button id="auth-submit" onclick="doLogin()" style="width:100%;padding:14px;background:var(--primary);color:white;border:none;border-radius:12px;font-size:15px;font-weight:800;font-family:Outfit,sans-serif;cursor:pointer;margin-bottom:16px">Sign In →</button>
+        <button id="auth-submit" onclick="doLogin()" style="width:100%;padding:14px;background:var(--primary);color:white;border:none;border-radius:12px;font-size:15px;font-weight:800;font-family:Outfit,sans-serif;cursor:pointer;margin-bottom:16px">${t('sign_in_btn')}</button>
       ` : `
         <div style="margin-bottom:12px">
-          <label class="form-label">Name</label>
-          <input id="auth-name" type="text" autocomplete="name" placeholder="Your full name" onkeydown="if(event.key==='Enter')doRegister()" style="width:100%;padding:12px 14px;border:2px solid var(--border);border-radius:10px;font-size:14px;font-family:Outfit,sans-serif;outline:none;box-sizing:border-box">
+          <label class="form-label">${t('lbl_name')}</label>
+          <input id="auth-name" type="text" autocomplete="name" placeholder="${t('ph_full_name')}" onkeydown="if(event.key==='Enter')doRegister()" style="width:100%;padding:12px 14px;border:2px solid var(--border);border-radius:10px;font-size:14px;font-family:Outfit,sans-serif;outline:none;box-sizing:border-box">
         </div>
         <div style="margin-bottom:12px">
-          <label class="form-label">Email</label>
+          <label class="form-label">${t('lbl_email')}</label>
           <input id="auth-email" type="email" autocomplete="email" placeholder="you@example.com" onkeydown="if(event.key==='Enter')doRegister()" style="width:100%;padding:12px 14px;border:2px solid var(--border);border-radius:10px;font-size:14px;font-family:Outfit,sans-serif;outline:none;box-sizing:border-box">
         </div>
         <div style="margin-bottom:12px">
-          <label class="form-label">Password</label>
+          <label class="form-label">${t('lbl_password')}</label>
           <div style="position:relative">
-            <input id="auth-pass" type="password" autocomplete="new-password" placeholder="Min 8 characters" onkeydown="if(event.key==='Enter')doRegister()" style="width:100%;padding:12px 44px 12px 14px;border:2px solid var(--border);border-radius:10px;font-size:14px;font-family:Outfit,sans-serif;outline:none;box-sizing:border-box">
+            <input id="auth-pass" type="password" autocomplete="new-password" placeholder="${t('ph_min8')}" onkeydown="if(event.key==='Enter')doRegister()" style="width:100%;padding:12px 44px 12px 14px;border:2px solid var(--border);border-radius:10px;font-size:14px;font-family:Outfit,sans-serif;outline:none;box-sizing:border-box">
             <button type="button" onclick="togglePasswordVisibility()" aria-label="Show or hide password" style="position:absolute;right:8px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:17px;padding:4px;line-height:1">👁</button>
           </div>
         </div>
         <div style="margin-bottom:16px">
-          <label class="form-label">Class Code <span style="color:var(--muted);font-weight:400;text-transform:none">(optional — given by your teacher)</span></label>
-          <input id="auth-sem-code" type="text" autocomplete="off" autocapitalize="characters" placeholder="e.g. FALL2026" onkeydown="if(event.key==='Enter')doRegister()" style="width:100%;padding:12px 14px;border:2px solid var(--border);border-radius:10px;font-size:14px;font-family:Outfit,sans-serif;outline:none;box-sizing:border-box;text-transform:uppercase">
+          <label class="form-label">${t('lbl_class_code')} <span style="color:var(--muted);font-weight:400;text-transform:none">${t('class_code_optional')}</span></label>
+          <input id="auth-sem-code" type="text" autocomplete="off" autocapitalize="characters" placeholder="${t('ph_class_code')}" onkeydown="if(event.key==='Enter')doRegister()" style="width:100%;padding:12px 14px;border:2px solid var(--border);border-radius:10px;font-size:14px;font-family:Outfit,sans-serif;outline:none;box-sizing:border-box;text-transform:uppercase">
         </div>
         <div id="auth-error" style="color:var(--danger);font-size:13px;margin-bottom:12px;display:none"></div>
         <div style="font-size:11px;color:var(--muted);line-height:1.5;margin-bottom:12px">By creating an account you agree to your name and email being stored for course administration and progress tracking.</div>
-        <button id="auth-submit" onclick="doRegister()" style="width:100%;padding:14px;background:var(--primary);color:white;border:none;border-radius:12px;font-size:15px;font-weight:800;font-family:Outfit,sans-serif;cursor:pointer">Create Account →</button>
+        <button id="auth-submit" onclick="doRegister()" style="width:100%;padding:14px;background:var(--primary);color:white;border:none;border-radius:12px;font-size:15px;font-weight:800;font-family:Outfit,sans-serif;cursor:pointer">${t('create_account_btn')}</button>
       `}
 
       <div style="margin-top:16px;text-align:center">
-        <button onclick="continueAsGuest()" style="background:none;border:none;color:var(--muted);font-size:13px;cursor:pointer;font-family:Outfit,sans-serif;text-decoration:underline">Continue as Guest (local only)</button>
+        <button onclick="continueAsGuest()" style="background:none;border:none;color:var(--muted);font-size:13px;cursor:pointer;font-family:Outfit,sans-serif;text-decoration:underline">${t('guest_btn')}</button>
       </div>
     </div>
   `;
@@ -14429,7 +14567,7 @@ async function doLogin() {
   const email = document.getElementById('auth-email').value.trim();
   const pass = document.getElementById('auth-pass').value;
   const btn = document.getElementById('auth-submit');
-  const setBusy = busy => { if (btn) { btn.disabled = busy; btn.textContent = busy ? 'Signing in…' : 'Sign In →'; btn.style.opacity = busy ? '0.7' : '1'; } };
+  const setBusy = busy => { if (btn) { btn.disabled = busy; btn.textContent = busy ? t('signing_in') : t('sign_in_btn'); btn.style.opacity = busy ? '0.7' : '1'; } };
   setBusy(true);
   const result = await authLogin(email, pass);
   if (result.error) {
@@ -14458,7 +14596,7 @@ async function doLogin() {
             if (data.suspended) {
               setBusy(false);
               const el = document.getElementById('auth-error');
-              if (el) { el.textContent = 'Your account has been suspended. Contact your teacher.'; el.style.display = 'block'; }
+              if (el) { el.textContent = t('account_suspended'); el.style.display = 'block'; }
               authLogout(); return;
             }
             if (data.emailVerified) {
@@ -14487,7 +14625,7 @@ async function doRegister() {
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { showErr('Please enter a valid email address'); return; }
   if (pass.length < 8) { showErr('Password must be at least 8 characters'); return; }
   const btn = document.getElementById('auth-submit');
-  const setBusy = busy => { if (btn) { btn.disabled = busy; btn.textContent = busy ? 'Creating account…' : 'Create Account →'; btn.style.opacity = busy ? '0.7' : '1'; } };
+  const setBusy = busy => { if (btn) { btn.disabled = busy; btn.textContent = busy ? t('creating_account') : t('create_account_btn'); btn.style.opacity = busy ? '0.7' : '1'; } };
   setBusy(true);
   const result = await authRegister(name, email, pass);
   if (result.error) {
@@ -14707,7 +14845,7 @@ function _markVerified() {
   localStorage.removeItem('cc_verify_code_hash');
   localStorage.removeItem('cc_verify_code_expiry');
   document.getElementById('verify-screen')?.remove();
-  showToast('✓ Email verified — welcome!');
+  showToast(t('email_verified'));
   pushRegistration();
   enterApp();
 }
@@ -14717,7 +14855,7 @@ async function checkVerificationCode() {
   const errEl  = document.getElementById('verify-error');
   const code   = (codeEl?.value || '').trim();
   if (code.length !== 6) {
-    if (errEl) errEl.textContent = 'Please enter the full 6-digit code.';
+    if (errEl) errEl.textContent = t('code_enter_full');
     return;
   }
   if (errEl) errEl.textContent = '';
@@ -14732,19 +14870,19 @@ async function checkVerificationCode() {
     if (Date.now() > storedExpiry) {
       localStorage.removeItem('cc_verify_code_hash');
       localStorage.removeItem('cc_verify_code_expiry');
-      if (errEl) errEl.textContent = 'Code has expired — tap Resend to get a new one.';
+      if (errEl) errEl.textContent = t('code_expired');
       return;
     }
     try {
       const inputBuf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(code));
       const inputHex = Array.from(new Uint8Array(inputBuf)).map(function(b) { return b.toString(16).padStart(2, '0'); }).join('');
       if (inputHex !== storedHash) {
-        if (errEl) errEl.textContent = 'Incorrect code — check your email and try again.';
+        if (errEl) errEl.textContent = t('code_incorrect');
         return;
       }
       _markVerified();
     } catch(e) {
-      if (errEl) errEl.textContent = 'Verification error — try again.';
+      if (errEl) errEl.textContent = t('code_error');
     }
     return;
   }
@@ -14752,7 +14890,7 @@ async function checkVerificationCode() {
   // ── Path B: server check (fallback when no local hash — server-sent code) ──
   const base = getSyncEndpoint();
   if (!base) {
-    if (errEl) errEl.textContent = 'No pending code found — tap Resend to get a new one.';
+    if (errEl) errEl.textContent = t('code_none');
     return;
   }
   try {
@@ -14768,7 +14906,7 @@ async function checkVerificationCode() {
       data.attemptsLeft != null     ? 'Incorrect code. ' + data.attemptsLeft + ' attempt' + (data.attemptsLeft !== 1 ? 's' : '') + ' remaining.' :
       data.error || 'Incorrect code.';
   } catch(e) {
-    if (errEl) errEl.textContent = 'No internet connection — check connection and try again.';
+    if (errEl) errEl.textContent = t('no_internet');
   }
 }
 
@@ -14929,7 +15067,7 @@ async function enterApp() {
           if (r.ok) {
             const data = await r.json();
             if (data.suspended) {
-              showToast('Your account has been suspended. Contact your teacher.');
+              showToast(t('account_suspended'));
               authLogout();
               return;
             }
@@ -15000,15 +15138,15 @@ function showForcePasswordChange(userId) {
 
       <div style="margin-bottom:14px">
         <label class="lab-label">New Password</label>
-        <input id="fpc-new" class="lab-input" type="password" placeholder="Choose a password…" autocomplete="new-password">
+        <input id="fpc-new" class="lab-input" type="password" placeholder="${t('ph_choose_pw')}" autocomplete="new-password">
       </div>
       <div style="margin-bottom:20px">
         <label class="lab-label">Confirm Password</label>
-        <input id="fpc-confirm" class="lab-input" type="password" placeholder="Repeat password…" autocomplete="new-password">
+        <input id="fpc-confirm" class="lab-input" type="password" placeholder="${t('ph_repeat_pw')}" autocomplete="new-password">
       </div>
       <div id="fpc-error" style="display:none;background:var(--danger-l);color:var(--danger);padding:10px 14px;border-radius:var(--radius-xs);font-size:13px;font-weight:600;margin-bottom:16px"></div>
 
-      <button class="btn btn-primary" onclick="saveForcePasswordChange('${userId}')">Set Password & Continue →</button>
+      <button class="btn btn-primary" onclick="saveForcePasswordChange('${userId}')">${t('set_pw_btn')}</button>
     </div>`;
   document.body.appendChild(ov);
 }
@@ -15017,8 +15155,8 @@ async function saveForcePasswordChange(userId) {
   const pw  = document.getElementById('fpc-new').value;
   const pw2 = document.getElementById('fpc-confirm').value;
   const err = document.getElementById('fpc-error');
-  if (pw.length < 6)  { err.textContent = 'Password must be at least 6 characters.'; err.style.display='block'; return; }
-  if (pw !== pw2)     { err.textContent = 'Passwords do not match.'; err.style.display='block'; return; }
+  if (pw.length < 6)  { err.textContent = t('pw_too_short'); err.style.display='block'; return; }
+  if (pw !== pw2)     { err.textContent = t('pw_mismatch'); err.style.display='block'; return; }
 
   const users = loadUsers();
   const idx = users.findIndex(u => u.id === userId);
@@ -16052,7 +16190,7 @@ function renderFeedbackBanner() {
               <div style="font-size:10px;font-weight:800;color:var(--primary-d);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:4px">💬 ${a.assignedBy || 'Teacher'} · ${feedbackDate}</div>
               ${a.feedback}
             </div>
-            <button onclick="markFeedbackRead('${a.id}')" style="border:none;background:var(--primary);color:white;padding:8px 16px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;width:100%">Mark as Read ✓</button>
+            <button onclick="markFeedbackRead('${a.id}')" style="border:none;background:var(--primary);color:white;padding:8px 16px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;width:100%">${t('mark_read')}</button>
           </div>
         </div>`;
     }).join('')}
@@ -16530,7 +16668,7 @@ function renderCertificates() {
             <div class="progress-fill" style="width:${pct}%;border-radius:4px"></div>
           </div>
         </div>
-        <button class="btn btn-primary" onclick="navigate('modules')">Continue Learning →</button>
+        <button class="btn btn-primary" onclick="navigate('modules')">${t('continue_learning_arrow')}</button>
       </div>`;
   }
 }
@@ -16548,7 +16686,7 @@ function renderLeaderboard() {
         <p style="font-size:13px;color:var(--muted);margin:8px 0 20px;line-height:1.6">
           See how you compare with your cohort — anonymously. You can leave at any time.
         </p>
-        <button class="btn btn-primary" onclick="showLBOptinSheet()">Join Leaderboard</button>
+        <button class="btn btn-primary" onclick="showLBOptinSheet()">${t('join_leaderboard')}</button>
       </div>`;
     return;
   }
@@ -16951,7 +17089,7 @@ function showReminderToast(reminders) {
             <span style="font-size:11px;font-weight:800;color:${color};white-space:nowrap;flex-shrink:0">${label}</span>
           </div>`;
       }).join('')}
-      <button onclick="document.getElementById('reminder-toast').remove()" style="width:100%;padding:8px;border:none;background:var(--bg);border-radius:8px;font-size:13px;font-weight:700;color:var(--muted);cursor:pointer;margin-top:2px">Got it ✓</button>
+      <button onclick="document.getElementById('reminder-toast').remove()" style="width:100%;padding:8px;border:none;background:var(--bg);border-radius:8px;font-size:13px;font-weight:700;color:var(--muted);cursor:pointer;margin-top:2px">${t('got_it_check')}</button>
     </div>
   `;
 
@@ -17538,7 +17676,7 @@ function speakDiagramDescription(key, btn) {
   if (!rawText) return;
 
   if (!window.speechSynthesis) {
-    alert('Text-to-speech is not supported in this browser.');
+    alert(t('tts_unsupported'));
     return;
   }
 
@@ -20984,7 +21122,7 @@ function renderSemesterProfile() {
     body.innerHTML = `
       <div style="padding:4px 0 12px">
         <div style="font-size:13px;color:var(--muted);margin-bottom:14px">You haven't joined a semester yet. Ask your teacher for a join code.</div>
-        <button class="btn btn-primary btn-sm" onclick="showEnrollSemesterSheet(false)" style="width:auto">Join Semester</button>
+        <button class="btn btn-primary btn-sm" onclick="showEnrollSemesterSheet(false)" style="width:auto">${t('join_semester_btn')}</button>
       </div>`;
     return;
   }
@@ -20998,7 +21136,7 @@ function renderSemesterProfile() {
         <span class="tag ${tagCls}">${st}</span>
       </div>
       <div style="font-size:12px;color:var(--muted);margin-bottom:14px">${sem.startDate} → ${sem.endDate}</div>
-      <button onclick="leaveSemester()" class="btn btn-sm" style="width:auto;background:var(--danger-l);color:var(--danger)">Leave Semester</button>
+      <button onclick="leaveSemester()" class="btn btn-sm" style="width:auto;background:var(--danger-l);color:var(--danger)">${t('leave_semester_btn')}</button>
     </div>`;
 }
 
@@ -21021,7 +21159,7 @@ function renderSemesterHomeInfo() {
 function enrollInSemester(semId) {
   const all = loadSemesters();
   const sem = all.find(s => s.id === semId);
-  if (!sem) { showToast('Semester not found'); return; }
+  if (!sem) { showToast(t('semester_not_found')); return; }
 
   state.semesterId = semId;
   saveState();
@@ -21038,7 +21176,7 @@ function enrollInSemester(semId) {
   document.getElementById('enroll-sem-overlay')?.remove();
   renderSemesterProfile();
   renderSemesterHomeInfo();
-  showToast('📅 Enrolled in ' + sem.name);
+  showToast(t('enrolled_in') + ' ' + sem.name);
 
   // If student is pending approval, push registration now (write token just became available)
   // then show the pending screen instead of entering the app.
@@ -21075,7 +21213,7 @@ async function showEnrollSemesterSheet(auto) {
       </div>
       <div id="enroll-code-err" style="color:var(--danger);font-size:12px;margin-top:8px;display:none"></div>
       ${auto
-        ? `<button class="btn btn-ghost" onclick="onSkipSemesterEnrollment()" style="margin-top:16px;width:100%;color:var(--muted)">Skip for now</button>`
+        ? `<button class="btn btn-ghost" onclick="onSkipSemesterEnrollment()" style="margin-top:16px;width:100%;color:var(--muted)">${t('skip_for_now')}</button>`
         : `<button class="btn btn-ghost" onclick="document.getElementById('enroll-sem-overlay').remove()" style="margin-top:16px;width:100%">Cancel</button>`}
     </div>`;
   document.body.appendChild(overlay);
@@ -21121,10 +21259,10 @@ async function showEnrollSemesterSheet(auto) {
           </div>
         </div>
         <div style="display:flex;gap:8px">
-          <input id="${iid}" type="text" maxlength="12" placeholder="Enter join code"
+          <input id="${iid}" type="text" maxlength="12" placeholder="${t('ph_join_code')}"
             style="flex:1;padding:9px 12px;border:2px solid var(--border);border-radius:8px;font-size:15px;font-family:var(--mono);text-transform:uppercase;background:var(--bg);color:var(--text);letter-spacing:0.1em"
             oninput="this.value=this.value.toUpperCase()">
-          <button class="btn btn-primary btn-sm" onclick="joinSemesterWithCode('${s.code}','${iid}')" style="width:auto;flex-shrink:0">Join</button>
+          <button class="btn btn-primary btn-sm" onclick="joinSemesterWithCode('${s.code}','${iid}')" style="width:auto;flex-shrink:0">${t('join_btn')}</button>
         </div>
       </div>`;
   }).join('');
@@ -21137,8 +21275,8 @@ async function joinSemesterWithCode(semCode, inputId) {
     : semCode.toUpperCase();
   const errEl = document.getElementById('enroll-code-err');
   if (errEl) errEl.style.display = 'none';
-  if (!entered) { if (errEl) { errEl.textContent = 'Enter the join code first.'; errEl.style.display = 'block'; } return; }
-  if (entered !== semCode.toUpperCase()) { if (errEl) { errEl.textContent = 'Wrong code — check with your teacher and try again.'; errEl.style.display = 'block'; } return; }
+  if (!entered) { if (errEl) { errEl.textContent = t('join_code_empty'); errEl.style.display = 'block'; } return; }
+  if (entered !== semCode.toUpperCase()) { if (errEl) { errEl.textContent = t('join_code_wrong'); errEl.style.display = 'block'; } return; }
 
   // Fetch full semester record (includes write token)
   let sem = loadSemesters().find(s => s.code === semCode);
@@ -21159,7 +21297,7 @@ async function joinSemesterWithCode(semCode, inputId) {
       } catch(e) {}
     }
   }
-  if (!sem) { if (errEl) { errEl.textContent = 'Could not connect to server — check your connection.'; errEl.style.display = 'block'; } return; }
+  if (!sem) { if (errEl) { errEl.textContent = t('server_unreachable'); errEl.style.display = 'block'; } return; }
   enrollInSemester(sem.id);
 }
 
@@ -21200,7 +21338,7 @@ async function enrollByCode() {
   }
 
   if (!sem) {
-    if (errEl) { errEl.textContent = 'Code not found — check your code or ask your teacher.'; errEl.style.display = 'block'; }
+    if (errEl) { errEl.textContent = t('class_code_not_found'); errEl.style.display = 'block'; }
     return;
   }
   enrollInSemester(sem.id);
@@ -21223,7 +21361,7 @@ function leaveSemester() {
 
   renderSemesterProfile();
   renderSemesterHomeInfo();
-  showToast('Left semester');
+  showToast(t('left_semester'));
 }
 
 // ============================================================
@@ -22488,7 +22626,7 @@ function _cpAddPuzzle() {
   const shift = Math.max(1, Math.min(25, parseInt(document.getElementById('cp-shift')?.value) || 3));
   const hint  = (document.getElementById('cp-hint')?.value || '').trim();
   const scheduledDate = document.getElementById('cp-date')?.value || '';
-  if (!plain) { showToast('Please enter the plaintext'); return; }
+  if (!plain) { showToast(t('enter_plaintext')); return; }
   const cipher = caesarEncrypt(plain, shift);
   const entry = { id: 'cp_' + Date.now(), cipher, shift, plain, hint: hint || undefined, createdAt: new Date().toISOString() };
   if (scheduledDate) entry.scheduledDate = scheduledDate;
@@ -23712,8 +23850,8 @@ function renderDiagramsInLesson(moduleId) {
         + '<div class="idag-svg-wrap idag-wrap">' + _buildIDagSVG(d.steps[0], true) + '</div>'
         + '<div class="idag-caption diag-step-caption" style="transition:opacity 0.15s ease">' + _escHtml(d.steps[0].caption || '') + '</div>'
         + '<div class="diag-step-nav">'
-          + '<button class="diag-step-btn idag-prev" onclick="idiagNav(\'' + key + '\',-1)" disabled>&#x2039; Prev</button>'
-          + '<button class="diag-step-btn ' + (n <= 1 ? 'done' : 'primary') + ' idag-next" onclick="idiagNav(\'' + key + '\',1)"' + (n <= 1 ? ' disabled' : '') + '>Next &#x203a;</button>'
+          + '<button class="diag-step-btn idag-prev" onclick="idiagNav(\'' + key + '\',-1)" disabled>' + t('prev_chevron') + '</button>'
+          + '<button class="diag-step-btn ' + (n <= 1 ? 'done' : 'primary') + ' idag-next" onclick="idiagNav(\'' + key + '\',1)"' + (n <= 1 ? ' disabled' : '') + '>' + t('next_chevron') + '</button>'
         + '</div>'
       + '</div>';
 
@@ -23782,7 +23920,7 @@ function _naBumpStat(title) {
 }
 
 function _naSpeak(rawText, btn, xapiName, onDone) {
-  if (!window.speechSynthesis) { showToast('Text-to-speech not supported on this device'); return false; }
+  if (!window.speechSynthesis) { showToast(t('tts_unsupported_device')); return false; }
   var text = (typeof preprocessSpeechText === 'function') ? preprocessSpeechText(rawText) : rawText;
   var utt = new SpeechSynthesisUtterance(text);
   var v = (typeof getBestVoice === 'function') ? getBestVoice() : null;
@@ -24152,7 +24290,7 @@ function _updateStepChrome(player, next, total) {
     var isDone = next === total - 1;
     nextBtn.disabled    = isDone;
     nextBtn.className   = 'diag-step-btn ' + (isDone ? 'done' : 'primary') + ' idag-next';
-    nextBtn.textContent = isDone ? 'Done ✓' : 'Next ›';
+    nextBtn.textContent = isDone ? t('done_check') : t('next_chevron');
   }
 }
 
@@ -24550,7 +24688,7 @@ function renderGraphsInLesson(moduleId) {
       + '<div class="igraph-svg-wrap" style="margin:8px 0;transition:opacity 0.2s ease,transform 0.2s ease">' + _buildIGraphChart(d.steps[0], true, chartType) + '</div>'
       + '<div class="idag-caption diag-step-caption" style="transition:opacity 0.15s ease">' + _escHtml(d.steps[0].caption || '') + '</div>'
       + '<div class="diag-step-nav">'
-        + '<button class="diag-step-btn idag-prev" onclick="igraphNav(\'' + key + '\',-1)" disabled>&#x2039; Prev</button>'
+        + '<button class="diag-step-btn idag-prev" onclick="igraphNav(\'' + key + '\',-1)" disabled>' + t('prev_chevron') + '</button>'
         + '<button class="diag-step-btn ' + (n <= 1 ? 'done' : 'primary') + ' idag-next" onclick="igraphNav(\'' + key + '\',1)"' + (n <= 1 ? ' disabled' : '') + '>Next &#x203a;</button>'
       + '</div>'
     + '</div>';
