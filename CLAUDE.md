@@ -70,6 +70,58 @@ Audit → Implementation → Verification. Every implementation session ends wit
 
 ---
 
+## Internationalisation (i18n) — added June 2026
+
+The PWA UI is bilingual (English / Arabic, RTL). Module lesson content remains
+English by design (Scope A). The following rules apply to ALL code changes:
+
+### Hard rules
+1. **Every new student-facing string goes through `t('key')`** — never hardcode
+   English in toasts, alerts, button labels, `textContent` assignments, or
+   JS-rendered template-literal UI. Teacher/admin/builder UI may remain English.
+2. **Key parity is an invariant**: every key added to `i18n.en` MUST be added to
+   `i18n.ar` in the same commit, and vice versa. Verify with the parity check
+   (see Verification below).
+3. **Placeholders**: in JS-rendered HTML use `placeholder="${t('key')}"`. In
+   static HTML use `data-i18n-placeholder="key"` — `setLanguage()` applies it.
+4. **Static HTML text** uses `data-i18n="key"` (textContent replacement).
+5. **No backticks in i18n values.** All dictionary values are single-quoted
+   strings; escape apostrophes as `\'`. This preserves the even-backtick
+   structural invariant.
+6. **English content under Arabic UI**: lesson bodies are wrapped in
+   `lang="en"` (on `.lesson-content` containers) so screen readers switch
+   voices correctly. Keep this attribute on any new lesson-content container.
+
+### Arabic string conventions
+- Formal MSA register, matching existing `i18n.ar` entries.
+- Eastern Arabic numerals in prose (٧, ١٠); Western digits acceptable in
+  dynamic interpolated values.
+- Forward-action arrows use `←` in Arabic (RTL reading direction), `→` in English.
+- Technical formula fragments inside Arabic strings must be pinned with
+  `<span dir="ltr">…</span>` (relevant only if Scope B lab translation begins).
+
+### Auth screen specifics
+- `showAuthScreen()` tracks its tab in `window._authTab`; the login-screen
+  language toggle re-renders via `setLanguage()`, which re-renders the auth
+  screen when visible instead of calling `navigate()`. Do not remove this guard.
+
+### Verification (run after any i18n change)
+- Key parity: extract all `key: '...'` pairs from both `i18n.en` and `i18n.ar`
+  (note: multiple keys per line — regex must not be line-anchored) and assert
+  identical key sets, zero duplicates.
+- Reference integrity: every `t('key')`, `data-i18n="key"`, and
+  `data-i18n-placeholder="key"` must resolve to a defined key.
+- Backtick count: must remain even and unchanged unless template literals were
+  intentionally added/removed.
+- `node --check` on the extracted script block.
+
+### Out of scope (deferred to a future DBR iteration — "Scope B")
+- Arabic translation of module lesson bodies, quiz banks, and lab technical
+  feedback. The AI automation panel's "Arabic Translation" job type +
+  human-approval flow is the intended pipeline when this begins.
+
+---
+
 ## ARCHITECTURE
 
 ### File Structure

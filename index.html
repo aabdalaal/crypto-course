@@ -111,8 +111,7 @@ select:focus-visible {
 [dir="rtl"] .ce-char-count   { text-align: left; }  /* keep numbers left-aligned */
 
 /* List indentation */
-[dir="rtl"] .lesson-content ul,
-[dir="rtl"] .lesson-content ol { padding-left: 0; padding-right: 20px; }
+/* Lesson content is English (Scope A): containers carry dir="ltr"; no RTL list flip */
 
 /* Toggle slider position */
 [dir="rtl"] .toggle::after { left: auto; right: 3px; }
@@ -1122,6 +1121,10 @@ body {
 #lb-optin-sheet.show { opacity: 1; pointer-events: all; }
 #lb-optin-sheet .sheet-backdrop { position: absolute; inset: 0; background: rgba(0,0,0,0.5); }
 #lb-optin-sheet .sheet-card { position: relative; background: var(--surface); border-radius: 24px 24px 0 0; padding: 28px 24px 40px; display: flex; flex-direction: column; gap: 14px; max-height: 88vh; overflow-y: auto; }
+#privacy-sheet { position: fixed; inset: 0; z-index: 230; display: flex; flex-direction: column; justify-content: flex-end; opacity: 0; pointer-events: none; transition: opacity 0.25s; }
+#privacy-sheet.show { opacity: 1; pointer-events: all; }
+#privacy-sheet .sheet-backdrop { position: absolute; inset: 0; background: rgba(0,0,0,0.5); }
+#privacy-sheet .sheet-card { position: relative; background: var(--surface); border-radius: 24px 24px 0 0; padding: 28px 24px 40px; display: flex; flex-direction: column; gap: 12px; max-height: 88vh; overflow-y: auto; }
 /* Leave confirmation sheet */
 #lb-leave-sheet { position: fixed; inset: 0; z-index: 220; display: flex; flex-direction: column; justify-content: flex-end; opacity: 0; pointer-events: none; transition: opacity 0.2s; }
 #lb-leave-sheet.show { opacity: 1; pointer-events: all; }
@@ -1599,6 +1602,24 @@ body.high-contrast {
 </div>
 
 <!-- LEADERBOARD OPT-IN SHEET -->
+<div id="privacy-sheet" role="dialog" aria-modal="true" aria-labelledby="privacy-sheet-title">
+  <div class="sheet-backdrop" onclick="dismissPrivacySheet()"></div>
+  <div class="sheet-card">
+    <div style="font-size:32px;text-align:center" aria-hidden="true">🔒</div>
+    <div id="privacy-sheet-title" style="font-size:18px;font-weight:800;color:var(--text);text-align:center" data-i18n="privacy_title">Your Data &amp; Cloud Backup</div>
+    <div style="font-size:13.5px;color:var(--text2);line-height:1.55" data-i18n="privacy_intro">When you are online, Crypto-Course backs up your learning progress so your teacher can support you and the University of Westminster research team can evaluate the course.</div>
+    <div style="font-size:13px;color:var(--text2);line-height:1.6">
+      <strong data-i18n="privacy_what_lbl">What is saved</strong>: <span data-i18n="privacy_what">XP, streak, badge dates, quiz and lab results, module progress, and session length.</span><br>
+      <strong data-i18n="privacy_not_lbl">Never saved</strong>: <span data-i18n="privacy_not">Your messages, your location, or details about your device.</span><br>
+      <strong data-i18n="privacy_who_lbl">Who can see it</strong>: <span data-i18n="privacy_who">Only your teacher and the research team. Data is stored securely on Cloudflare infrastructure.</span><br>
+      <strong data-i18n="privacy_keep_lbl">Kept until</strong>: <span data-i18n="privacy_keep">Deleted at the end of the semester.</span>
+    </div>
+    <div style="font-size:13px;color:var(--text2);line-height:1.55" data-i18n="privacy_rights">You can turn backup off at any time here or in your Profile, and you can ask for your data to be deleted at any time.</div>
+    <div style="font-size:12.5px;color:var(--muted)"><span data-i18n="privacy_contact_lbl">Questions or deletion requests:</span> <span id="privacy-contact-email" style="font-weight:600">cryptocourse-privacy@westminster.ac.uk</span></div>
+    <button class="btn btn-primary" onclick="dismissPrivacySheet()" data-i18n="got_it_check">Got it &#10003;</button>
+    <button onclick="privacySheetTurnOff()" style="background:none;border:none;color:var(--muted);font-size:13px;cursor:pointer;font-family:var(--font);text-decoration:underline" data-i18n="turn_off_backup">Turn off backup</button>
+  </div>
+</div>
 <div id="lb-optin-sheet" role="dialog" aria-modal="true" aria-labelledby="lb-optin-title">
   <div class="sheet-backdrop" onclick="dismissLBOptinSheet(false)"></div>
   <div class="sheet-card">
@@ -1998,10 +2019,15 @@ body.high-contrast {
               <div style="font-size:14px;color:var(--text2);line-height:1.5;margin-bottom:14px" data-i18n="sync_student_expl">
                 Your progress is saved on this device. When you have internet, tap below to back it up so it's safe even if you switch devices.
               </div>
+              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+                <div style="font-size:13.5px;font-weight:600;color:var(--text)" data-i18n="sync_toggle_lbl">Cloud backup &amp; teacher sync</div>
+                <button class="toggle on" id="toggle-sync" role="switch" aria-checked="true" aria-label="Cloud backup and teacher sync" onclick="togglePrivacySync()"></button>
+              </div>
               <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px">
                 <button class="btn btn-primary btn-sm" onclick="triggerSync()" style="width:auto" data-i18n="backup_now_btn">📤 Back up now</button>
                 <div id="sync-time-student" style="font-size:12px;color:var(--muted)" data-i18n="checking">Checking…</div>
               </div>
+              <button onclick="showPrivacySheet()" style="background:none;border:none;padding:0;color:var(--primary);font-size:12.5px;cursor:pointer;font-family:var(--font);text-decoration:underline;margin-bottom:4px" data-i18n="privacy_link">Privacy notice</button>
             </div>
             <!-- Teacher/admin technical view -->
             <div id="sync-admin-view">
@@ -2192,8 +2218,8 @@ body.high-contrast {
       <button class="cp-tab active" id="cp-tab-cipher" onclick="cpSwitchTab('cipher')">🔐 Crack the Cipher</button>
       <button class="cp-tab" id="cp-tab-mcq" onclick="cpSwitchTab('mcq')">🧠 Knowledge Check</button>
     </div>
-    <div class="cp-overlay-scroll" id="cp-overlay-scroll"></div>
-    <div class="cp-overlay-scroll" id="cp-mcq-scroll" style="display:none;padding:20px 20px 100px"></div>
+    <div class="cp-overlay-scroll" id="cp-overlay-scroll" lang="en" dir="ltr"></div>
+    <div class="cp-overlay-scroll" id="cp-mcq-scroll" lang="en" dir="ltr" style="display:none;padding:20px 20px 100px"></div>
   </div>
 
   <!-- BOTTOM NAV -->
@@ -2358,6 +2384,34 @@ function toggleLeaderboardOptIn() {
 }
 
 // ── Leaderboard opt-in sheet ──
+// ── Privacy notice & cloud-backup opt-out (UK-GDPR transparency) ──
+function showPrivacySheet() {
+  const sheet = document.getElementById('privacy-sheet');
+  if (sheet) sheet.classList.add('show');
+}
+function dismissPrivacySheet() {
+  const sheet = document.getElementById('privacy-sheet');
+  if (sheet) sheet.classList.remove('show');
+  if (!state.privacyNoticeSeen) { state.privacyNoticeSeen = true; saveState(); }
+  if (window._pendingDiag) { window._pendingDiag = false; setTimeout(() => startDiagnostic(), 350); }
+}
+function privacySheetTurnOff() {
+  state.syncOptOut = true; saveState();
+  updateSyncToggleUI();
+  showToast(t('backup_off_toast'));
+  dismissPrivacySheet();
+}
+function togglePrivacySync() {
+  state.syncOptOut = !state.syncOptOut; saveState();
+  updateSyncToggleUI();
+  showToast(state.syncOptOut ? t('backup_off_toast') : t('backup_on_toast'));
+  if (!state.syncOptOut) triggerSync();
+}
+function updateSyncToggleUI() {
+  const el = document.getElementById('toggle-sync');
+  if (el) { el.classList.toggle('on', !state.syncOptOut); el.setAttribute('aria-checked', String(!state.syncOptOut)); }
+}
+
 function showLBOptinSheet() {
   const sheet   = document.getElementById('lb-optin-sheet');
   const nameEl  = document.getElementById('lb-optin-name');
@@ -6199,7 +6253,7 @@ const defaultState = {
   lastSync: new Date().toISOString(),
   quizAttempts: {}, currentLesson: { moduleId: 0, stage: 1 },
   lastLoginDate: null,
-  lastChallengeDate: null, lastMCQDate: null, diagnosticDone: false, diagDismissed: false, diagnosticScore: null, bypassedModules: [], leaderboardOptIn: false,
+  lastChallengeDate: null, lastMCQDate: null, diagnosticDone: false, diagDismissed: false, diagnosticScore: null, bypassedModules: [], leaderboardOptIn: false, syncOptOut: false, privacyNoticeSeen: false,
   readAnnouncements: [], semesterId: null,
   spacedRevisits: {}, // ── Phase 3: { moduleId: { completedAt, nextRevisit7, nextRevisit14, revisitsDone } }
   labsDone: {},       // { moduleId: true } — prevents re-awarding XP on lab revisit
@@ -6882,7 +6936,7 @@ function renderLessonStage() {
     const diagramsHTML   = stage === diagStage  ? renderDiagramsInLesson(lessonState.moduleId) : '';
     body.innerHTML = `
       <div class="stage-label">📖 ${stageLabels[stage-1]}</div>
-      <div class="lesson-content" lang="en">${content.body}${graphsHTML}${igraphsHTML}${flowchartsHTML}${diagramsHTML}</div>
+      <div class="lesson-content" lang="en" dir="ltr">${content.body}${graphsHTML}${igraphsHTML}${flowchartsHTML}${diagramsHTML}</div>
     `;
     if (stage === graphStage) {
       if (graphsHTML)     requestAnimationFrame(() => initModuleCharts(lessonState.moduleId));
@@ -6942,14 +6996,14 @@ function renderLessonStage() {
     // Filler stages (2, 3, 6)
     const fillerContent = {
       2: `<div class="stage-label">🔍 ${stageLabels[1]}</div>
-          <div class="lesson-content" lang="en">
+          <div class="lesson-content" lang="en" dir="ltr">
             <h2>Worked Example</h2>
             <p>Let's walk through a concrete example to see the concepts from Stage 1 in action.</p>
             ${getWorkedExample(mod.id)}
             ${renderVideoPlayer(lessonState.moduleId)}
           </div>`,
       3: `<div class="stage-label">✏️ ${stageLabels[2]}</div>
-          <div class="lesson-content" lang="en">
+          <div class="lesson-content" lang="en" dir="ltr">
             <h2>Guided Practice</h2>
             <p>Apply what you have learned with this guided exercise. Read each step carefully — the interactive lab in the next stage will put this into practice.</p>
             ${getGuidedPractice(mod.id)}
@@ -6958,7 +7012,7 @@ function renderLessonStage() {
             ${renderFlashcards(lessonState.moduleId)}
           </div>`,
       6: `<div class="stage-label">📋 ${stageLabels[5]}</div>
-          <div class="lesson-content" lang="en">
+          <div class="lesson-content" lang="en" dir="ltr">
             <h2>Summary</h2>
             ${getSummary(mod)}
             <div class="concept-box">
@@ -12549,6 +12603,19 @@ const i18n = {
     // — Phase 2: surveys & misc —
     submit_rating: 'Submit Rating →', skip_no_record: 'Skip (data will not be recorded)',
     ph_search_modules: 'Search modules…',
+    // — Phase 2b: privacy notice & backup opt-out —
+    privacy_title: 'Your Data & Cloud Backup',
+    privacy_intro: 'When you are online, Crypto-Course backs up your learning progress so your teacher can support you and the University of Westminster research team can evaluate the course.',
+    privacy_what_lbl: 'What is saved', privacy_what: 'XP, streak, badge dates, quiz and lab results, module progress, and session length.',
+    privacy_not_lbl: 'Never saved', privacy_not: 'Your messages, your location, or details about your device.',
+    privacy_who_lbl: 'Who can see it', privacy_who: 'Only your teacher and the research team. Data is stored securely on Cloudflare infrastructure.',
+    privacy_keep_lbl: 'Kept until', privacy_keep: 'Deleted at the end of the semester.',
+    privacy_rights: 'You can turn backup off at any time here or in your Profile, and you can ask for your data to be deleted at any time.',
+    privacy_contact_lbl: 'Questions or deletion requests:',
+    privacy_link: 'Privacy notice', sync_toggle_lbl: 'Cloud backup & teacher sync',
+    sync_off_status: 'Backup off', turn_off_backup: 'Turn off backup',
+    backup_off_toast: 'Backup turned off — your progress stays on this device only.',
+    backup_on_toast: '✓ Backup turned on.',
   },
   ar: {
     // Navigation
@@ -12664,6 +12731,19 @@ const i18n = {
     // — Phase 2: surveys & misc —
     submit_rating: 'إرسال التقييم ←', skip_no_record: 'تخطٍّ (لن تُسجَّل البيانات)',
     ph_search_modules: 'ابحث في الوحدات…',
+    // — Phase 2b: privacy notice & backup opt-out —
+    privacy_title: 'بياناتك والنسخ الاحتياطي السحابي',
+    privacy_intro: 'عند اتصالك بالإنترنت، تنسخ منصة Crypto-Course تقدمك التعليمي احتياطيًا ليتمكن معلمك من دعمك وليتمكن فريق البحث في جامعة وستمنستر من تقييم الدورة.',
+    privacy_what_lbl: 'ما يُحفَظ', privacy_what: 'النقاط، وسلسلة الأيام، وتواريخ الأوسمة، ونتائج الاختبارات والمختبرات، وتقدم الوحدات، ومدة الجلسة.',
+    privacy_not_lbl: 'لا يُحفَظ أبدًا', privacy_not: 'رسائلك أو موقعك أو تفاصيل جهازك.',
+    privacy_who_lbl: 'من يمكنه الاطلاع', privacy_who: 'معلمك وفريق البحث فقط. تُخزَّن البيانات بأمان على بنية Cloudflare التحتية.',
+    privacy_keep_lbl: 'مدة الاحتفاظ', privacy_keep: 'تُحذَف في نهاية الفصل الدراسي.',
+    privacy_rights: 'يمكنك إيقاف النسخ الاحتياطي في أي وقت من هنا أو من ملفك الشخصي، ويمكنك طلب حذف بياناتك في أي وقت.',
+    privacy_contact_lbl: 'للاستفسارات أو طلبات الحذف:',
+    privacy_link: 'إشعار الخصوصية', sync_toggle_lbl: 'النسخ الاحتياطي السحابي ومزامنة المعلم',
+    sync_off_status: 'النسخ الاحتياطي متوقف', turn_off_backup: 'إيقاف النسخ الاحتياطي',
+    backup_off_toast: 'تم إيقاف النسخ الاحتياطي — يبقى تقدمك على هذا الجهاز فقط.',
+    backup_on_toast: '✓ تم تشغيل النسخ الاحتياطي.',
   }
 };
 
@@ -12749,6 +12829,7 @@ function applyUserSettings() {
   document.body.style.zoom = zooms[state.textSize] || '100%';
   document.body.classList.toggle('high-contrast', !!state.highContrast);
   if (state.language) setLanguage(state.language);
+  updateSyncToggleUI();
 
   // Auto-initialise from OS preference on first use (only when user hasn't explicitly toggled)
   if (!state._animPrefExplicit && window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
@@ -12883,6 +12964,7 @@ function fetchWithTimeout(url, opts, ms) {
 async function pullSync() {
   const userId = currentUser?.sub;
   if (!userId) return;
+  if (state.syncOptOut) return; // UK-GDPR: opted out — no identifier transmitted
   const base = getSyncEndpoint();
   if (!base) return;
   try {
@@ -13084,6 +13166,14 @@ async function triggerSync() {
 
   if (!userId || !base) {
     if (syncEl) syncEl.textContent = t('sync_unavailable');
+    return;
+  }
+
+  // UK-GDPR: student has opted out of cloud backup — nothing leaves the device
+  if (state.syncOptOut) {
+    if (syncEl) syncEl.textContent = t('sync_off_status');
+    const stuEl = document.getElementById('sync-time-student');
+    if (stuEl) stuEl.textContent = t('sync_off_status');
     return;
   }
 
@@ -13385,7 +13475,7 @@ function showDiagnosticQuestion() {
       </div>
       <div class="diag-progress"><div class="diag-fill" style="width:${pct}%"></div></div>
     </div>
-    <div class="diag-q-wrap">
+    <div class="diag-q-wrap" lang="en" dir="ltr">
       <div style="font-size:17px;font-weight:700;color:var(--text);line-height:1.45;margin-bottom:20px">${q.q}</div>
       <div id="diag-options">
         ${q.opts.map((opt, i) => `
@@ -15122,7 +15212,13 @@ async function enterApp() {
     && !state.diagDismissed
     && state.lessonsCompleted === 0
     && !Object.keys(state.moduleProgress || {}).length;
-  if (_isNewStudent) {
+  const _needsPrivacy = currentUser?.role === ROLES.STUDENT
+    && !state.privacyNoticeSeen
+    && !me?.mustChangePassword;
+  if (_needsPrivacy) {
+    window._pendingDiag = _isNewStudent;
+    setTimeout(() => showPrivacySheet(), 600);
+  } else if (_isNewStudent) {
     setTimeout(() => startDiagnostic(), 350);
   }
 }
