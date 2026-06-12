@@ -2240,6 +2240,12 @@ const APP_VERSION = '1.0.0';
 const APP_VERSION_DATE = '2026-06-11';
 const WHATS_NEW = 'Baseline release: 14 modules, interactive labs, per-step audio narration.';
 
+// EmailJS — student email verification. These travel with the file (USB/WhatsApp/web).
+// Public keys are safe in client-side code; EmailJS is designed for browser use.
+const _EJS_SERVICE  = 'service_no7fxie';
+const _EJS_TEMPLATE = 'template_qabtnxb';
+const _EJS_PUBKEY   = '-AhrKaW9TEB1k9UKr';
+
 const STATE_KEY = 'crypto_course_state';
 const LEADERBOARD_KEY = 'crypto_course_leaderboard';
 const LEADERBOARD_MIN_SIZE = 10;
@@ -14554,8 +14560,9 @@ function showVerificationScreen() {
       <div style="font-size:52px;margin-bottom:16px">📧</div>
       <div style="font-size:22px;font-weight:800;color:var(--text);margin-bottom:8px">Check your email</div>
       <div style="font-size:14px;color:var(--muted);line-height:1.6;margin-bottom:24px">
-        We sent a 6-digit code to<br>
+        A 6-digit code is being sent to<br>
         <strong style="color:var(--text);font-family:var(--mono)">${_escHtml(masked)}</strong>
+        <span id="verify-send-result" style="display:block;font-size:12px;margin-top:6px;font-weight:700"></span>
       </div>
       <input id="verify-code-input" type="text" inputmode="numeric" maxlength="6" autocomplete="one-time-code"
         placeholder="000000"
@@ -14590,12 +14597,15 @@ function showVerificationScreen() {
 }
 
 async function sendVerificationCode() {
-  const errEl = document.getElementById('verify-error');
+  const errEl    = document.getElementById('verify-error');
+  const resultEl = document.getElementById('verify-send-result');
+  if (resultEl) { resultEl.textContent = 'Sending…'; resultEl.style.color = 'var(--muted)'; }
 
-  // ── Path A: EmailJS (preferred — reliable delivery, verified working) ──────
-  const svcId  = localStorage.getItem('cc_ejs_service');
-  const tplId  = localStorage.getItem('cc_ejs_template');
-  const pubKey = localStorage.getItem('cc_ejs_pubkey');
+  // ── Path A: EmailJS (preferred — credentials embedded in file as fallback) ─
+  // localStorage values override the built-in constants (teacher can update via Settings).
+  const svcId  = localStorage.getItem('cc_ejs_service')  || _EJS_SERVICE;
+  const tplId  = localStorage.getItem('cc_ejs_template') || _EJS_TEMPLATE;
+  const pubKey = localStorage.getItem('cc_ejs_pubkey')   || _EJS_PUBKEY;
 
   if (svcId && tplId && pubKey) {
     const arr  = new Uint32Array(1);
@@ -14623,14 +14633,20 @@ async function sendVerificationCode() {
           },
         }),
       }, 15000);
-      if (r.ok) return 'emailjs';
+      if (r.ok) {
+        if (resultEl) { resultEl.textContent = '✓ Code sent — check your inbox'; resultEl.style.color = 'var(--secondary-d)'; }
+        return 'emailjs';
+      }
       localStorage.removeItem('cc_verify_code_hash');
       localStorage.removeItem('cc_verify_code_expiry');
-      if (errEl) errEl.textContent = 'Could not send verification code — check EmailJS settings.';
+      const errTxt = await r.text().catch(function() { return ''; });
+      if (resultEl) resultEl.textContent = '';
+      if (errEl) errEl.textContent = 'Email error: ' + (errTxt || 'check EmailJS settings.');
       return false;
     } catch(e) {
       localStorage.removeItem('cc_verify_code_hash');
       localStorage.removeItem('cc_verify_code_expiry');
+      if (resultEl) resultEl.textContent = '';
       if (errEl) errEl.textContent = 'No internet connection — connect and tap Resend.';
       return false;
     }
@@ -14640,6 +14656,7 @@ async function sendVerificationCode() {
   const base = getSyncEndpoint();
   const wt   = localStorage.getItem('crypto_course_write_token');
   if (!base || !wt) {
+    if (resultEl) resultEl.textContent = '';
     if (errEl) errEl.textContent = 'Join a class first so we know where to send your code.';
     return false;
   }
@@ -14649,10 +14666,15 @@ async function sendVerificationCode() {
       headers: { 'Authorization': 'Bearer ' + wt, 'Content-Type': 'application/json' },
       body: JSON.stringify({ userId: currentUser?.sub, email: currentUser?.email, name: currentUser?.name }),
     }, 10000);
-    if (resp.ok) return 'server';
+    if (resp.ok) {
+      if (resultEl) { resultEl.textContent = '✓ Code sent — check your inbox'; resultEl.style.color = 'var(--secondary-d)'; }
+      return 'server';
+    }
+    if (resultEl) resultEl.textContent = '';
     if (errEl) errEl.textContent = 'Could not send verification code. Try again.';
     return false;
   } catch(e) {
+    if (resultEl) resultEl.textContent = '';
     if (errEl) errEl.textContent = 'No internet connection — connect and tap Resend.';
     return false;
   }
