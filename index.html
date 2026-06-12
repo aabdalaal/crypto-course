@@ -14727,6 +14727,44 @@ async function enterApp() {
   // Cache sync URL from sync-config.json if not already configured
   await bootstrapSyncConfig();
 
+  // ── Email-verification gate ──────────────────────────
+  // Single chokepoint for ALL entry paths — including page reload, where
+  // initAuth() → enterApp() previously bypassed the 6-digit code screen.
+  // Mirrors doLogin(): trust local emailVerified; otherwise re-check the
+  // server in case the teacher approved the account from another device.
+  // Guests pass naturally (no local user record).
+  if (currentUser?.role === ROLES.STUDENT) {
+    const _gateUsers = loadUsers();
+    const _gateMe = _gateUsers.find(u => u.id === currentUser.sub);
+    if (_gateMe && !_gateMe.emailVerified) {
+      let _gateVerified = false;
+      const _gateBase = getSyncEndpoint();
+      const _gateWt = localStorage.getItem('crypto_course_write_token');
+      if (_gateBase && _gateWt) {
+        try {
+          const r = await fetchWithTimeout(`${_gateBase}/${encodeURIComponent(currentUser.sub)}`, {
+            headers: { 'Authorization': 'Bearer ' + _gateWt }
+          }, 6000);
+          if (r.ok) {
+            const data = await r.json();
+            if (data.suspended) {
+              showToast('Your account has been suspended. Contact your teacher.');
+              authLogout();
+              return;
+            }
+            if (data.emailVerified) {
+              _gateVerified = true;
+              const idx = _gateUsers.findIndex(u => u.id === currentUser.sub);
+              if (idx >= 0) { _gateUsers[idx].emailVerified = true; saveUsers(_gateUsers); }
+              currentUser.emailVerified = true; // keep in-memory token in sync
+            }
+          }
+        } catch(e) {}
+      }
+      if (!_gateVerified) { showVerificationScreen(); return; }
+    }
+  }
+
   // Load this user's personal progress (isolated per userId)
   const userState = loadUserState();
   Object.assign(state, defaultState, userState || {});
