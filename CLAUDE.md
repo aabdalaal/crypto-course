@@ -210,6 +210,16 @@ All 37 entries have the `concept` field (added Cycle 1). The MCQ feedback render
 
 ---
 
+## VERSIONING
+
+- `APP_VERSION` in `index.html` and `SW_VERSION` in `sw.js` **MUST** be bumped together on every deploy.
+- Scheme: MAJOR = breaking data/schema change · MINOR = feature batch · PATCH = fix.
+- Update `WHATS_NEW` (one sentence) with every MINOR/MAJOR bump.
+- Reserved localStorage keys: `cc_seen_version` (plus `cc_tts_rate`, `cc_narration_stats` from narration Tier C).
+- Pre-deploy check: `grep "APP_VERSION = " index.html && grep "SW_VERSION = " sw.js` → versions must match.
+
+---
+
 ## THE SECRET CHANNEL — PRODUCTION RULES
 
 12-episode cryptography drama. Tagline: *"You cannot love someone you cannot verify."*

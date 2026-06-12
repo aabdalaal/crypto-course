@@ -16,6 +16,8 @@
 // ============================================================
 
 const VERSION      = 'v7';
+const SW_VERSION   = '1.0.0';  // keep in lockstep with APP_VERSION in index.html
+const CACHE_NAME   = 'crypto-course-v' + SW_VERSION;  // logical name; shell/cdn/img use VERSION below
 const SHELL_CACHE  = `cc-shell-${VERSION}`;
 const CDN_CACHE    = `cc-cdn-${VERSION}`;
 const IMG_CACHE    = `cc-img-${VERSION}`;
@@ -184,7 +186,7 @@ async function staleWhileRevalidate(req, cacheName) {
       await cache.put(req, response.clone());
       // Notify all open tabs that an updated shell is cached.
       const clients = await self.clients.matchAll({ type: 'window' });
-      clients.forEach(client => client.postMessage({ type: 'SW_SHELL_UPDATED' }));
+      clients.forEach(client => client.postMessage({ type: 'SW_SHELL_UPDATED', version: SW_VERSION }));
     }
     return response;
   }).catch(() => null);
