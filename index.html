@@ -2052,7 +2052,9 @@ body.high-contrast {
                   <input id="cfg-ejs-pubkey" type="text" placeholder="xxxxxxxxxxxxxxx" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"
                     style="width:100%;padding:8px 10px;border:1.5px solid var(--border);border-radius:8px;font-size:11px;font-family:var(--mono);box-sizing:border-box;background:var(--bg);color:var(--text)">
                 </div>
-                <div style="font-size:10px;color:var(--muted);line-height:1.5">Template must include variables: <code>to_email</code>, <code>to_name</code>, <code>code</code></div>
+                <div style="font-size:10px;color:var(--muted);line-height:1.5;margin-bottom:10px">Template must include variables: <code>to_email</code>, <code>to_name</code>, <code>code</code></div>
+                <button type="button" onclick="sendEjsTestEmail()" class="btn btn-sm" style="width:auto;background:var(--secondary-l);color:var(--secondary-d);border:none">📧 Send test email to my account</button>
+                <div id="ejs-test-status" style="font-size:11px;min-height:16px;margin-top:6px;line-height:1.4"></div>
               </div>
               <button class="btn btn-primary btn-sm" onclick="saveSyncConfig()" style="width:auto;margin-top:12px">Save & Sync</button>
             </div>
@@ -12385,6 +12387,44 @@ function saveSyncConfig() {
   triggerSync();
 }
 
+async function sendEjsTestEmail() {
+  const svcId  = (document.getElementById('cfg-ejs-service')?.value  || '').trim();
+  const tplId  = (document.getElementById('cfg-ejs-template')?.value || '').trim();
+  const pubKey = (document.getElementById('cfg-ejs-pubkey')?.value   || '').trim();
+  const email  = currentUser?.email || '';
+  const statusEl = document.getElementById('ejs-test-status');
+  if (!svcId || !tplId || !pubKey) {
+    if (statusEl) { statusEl.textContent = 'Fill in all three EmailJS fields first.'; statusEl.style.color = 'var(--danger)'; }
+    return;
+  }
+  if (!email) {
+    if (statusEl) { statusEl.textContent = 'No email address on your account.'; statusEl.style.color = 'var(--danger)'; }
+    return;
+  }
+  if (statusEl) { statusEl.textContent = 'Sending…'; statusEl.style.color = 'var(--muted)'; }
+  const arr  = new Uint32Array(1);
+  crypto.getRandomValues(arr);
+  const code = String(100000 + (arr[0] % 900000));
+  try {
+    const r = await fetchWithTimeout('https://api.emailjs.com/api/v1.0/email/send', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        service_id: svcId, template_id: tplId, user_id: pubKey,
+        template_params: { to_email: email, to_name: currentUser?.name || email, code: code, app_name: 'Crypto-Course' },
+      }),
+    }, 15000);
+    if (r.ok) {
+      if (statusEl) { statusEl.textContent = 'Sent to ' + email + ' — test code: ' + code + '. Check your inbox.'; statusEl.style.color = 'var(--secondary-d)'; }
+    } else {
+      const txt = await r.text().catch(function() { return ''; });
+      if (statusEl) { statusEl.textContent = 'EmailJS error: ' + (txt || ('HTTP ' + r.status)) + '. Check your IDs and key.'; statusEl.style.color = 'var(--danger)'; }
+    }
+  } catch(e) {
+    if (statusEl) { statusEl.textContent = 'Network error — check your internet connection.'; statusEl.style.color = 'var(--danger)'; }
+  }
+}
+
 // ============================================================
 // LANGUAGE
 // ============================================================
@@ -12611,12 +12651,17 @@ function getSyncEndpoint() {
 // Fetch sync-config.json once and cache the syncUrl in localStorage.
 // Silent — never blocks the app.
 async function bootstrapSyncConfig() {
-  if (localStorage.getItem('crypto_course_sync_url')) return; // already configured
+  const needsUrl = !localStorage.getItem('crypto_course_sync_url');
+  const needsEjs = !(localStorage.getItem('cc_ejs_service') && localStorage.getItem('cc_ejs_template') && localStorage.getItem('cc_ejs_pubkey'));
+  if (!needsUrl && !needsEjs) return;
   try {
     const r = await fetch('sync-config.json');
     if (!r.ok) return;
     const cfg = await r.json();
-    if (cfg.syncUrl) localStorage.setItem('crypto_course_sync_url', cfg.syncUrl.replace(/\/$/, ''));
+    if (needsUrl && cfg.syncUrl)    localStorage.setItem('crypto_course_sync_url', cfg.syncUrl.replace(/\/$/, ''));
+    if (cfg.ejsService)             localStorage.setItem('cc_ejs_service',  cfg.ejsService);
+    if (cfg.ejsTemplate)            localStorage.setItem('cc_ejs_template', cfg.ejsTemplate);
+    if (cfg.ejsPubkey)              localStorage.setItem('cc_ejs_pubkey',   cfg.ejsPubkey);
   } catch (e) {}
 }
 
