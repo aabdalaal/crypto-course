@@ -16287,6 +16287,9 @@ async function enterApp() {
   const users = loadUsers();
   const me = users.find(u => u.id === currentUser?.sub);
   if (me?.mustChangePassword) showForcePasswordChange(me.id);
+  // Push registration record (incl. credential hash) so the student can recover
+  // their account on a new device. Fire-and-forget; silent if offline or unconfigured.
+  pushRegistration();
   // Pull remote progress and merge (silent if offline or no server)
   pullSync();
 
