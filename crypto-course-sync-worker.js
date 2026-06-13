@@ -336,12 +336,17 @@ export default {
         for (const k of list.keys) {
           const rec = await env.SYNC.get(k.name, 'json');
           if (rec && (rec.email || '').toLowerCase() === email && rec.passwordHash) {
-            const userId = k.name.split(':').slice(2).join(':');
+            const parts = k.name.split(':'); // student:{cohort}:{userId}
+            const cohort = parts[1];
+            const userId = parts.slice(2).join(':');
+            const writeToken = cohorts[cohort]?.write || '';
             return json({
               id: userId, name: rec.name || '', email: rec.email || '',
               role: rec.role || 'student', emailVerified: rec.emailVerified || false,
               passwordHash: rec.passwordHash, passwordSalt: rec.passwordSalt,
               passwordIter: rec.passwordIter,
+              writeToken,           // lets the new device call pullSync() immediately
+              payload: rec.payload || null, // existing progress for offline restore
             }, 200, cors);
           }
         }

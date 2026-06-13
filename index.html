@@ -15541,6 +15541,10 @@ async function authLogin(email, password) {
               saveUsers(fresh);
             }
             user = fresh.find(u => u.id === remote.id);
+            // Restore write token so pullSync() works immediately after login
+            if (remote.writeToken) localStorage.setItem('crypto_course_write_token', remote.writeToken);
+            // Restore progress payload so enterApp() loads real state, not defaults
+            if (remote.payload) localStorage.setItem(STATE_KEY + '_' + remote.id, JSON.stringify(remote.payload));
           }
         }
       } catch(e) {}
