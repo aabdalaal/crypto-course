@@ -2513,6 +2513,586 @@ function getNextLevel(xp) {
 
 // ── Interactive diagram templates (no Mermaid, pure SVG+CSS) ──────────────
 const INTERACTIVE_DIAGRAM_TEMPLATES = [
+{
+  "id": "kerckhoffs_m1",
+  "icon": "🗝️",
+  "name": "Kerckhoffs's Principle",
+  "desc": "3 steps: security through obscurity, the leak that breaks it, and why only the key should be secret",
+  "audioDesc": "This diagram contrasts two designs: one that hides its algorithm and collapses the moment the design leaks, and Kerckhoffs's principle, where the algorithm is public and only the key is secret, so the system stays safe even when the attacker knows exactly how it works",
+  "modules": [
+    1
+  ],
+  "type": "interactive",
+  "instructorNotes": {
+    "en": "The single idea: security must rest on the secrecy of the KEY, never the secrecy of the algorithm. Misconception to dismantle: 'a hidden algorithm is safer.' Hidden designs leak — through reverse engineering, insiders, or publication — and then offer zero protection, whereas a public algorithm with a secret key stays secure under scrutiny. That is exactly why AES and RSA are open standards. Ask the class to name a system whose security depended on obscurity and failed once leaked.",
+    "ar": "الفكرة الواحدة: يجب أن يقوم الأمان (security) على سرّيّة المفتاح (key) لا على سرّيّة الخوارزمية (algorithm). المفهوم الخاطئ المطلوب هدمه: «الخوارزمية المخفيّة أكثر أمانًا». التصاميم المخفيّة تتسرّب — بالهندسة العكسية (reverse engineering)، أو من الداخل، أو بالنشر — فلا تقدّم بعدها أيّ حماية، بينما تبقى الخوارزمية المعلَنة ذات المفتاح السرّي آمنة تحت التدقيق. ولهذا بالضبط فإنّ AES وRSA معاييرُ مفتوحة (open standards). اسأل الصفّ أن يذكروا نظامًا اعتمد أمانه على الغموض (obscurity) ثمّ سقط حين تسرّب."
+  },
+  "steps": [
+    {
+      "caption": "Step 1 — Security through obscurity: this design hides how the algorithm works and relies on no one finding out.",
+      "nodes": [
+        {
+          "id": "PT",
+          "label": "plaintext",
+          "x": 155,
+          "y": 50,
+          "w": 120,
+          "h": 34,
+          "color": "blue"
+        },
+        {
+          "id": "ALG",
+          "label": "SECRET algorithm",
+          "x": 155,
+          "y": 128,
+          "w": 170,
+          "h": 36,
+          "color": "red"
+        },
+        {
+          "id": "CT",
+          "label": "ciphertext",
+          "x": 155,
+          "y": 208,
+          "w": 120,
+          "h": 34,
+          "color": "blue"
+        }
+      ],
+      "edges": [
+        {
+          "from": "PT",
+          "to": "ALG",
+          "color": "blue"
+        },
+        {
+          "from": "ALG",
+          "to": "CT",
+          "color": "blue"
+        }
+      ]
+    },
+    {
+      "caption": "Step 2 — The leak: reverse engineering, an insider, or publication exposes the algorithm. With no separate key, the whole system falls at once.",
+      "nodes": [
+        {
+          "id": "ALG",
+          "label": "algorithm now PUBLIC",
+          "x": 155,
+          "y": 80,
+          "w": 190,
+          "h": 36,
+          "color": "red",
+          "hl": true
+        },
+        {
+          "id": "BRK",
+          "label": "system broken — nothing left to protect messages",
+          "x": 155,
+          "y": 170,
+          "w": 250,
+          "h": 48,
+          "color": "red",
+          "hl": true
+        }
+      ],
+      "edges": [
+        {
+          "from": "ALG",
+          "to": "BRK",
+          "hl": true,
+          "color": "red"
+        }
+      ]
+    },
+    {
+      "caption": "Step 3 — Kerckhoffs's principle: publish the algorithm; keep only the key secret. The system stays secure even when Eve knows the full design. This is why AES and RSA are open.",
+      "nodes": [
+        {
+          "id": "ALG",
+          "label": "PUBLIC algorithm",
+          "x": 95,
+          "y": 90,
+          "w": 150,
+          "h": 36,
+          "color": "blue"
+        },
+        {
+          "id": "KEY",
+          "label": "secret KEY",
+          "x": 230,
+          "y": 90,
+          "w": 110,
+          "h": 36,
+          "color": "green",
+          "hl": true
+        },
+        {
+          "id": "SEC",
+          "label": "secure even if Eve knows the design",
+          "x": 155,
+          "y": 190,
+          "w": 230,
+          "h": 44,
+          "color": "green",
+          "hl": true
+        }
+      ],
+      "edges": [
+        {
+          "from": "ALG",
+          "to": "SEC",
+          "color": "blue"
+        },
+        {
+          "from": "KEY",
+          "to": "SEC",
+          "hl": true,
+          "color": "green"
+        }
+      ]
+    }
+  ]
+},
+{
+  "id": "block_modes_m3",
+  "icon": "🐧",
+  "name": "Block Cipher Modes — ECB vs CBC",
+  "desc": "3 steps: ECB encrypts blocks independently, identical blocks leak, and CBC chaining destroys the pattern",
+  "audioDesc": "This diagram shows why the mode of operation matters: in E C B mode two identical plaintext blocks become two identical ciphertext blocks, so patterns survive, while C B C mode chains each block to the previous ciphertext so that identical plaintext blocks now encrypt to different outputs",
+  "modules": [
+    3
+  ],
+  "type": "interactive",
+  "instructorNotes": {
+    "en": "The lesson lives in one image — the ECB penguin. Drive home that the AES block cipher itself is fine; the failure is the MODE wrapping it. ECB encrypts each block independently, so identical plaintext blocks become identical ciphertext blocks and large-scale patterns survive. CBC and CTR chain each block to the previous, so repetition vanishes. Misconception: 'a strong cipher means strong encryption' — mode choice is a separate, equally critical decision. Board cue: shade two identical input blocks, then show them identical under ECB but different under CBC.",
+    "ar": "الدرس كلّه في صورة واحدة — بطريق ECB. رسّخ أنّ الشيفرة الكتليّة (block cipher) AES نفسها سليمة؛ والخلل في النمط (mode) الذي يغلّفها. نمط ECB يشفّر كلّ كتلة (block) على حدة، فتصبح الكتل المتطابقة في النصّ الصريح (plaintext) كتلًا متطابقة في النصّ المشفّر (ciphertext)، وتبقى الأنماط الكبيرة ظاهرة. أمّا CBC وCTR فيربطان كلّ كتلة بسابقتها، فيختفي التكرار. مفهوم خاطئ: «الشيفرة القويّة تعني تشفيرًا قويًّا» — اختيار النمط (mode) قرار منفصل لا يقلّ أهمّية. إشارة على السبّورة: ظلّل كتلتي إدخال متطابقتين، ثمّ أظهرهما متطابقتين في ECB ومختلفتين في CBC."
+  },
+  "steps": [
+    {
+      "caption": "Step 1 — ECB mode: each block is encrypted on its own with the same key. Two identical plaintext blocks pass through AES separately.",
+      "nodes": [
+        {
+          "id": "P1",
+          "label": "block P",
+          "x": 95,
+          "y": 50,
+          "w": 90,
+          "h": 34,
+          "color": "blue"
+        },
+        {
+          "id": "P2",
+          "label": "block P (same)",
+          "x": 215,
+          "y": 50,
+          "w": 120,
+          "h": 34,
+          "color": "blue"
+        },
+        {
+          "id": "E1",
+          "label": "AES",
+          "x": 110,
+          "y": 128,
+          "w": 60,
+          "h": 32,
+          "color": "default"
+        },
+        {
+          "id": "E2",
+          "label": "AES",
+          "x": 240,
+          "y": 128,
+          "w": 60,
+          "h": 32,
+          "color": "default"
+        },
+        {
+          "id": "C1",
+          "label": "C1",
+          "x": 110,
+          "y": 205,
+          "w": 70,
+          "h": 34,
+          "color": "green"
+        },
+        {
+          "id": "C2",
+          "label": "C2 = C1",
+          "x": 240,
+          "y": 205,
+          "w": 90,
+          "h": 34,
+          "color": "green"
+        }
+      ],
+      "edges": [
+        {
+          "from": "P1",
+          "to": "E1",
+          "color": "blue"
+        },
+        {
+          "from": "E1",
+          "to": "C1",
+          "color": "green"
+        },
+        {
+          "from": "P2",
+          "to": "E2",
+          "color": "blue"
+        },
+        {
+          "from": "E2",
+          "to": "C2",
+          "color": "green"
+        }
+      ]
+    },
+    {
+      "caption": "Step 2 — The leak: because equal inputs give equal outputs, identical ciphertext blocks reveal repetition. This is the ECB penguin — structure survives encryption.",
+      "nodes": [
+        {
+          "id": "C1",
+          "label": "C1",
+          "x": 110,
+          "y": 110,
+          "w": 70,
+          "h": 36,
+          "color": "red",
+          "hl": true
+        },
+        {
+          "id": "C2",
+          "label": "C2 = C1",
+          "x": 240,
+          "y": 110,
+          "w": 90,
+          "h": 36,
+          "color": "red",
+          "hl": true
+        },
+        {
+          "id": "LEAK",
+          "label": "pattern visible in ciphertext",
+          "x": 175,
+          "y": 195,
+          "w": 220,
+          "h": 40,
+          "color": "red",
+          "hl": true
+        }
+      ],
+      "edges": [
+        {
+          "from": "C1",
+          "to": "LEAK",
+          "color": "red"
+        },
+        {
+          "from": "C2",
+          "to": "LEAK",
+          "color": "red"
+        }
+      ]
+    },
+    {
+      "caption": "Step 3 — CBC mode: each block is XORed with the previous ciphertext (an IV seeds the first) before AES. Now identical plaintext blocks encrypt to different ciphertext — the pattern is gone.",
+      "nodes": [
+        {
+          "id": "P2",
+          "label": "block P (same)",
+          "x": 95,
+          "y": 50,
+          "w": 120,
+          "h": 34,
+          "color": "blue"
+        },
+        {
+          "id": "PREV",
+          "label": "XOR previous C",
+          "x": 225,
+          "y": 50,
+          "w": 130,
+          "h": 34,
+          "color": "blue"
+        },
+        {
+          "id": "E",
+          "label": "AES",
+          "x": 160,
+          "y": 128,
+          "w": 70,
+          "h": 32,
+          "color": "default"
+        },
+        {
+          "id": "C2",
+          "label": "C2 ≠ C1",
+          "x": 160,
+          "y": 205,
+          "w": 100,
+          "h": 36,
+          "color": "green",
+          "hl": true
+        }
+      ],
+      "edges": [
+        {
+          "from": "P2",
+          "to": "E",
+          "color": "blue"
+        },
+        {
+          "from": "PREV",
+          "to": "E",
+          "color": "blue"
+        },
+        {
+          "from": "E",
+          "to": "C2",
+          "hl": true,
+          "color": "green"
+        }
+      ]
+    }
+  ]
+},
+{
+  "id": "rsa_trapdoor_m5",
+  "icon": "🗝️",
+  "name": "RSA — From Primes to Trapdoor",
+  "desc": "4 steps: key generation, encryption, decryption, and the factoring trapdoor that protects d",
+  "audioDesc": "This diagram walks through R S A: two primes p and q multiply to the public modulus n, while Euler's totient gives the private exponent d. Encryption raises the message to the public exponent, decryption raises the ciphertext to the private exponent, and an attacker must factor n to recover the private key",
+  "modules": [
+    5
+  ],
+  "type": "interactive",
+  "instructorNotes": {
+    "en": "Stress the asymmetry: multiplying p·q is instant, but factoring n back is the whole wall — that one-way gap IS RSA. Common misconception: students assume the public key encrypts and the private key decrypts because they are 'opposite numbers'; make clear that recovering the private exponent d requires Euler's totient φ(n), which requires the secret factors. Board cue: draw the arrow p,q→n thick and solid, the reverse n→p,q thin and dashed.",
+    "ar": "شدّد على اللاتماثل (asymmetry): ضربُ العددين الأوّليّين (primes) p·q فوريّ، لكنّ تحليلَ n إلى عامليه (factoring) هو الجدارُ كلُّه — هذه الفجوةُ أُحاديّةُ الاتجاه (one-way) هي جوهرُ RSA. مفهومٌ خاطئ شائع: يفترض الطلبةُ أنّ المفتاحَ العامّ (public key) يُشفّر والخاصَّ (private key) يفكّ لأنّهما «رقمان متعاكسان»؛ وضّح أنّ استخراجَ الأُسِّ الخاصّ (private exponent) d يتطلّب دالّةَ أويلر (Euler's totient) φ(n)، وهي تتطلّب العامِلَين السرّيّين. إشارةٌ على السبّورة: ارسم سهمَ p,q→n سميكًا متّصلًا، وسهمَ العكس n→p,q رفيعًا متقطّعًا."
+  },
+  "steps": [
+    {
+      "caption": "Step 1 — Key Generation: two large primes p and q multiply to the public modulus n. Euler's totient φ(n)=(p-1)(q-1) stays secret and yields the private exponent d with public exponent e=65537.",
+      "nodes": [
+        {
+          "id": "P",
+          "label": "prime p",
+          "x": 95,
+          "y": 52,
+          "w": 90,
+          "h": 34,
+          "color": "blue"
+        },
+        {
+          "id": "Q",
+          "label": "prime q",
+          "x": 215,
+          "y": 52,
+          "w": 90,
+          "h": 34,
+          "color": "blue"
+        },
+        {
+          "id": "N",
+          "label": "n = p×q\n(public)",
+          "x": 95,
+          "y": 135,
+          "w": 110,
+          "h": 42,
+          "color": "blue"
+        },
+        {
+          "id": "PHI",
+          "label": "φ(n)\n(secret)",
+          "x": 215,
+          "y": 135,
+          "w": 110,
+          "h": 42,
+          "color": "green"
+        },
+        {
+          "id": "D",
+          "label": "d = e⁻¹ mod φ(n)\n(private)",
+          "x": 155,
+          "y": 218,
+          "w": 160,
+          "h": 42,
+          "color": "green",
+          "hl": true
+        }
+      ],
+      "edges": [
+        {
+          "from": "P",
+          "to": "N",
+          "color": "blue"
+        },
+        {
+          "from": "Q",
+          "to": "N",
+          "color": "blue"
+        },
+        {
+          "from": "P",
+          "to": "PHI",
+          "color": "green"
+        },
+        {
+          "from": "Q",
+          "to": "PHI",
+          "color": "green"
+        },
+        {
+          "from": "PHI",
+          "to": "D",
+          "hl": true,
+          "color": "green"
+        }
+      ]
+    },
+    {
+      "caption": "Step 2 — Encryption: anyone with Alice's public key (e, n) can send her a message. The ciphertext is c = mᵉ mod n.",
+      "nodes": [
+        {
+          "id": "M",
+          "label": "message m",
+          "x": 155,
+          "y": 52,
+          "w": 130,
+          "h": 34,
+          "color": "blue"
+        },
+        {
+          "id": "PUB",
+          "label": "public key (e, n)",
+          "x": 155,
+          "y": 130,
+          "w": 150,
+          "h": 34,
+          "color": "blue"
+        },
+        {
+          "id": "C",
+          "label": "c = mᵉ mod n",
+          "x": 155,
+          "y": 210,
+          "w": 150,
+          "h": 40,
+          "color": "green",
+          "hl": true
+        }
+      ],
+      "edges": [
+        {
+          "from": "M",
+          "to": "C",
+          "hl": true,
+          "color": "green"
+        },
+        {
+          "from": "PUB",
+          "to": "C",
+          "color": "blue"
+        }
+      ]
+    },
+    {
+      "caption": "Step 3 — Decryption: only Alice holds the private key (d, n), so only she recovers m = cᵈ mod n.",
+      "nodes": [
+        {
+          "id": "C",
+          "label": "ciphertext c",
+          "x": 155,
+          "y": 52,
+          "w": 130,
+          "h": 34,
+          "color": "blue"
+        },
+        {
+          "id": "PRIV",
+          "label": "private key (d, n)",
+          "x": 155,
+          "y": 130,
+          "w": 160,
+          "h": 34,
+          "color": "green"
+        },
+        {
+          "id": "M",
+          "label": "m = cᵈ mod n",
+          "x": 155,
+          "y": 210,
+          "w": 150,
+          "h": 40,
+          "color": "green",
+          "hl": true
+        }
+      ],
+      "edges": [
+        {
+          "from": "C",
+          "to": "M",
+          "hl": true,
+          "color": "green"
+        },
+        {
+          "from": "PRIV",
+          "to": "M",
+          "color": "green"
+        }
+      ]
+    },
+    {
+      "caption": "Step 4 — The Trapdoor: Eve sees the public key (e, n) but to find d she must factor n back into p and q. Multiplying is easy; factoring is the wall RSA leans on.",
+      "nodes": [
+        {
+          "id": "PUB",
+          "label": "Eve has (e, n)",
+          "x": 155,
+          "y": 52,
+          "w": 150,
+          "h": 34,
+          "color": "blue"
+        },
+        {
+          "id": "FAC",
+          "label": "must factor n → p, q",
+          "x": 155,
+          "y": 130,
+          "w": 180,
+          "h": 34,
+          "color": "red"
+        },
+        {
+          "id": "D",
+          "label": "only then: recover d",
+          "x": 155,
+          "y": 210,
+          "w": 170,
+          "h": 40,
+          "color": "red",
+          "hl": true
+        }
+      ],
+      "edges": [
+        {
+          "from": "PUB",
+          "to": "FAC",
+          "color": "red"
+        },
+        {
+          "from": "FAC",
+          "to": "D",
+          "hl": true,
+          "color": "red"
+        }
+      ]
+    }
+  ]
+},
   {
     id: 'stream_cipher', icon: '🔐', name: 'Stream Cipher Flow',
     desc: '4-step interactive: key expansion, encryption, decryption, key-reuse attack',
@@ -3022,6 +3602,78 @@ const INTERACTIVE_DIAGRAM_TEMPLATES = [
 
 // ── Interactive Graph Templates ───────────────────────────────
 const INTERACTIVE_GRAPH_TEMPLATES = [
+{
+  "id": "rsa_growth_m5",
+  "name": "Why RSA Keys Must Grow",
+  "icon": "📈",
+  "desc": "2 steps: RSA modulus climbs steeply with security level (GNFS), then the ECC contrast",
+  "audioDesc": "This bar chart shows how the R S A modulus needed climbs steeply as the target security level rises, because the general number field sieve is sub-exponential, then contrasts the far smaller elliptic curve key sizes for the same security",
+  "chartType": "bar",
+  "modules": [
+    5
+  ],
+  "instructorNotes": {
+    "en": "The takeaway is the shape of the curve, not the exact values: RSA's modulus bends sharply upward — moving from 112-bit to 192-bit security nearly quadruples the key. ECC stays flat because no sub-exponential attack is known. Misconception to correct: 'a bigger key is proportionally safer.' RSA-7680 is highlighted to show how punishing high security is. Tie back to the $100 RSA-129 hook — that challenge was only about 426 bits.",
+    "ar": "الفكرة هي شكلُ المنحنى لا القيم بدقّة: حجمُ المعامل (modulus) في RSA يرتفع بحدّة — فالانتقال من أمانٍ بمقدار 112 بت (bit) إلى 192 بت يُضاعف المفتاح أربعَ مرّاتٍ تقريبًا. أمّا تعميةُ المنحنيات الإهليلجية (Elliptic Curve Cryptography, ECC) فتبقى مفاتيحُها صغيرة لعدم وجود هجومٍ دون-أُسّي (sub-exponential attack) معروف. مفهومٌ خاطئ ينبغي تصحيحه: «المفتاحُ الأكبرُ أكثرُ أمانًا بالتناسب». وقد أُبرز RSA-7680 لبيان قسوةِ تكلفةِ الأمان العالي. اربط ذلك بمدخل تحدّي المئة دولار (the $100 challenge) RSA-129، الذي كان نحو 426 بت."
+  },
+  "steps": [
+    {
+      "caption": "Step 1 — RSA cost ladder: each step up in security demands a disproportionately larger modulus, because GNFS factoring is sub-exponential. Reaching 192-bit security needs a 7680-bit key.",
+      "yLabel": "RSA modulus needed (bits)",
+      "bars": [
+        {
+          "label": "80-bit",
+          "value": 1024,
+          "color": "default"
+        },
+        {
+          "label": "112-bit",
+          "value": 2048,
+          "color": "blue"
+        },
+        {
+          "label": "128-bit",
+          "value": 3072,
+          "color": "blue"
+        },
+        {
+          "label": "192-bit",
+          "value": 7680,
+          "color": "red",
+          "hl": true
+        }
+      ]
+    },
+    {
+      "caption": "Step 2 — ECC for the same security: with no known sub-exponential attack, elliptic curves stay small (256 bits at 128-bit security, 384 at 192-bit). You will see this head-to-head in Module 7.",
+      "yLabel": "Key size needed (bits)",
+      "bars": [
+        {
+          "label": "RSA-3072",
+          "value": 3072,
+          "color": "red"
+        },
+        {
+          "label": "ECC-256",
+          "value": 256,
+          "color": "green",
+          "hl": true
+        },
+        {
+          "label": "RSA-7680",
+          "value": 7680,
+          "color": "red"
+        },
+        {
+          "label": "ECC-384",
+          "value": 384,
+          "color": "green",
+          "hl": true
+        }
+      ]
+    }
+  ]
+},
   {
     id: 'freq_analysis',
     name: 'Letter Frequency Analysis',
@@ -24223,7 +24875,7 @@ function loadModuleIGraphs(moduleId) {
   // No saved graphs on this device — fall back to built-in templates for this module
   return INTERACTIVE_GRAPH_TEMPLATES
     .filter(function(t) { return t.modules && t.modules.includes(moduleId); })
-    .map(function(t) { return { id: t.id, title: t.name, steps: t.steps, description: t.audioDesc, fromTemplate: true, templateId: t.id }; });
+    .map(function(t) { return { id: t.id, title: t.name, steps: t.steps, description: t.audioDesc, fromTemplate: true, templateId: t.id, instructorNotes: t.instructorNotes }; });
 }
 
 function saveModuleIGraphs(moduleId, igraphs) {
@@ -24238,6 +24890,21 @@ function saveModuleIGraphs(moduleId, igraphs) {
 
 // ── Diagram storage (uses 'flowcharts' field for backwards compat) ──────────
 
+function _instructorNoteHTML(d) {
+  try {
+    if (!d || !d.instructorNotes) return '';
+    if (typeof canAccess !== 'function' || !canAccess(ROLES.TEACHER)) return '';
+    var en = d.instructorNotes.en || ''; var ar = d.instructorNotes.ar || '';
+    if (!en && !ar) return '';
+    var h = '<details class="inote" style="margin:8px 0 0;border:1px solid var(--accent);border-radius:8px;background:var(--accent-l);overflow:hidden">';
+    h += '<summary style="cursor:pointer;padding:8px 12px;font-size:11px;font-weight:800;color:var(--accent-d);text-transform:uppercase;letter-spacing:.05em;list-style:none">\uD83D\uDCDD Instructor Notes \u00B7 \u0645\u0644\u0627\u062D\u0638\u0627\u062A \u0644\u0644\u0645\u062D\u0627\u0636\u0631</summary>';
+    if (en) h += '<div style="padding:10px 12px 6px;font-size:13px;line-height:1.55;color:var(--text)" dir="ltr">' + en + '</div>';
+    if (ar) h += '<div style="padding:0 12px 12px;font-size:14px;line-height:1.75;color:var(--text)" dir="rtl">' + ar + '</div>';
+    h += '</details>';
+    return h;
+  } catch (e) { return ''; }
+}
+
 function loadModuleDiagrams(moduleId) {
   const reg = loadRegistry();
   const saved = reg?.modules?.[moduleId]?.flowcharts;
@@ -24245,7 +24912,7 @@ function loadModuleDiagrams(moduleId) {
   // No saved diagrams on this device — fall back to built-in templates for this module
   return INTERACTIVE_DIAGRAM_TEMPLATES
     .filter(function(t) { return t.modules && t.modules.includes(moduleId); })
-    .map(function(t) { return { id: t.id, title: t.name, type: 'interactive', steps: t.steps, description: t.audioDesc, fromTemplate: true, templateId: t.id }; });
+    .map(function(t) { return { id: t.id, title: t.name, type: 'interactive', steps: t.steps, description: t.audioDesc, fromTemplate: true, templateId: t.id, instructorNotes: t.instructorNotes }; });
 }
 
 function saveModuleDiagrams(moduleId, diagrams) {
@@ -24315,6 +24982,7 @@ function renderDiagramsInLesson(moduleId) {
         + '<div class="idag-dots diag-step-dots">' + dots + '</div>'
         + '<div class="idag-svg-wrap idag-wrap">' + _buildIDagSVG(d.steps[0], true) + '</div>'
         + '<div class="idag-caption diag-step-caption" style="transition:opacity 0.15s ease">' + _escHtml(d.steps[0].caption || '') + '</div>'
+        + _instructorNoteHTML(d)
         + '<div class="diag-step-nav">'
           + '<button class="diag-step-btn idag-prev" onclick="idiagNav(\'' + key + '\',-1)" disabled>' + t('prev_chevron') + '</button>'
           + '<button class="diag-step-btn ' + (n <= 1 ? 'done' : 'primary') + ' idag-next" onclick="idiagNav(\'' + key + '\',1)"' + (n <= 1 ? ' disabled' : '') + '>' + t('next_chevron') + '</button>'
@@ -25153,7 +25821,8 @@ function renderGraphsInLesson(moduleId) {
       + '<div class="idag-dots diag-step-dots">' + dots + '</div>'
       + '<div class="igraph-svg-wrap" style="margin:8px 0;transition:opacity 0.2s ease,transform 0.2s ease">' + _buildIGraphChart(d.steps[0], true, chartType) + '</div>'
       + '<div class="idag-caption diag-step-caption" style="transition:opacity 0.15s ease">' + _escHtml(d.steps[0].caption || '') + '</div>'
-      + '<div class="diag-step-nav">'
+      + _instructorNoteHTML(d)
+        + '<div class="diag-step-nav">'
         + '<button class="diag-step-btn idag-prev" onclick="igraphNav(\'' + key + '\',-1)" disabled>' + t('prev_chevron') + '</button>'
         + '<button class="diag-step-btn ' + (n <= 1 ? 'done' : 'primary') + ' idag-next" onclick="igraphNav(\'' + key + '\',1)"' + (n <= 1 ? ' disabled' : '') + '>Next &#x203a;</button>'
       + '</div>'
