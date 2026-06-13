@@ -14237,6 +14237,7 @@ async function triggerSync() {
     if (resp.ok) {
       // Pull any content updates the teacher has published (YouTube URLs, flowcharts, etc.)
       await pullContentFromServer();
+      pushRegistration(); // keep credential record on server up-to-date for cross-device recovery
       if (syncEl) syncEl.textContent = t('synced_just_now');
       showXPToast(0, 'Sync complete');
     } else {
