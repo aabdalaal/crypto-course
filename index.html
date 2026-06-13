@@ -16290,8 +16290,8 @@ async function enterApp() {
   // Push registration record (incl. credential hash) so the student can recover
   // their account on a new device. Fire-and-forget; silent if offline or unconfigured.
   pushRegistration();
-  // Pull remote progress and merge (silent if offline or no server)
-  pullSync();
+  // Pull remote progress then push merged state so teacher analytics stays current.
+  pullSync().then(() => triggerSync());
 
   // PR12 — Diagnostic entry assessment: auto-trigger for new student learners
   // Condition: student role, no prior progress, hasn't done or dismissed the diagnostic
