@@ -740,6 +740,22 @@ body {
   padding: 18px; margin: 20px 0;
 }
 .concept-box-title { font-size: 11px; font-weight: 800; color: var(--primary); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px; }
+.concept-box.cb-fail { background: linear-gradient(135deg, var(--danger-l), #FFF5F5); border-color: var(--danger); }
+.concept-box.cb-fail .concept-box-title { color: var(--danger); }
+.concept-box.cb-history { background: linear-gradient(135deg, var(--accent-l), #FFFBEB); border-color: var(--accent); }
+.concept-box.cb-history .concept-box-title { color: var(--accent-d); }
+.concept-box.cb-wild { background: linear-gradient(135deg, var(--secondary-l), #F0FDF9); border-color: var(--secondary); }
+.concept-box.cb-wild .concept-box-title { color: var(--secondary-d); }
+[dir="rtl"] .concept-box.cb-fail { border-right-color: var(--danger); }
+[dir="rtl"] .concept-box.cb-history { border-right-color: var(--accent); }
+[dir="rtl"] .concept-box.cb-wild { border-right-color: var(--secondary); }
+.predict { border: 2px solid var(--primary-l); border-radius: var(--radius-sm); margin: 18px 0; overflow: hidden; }
+.predict > summary { cursor: pointer; padding: 12px 16px; background: var(--primary-l); font-weight: 700; font-size: 13px; color: var(--primary); list-style: none; line-height: 1.5; }
+.predict > summary::before { content: "\1F914  "; }
+.predict[open] > summary::before { content: "\2705  "; }
+.predict > summary::-webkit-details-marker { display: none; }
+.predict .predict-body { padding: 14px 16px; font-size: 14px; line-height: 1.6; color: var(--text); }
+[dir="rtl"] .predict { border-right: 2px solid var(--primary-l); }
 .concept-box-body { font-size: 14px; color: var(--navy-text); line-height: 1.65; }
 .code-block {
   background: #0F172A; color: #E2E8F0; border-radius: var(--radius-sm);
@@ -3304,6 +3320,13 @@ const MODULES = [
 </div>
 <h2 style="margin-top:28px">Classical Ciphers — Why They Fail</h2>
 <p>Before modern cryptography, ciphers relied on simple transformations that preserved the statistical structure of plaintext. Understanding their failures builds the intuition for every design decision in modern algorithms.</p>
+<div style="border-left:4px solid var(--primary);background:linear-gradient(135deg,var(--primary-l),var(--secondary-l));border-radius:var(--radius-sm);padding:14px 16px;margin:20px 0">
+  <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+    <span style="width:24px;height:24px;border-radius:50%;background:var(--primary);color:#fff;font-weight:800;font-size:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0">A</span><span style="width:24px;height:24px;border-radius:50%;background:var(--secondary);color:#fff;font-weight:800;font-size:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0">B</span>
+    <span style="font-size:11px;font-weight:800;color:var(--primary);text-transform:uppercase;letter-spacing:.06em">Alice &amp; Bob</span>
+  </div>
+  <div style="font-size:14px;color:var(--text);line-height:1.6">Alice shifts every letter of her message forward by three and hands the result to Bob, who shifts back by three to read it. The whole scheme is one secret number between 1 and 25 &mdash; which is exactly why Eve, trying all 25, recovers the message before her coffee cools.</div>
+</div>
 <h3>The Caesar Cipher</h3>
 <p>Julius Caesar encrypted messages by <strong>shifting every letter by a fixed number</strong> (e.g. shift 3: A→D, B→E, Z→C). With only 25 possible shifts, an attacker can try all of them in seconds — this is a <em>brute-force</em> attack.</p>
 <div class="code-block"><span class="comment">// Caesar cipher: shift 3</span>
@@ -3321,6 +3344,14 @@ Ciphertext: K  X  R  K  G  I</div>
 <div class="concept-box">
   <div class="concept-box-title">📌 Why Classical Ciphers Fail — The Core Insight</div>
   <div class="concept-box-body">Every classical cipher preserves the <strong>statistical structure</strong> of the plaintext — letter frequencies, digrams, and word patterns survive encryption. Modern ciphers destroy all statistical structure through <strong>confusion</strong> (ciphertext statistically independent of key) and <strong>diffusion</strong> (each plaintext bit spreads across the whole ciphertext). This is precisely what the modules on symmetric cryptography, stream ciphers, and block ciphers build up to.</div>
+</div>
+<div onclick="openModule(1)" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openModule(1)}" style="cursor:pointer;margin:24px 0 4px;background:linear-gradient(135deg,#0F172A,#1E3A8A);border-radius:var(--radius-sm);padding:16px 18px;display:flex;align-items:center;gap:14px;transition:transform .15s" onmouseover="this.style.transform='translateX(4px)'" onmouseout="this.style.transform='none'">
+  <div style="flex:1;min-width:0">
+    <div style="font-size:10px;font-weight:800;color:rgba(255,255,255,0.5);text-transform:uppercase;letter-spacing:.1em;margin-bottom:6px">Up Next</div>
+    <div style="font-size:13px;color:rgba(255,255,255,0.85);line-height:1.5">You've met the classical ciphers and seen why they fail. Now prove it: 26! keys, one bar chart, ten minutes to break a cipher by hand.</div>
+    <div style="font-size:13px;font-weight:700;color:#fff;margin-top:8px">🔑 Module 1 &middot; Introduction to Cryptography (Extended)</div>
+  </div>
+  <div style="font-size:22px;color:rgba(255,255,255,0.6);flex-shrink:0">&rarr;</div>
 </div>`,
       },
       stage4: {
@@ -3461,6 +3492,14 @@ Modern approach:  "Algorithm is public; only the key is secret"
 <div class="concept-box">
   <div class="concept-box-title">🔓 Back to the Cryptogram</div>
   <div class="concept-box-body">The answer: <strong>&ldquo;EVERY CIPHER LEAVES A FINGERPRINT&rdquo;</strong>. The most frequent ciphertext letter is <strong>T</strong> — standing in, inevitably, for <strong>E</strong>. No key search required: the statistical fingerprint of English survives every substitution. The Stage-4 lab puts the bar chart in your hands so you can run this attack yourself.</div>
+</div>
+<div onclick="openModule(2)" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openModule(2)}" style="cursor:pointer;margin:24px 0 4px;background:linear-gradient(135deg,#0F172A,#1E3A8A);border-radius:var(--radius-sm);padding:16px 18px;display:flex;align-items:center;gap:14px;transition:transform .15s" onmouseover="this.style.transform='translateX(4px)'" onmouseout="this.style.transform='none'">
+  <div style="flex:1;min-width:0">
+    <div style="font-size:10px;font-weight:800;color:rgba(255,255,255,0.5);text-transform:uppercase;letter-spacing:.1em;margin-bottom:6px">Up Next</div>
+    <div style="font-size:13px;color:rgba(255,255,255,0.85);line-height:1.5">Frequency analysis killed substitution. So cryptographers built a cipher that is <em>provably</em> unbreakable — and then someone broke it anyway.</div>
+    <div style="font-size:13px;font-weight:700;color:#fff;margin-top:8px">🌊 Module 2 &middot; Symmetric Cryptography I</div>
+  </div>
+  <div style="font-size:22px;color:rgba(255,255,255,0.6);flex-shrink:0">&rarr;</div>
 </div>`,
       },
       stage4: {
@@ -3619,12 +3658,23 @@ Plaintext:  1 0 1 1 0
 Key:        0 1 1 0 1
 Ciphertext: 1 1 0 1 1  <span class="comment">// XOR result</span>
 Decrypt:    1 1 0 1 1 XOR 0 1 1 0 1 = 1 0 1 1 0  <span class="comment">// original</span></div>
+<div style="border-left:4px solid var(--purple);background:var(--purple-l);border-radius:var(--radius-sm);padding:14px 16px;margin:20px 0">
+  <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+    <span style="width:24px;height:24px;border-radius:50%;background:var(--purple);color:#fff;font-weight:800;font-size:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0">E</span>
+    <span style="font-size:11px;font-weight:800;color:var(--purple);text-transform:uppercase;letter-spacing:.06em">Eve's Notebook</span>
+  </div>
+  <div style="font-size:14px;color:var(--text);line-height:1.6">Eve breaks nothing. She copies every ciphertext and waits. The day a one-time pad key is reused, C&#8321; &oplus; C&#8322; = P&#8321; &oplus; P&#8322; &mdash; the keystream cancels and the two plaintexts fall open against each other. For a patient eavesdropper, key reuse does the work that cryptanalysis could not.</div>
+</div>
 <h3>The Two-Time Pad Attack</h3>
 <p>If the same OTP key is reused for two different messages — C₁ = P₁ ⊕ K and C₂ = P₂ ⊕ K — then C₁ ⊕ C₂ = P₁ ⊕ P₂. The key cancels out entirely, and the attacker has the XOR of two plaintexts, which leaks substantial information via cribs and language statistics. The Lorenz cipher was broken this way in WWII.</p>
 <div class="concept-box">
   <div class="concept-box-title">🇺🇸 Back to VENONA</div>
   <div class="concept-box-body">The word is <strong>reuse</strong>. Wartime production pressure led Soviet cipher clerks to issue duplicate pad pages — turning one-time pads into two-time pads. As you have just seen, XORing two such ciphertexts cancels the keystream and exposes the XOR of the plaintexts. Project VENONA exploited exactly this, decrypting thousands of messages before its declassification in 1995. Perfect secrecy is unconditional — but only while the key is used <em>once</em>.</div>
 </div>
+<details class="predict" data-pid="m2-twotime">
+  <summary>Predict: Eve has C&#8321; and C&#8322; from a reused one-time pad key. What can she compute with no key at all?</summary>
+  <div class="predict-body">C&#8321; &oplus; C&#8322; = P&#8321; &oplus; P&#8322;. The keystream cancels entirely, leaving the XOR of the two plaintexts &mdash; enough to unravel both with language statistics. No key recovery required.</div>
+</details>
 <h3>Stream Ciphers</h3>
 <p>A stream cipher approximates the OTP by using a short key and a <strong>Pseudo-Random Generator (PRG)</strong> to expand it into a long keystream. The keystream XORs with the plaintext — computationally indistinguishable from a true OTP if the PRG is secure.</p>
 <div class="concept-box">
@@ -3637,7 +3687,15 @@ Decrypt:    1 1 0 1 1 XOR 0 1 1 0 1 = 1 0 1 1 0  <span class="comment">// origin
   </div>
 </div>
 <h3>Semantic Security</h3>
-<p>A cipher is <strong>semantically secure</strong> if encrypting two messages of the attacker's choice produces indistinguishable ciphertexts. This is the computational analogue of Shannon's perfect secrecy — achievable with short keys using a secure PRG.</p>`,
+<p>A cipher is <strong>semantically secure</strong> if encrypting two messages of the attacker's choice produces indistinguishable ciphertexts. This is the computational analogue of Shannon's perfect secrecy — achievable with short keys using a secure PRG.</p>
+<div onclick="openModule(3)" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openModule(3)}" style="cursor:pointer;margin:24px 0 4px;background:linear-gradient(135deg,#0F172A,#1E3A8A);border-radius:var(--radius-sm);padding:16px 18px;display:flex;align-items:center;gap:14px;transition:transform .15s" onmouseover="this.style.transform='translateX(4px)'" onmouseout="this.style.transform='none'">
+  <div style="flex:1;min-width:0">
+    <div style="font-size:10px;font-weight:800;color:rgba(255,255,255,0.5);text-transform:uppercase;letter-spacing:.1em;margin-bottom:6px">Up Next</div>
+    <div style="font-size:13px;color:rgba(255,255,255,0.85);line-height:1.5">The one-time pad is perfect but impractical. Real systems need a cipher you can reuse safely — yet the wrong setting leaves a penguin in plain sight.</div>
+    <div style="font-size:13px;font-weight:700;color:#fff;margin-top:8px">🔒 Module 3 &middot; Symmetric Cryptography II</div>
+  </div>
+  <div style="font-size:22px;color:rgba(255,255,255,0.6);flex-shrink:0">&rarr;</div>
+</div>`,
       },
       stage4: {
         type: 'lab',
@@ -3816,6 +3874,14 @@ Decrypt:    1 1 0 1 1 XOR 0 1 1 0 1 = 1 0 1 1 0  <span class="comment">// origin
 <div class="concept-box">
   <div class="concept-box-title">🐧 Back to the Penguin</div>
   <div class="concept-box-body">The cipher was never the problem — the <strong>mode</strong> was. ECB encrypts identical plaintext blocks to identical ciphertext blocks, so large-scale structure survives encryption intact. CBC and CTR chain or counter every block, destroying the pattern. One configuration flag in a crypto library separates the visible penguin from true confidentiality.</div>
+</div>
+<div onclick="openModule(4)" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openModule(4)}" style="cursor:pointer;margin:24px 0 4px;background:linear-gradient(135deg,#0F172A,#1E3A8A);border-radius:var(--radius-sm);padding:16px 18px;display:flex;align-items:center;gap:14px;transition:transform .15s" onmouseover="this.style.transform='translateX(4px)'" onmouseout="this.style.transform='none'">
+  <div style="flex:1;min-width:0">
+    <div style="font-size:10px;font-weight:800;color:rgba(255,255,255,0.5);text-transform:uppercase;letter-spacing:.1em;margin-bottom:6px">Up Next</div>
+    <div style="font-size:13px;color:rgba(255,255,255,0.85);line-height:1.5">You can now encrypt so no one reads a message. But how do you prove it was not <em>changed</em>? The answer hides in a room of 23 people.</div>
+    <div style="font-size:13px;font-weight:700;color:#fff;margin-top:8px">#️⃣ Module 4 &middot; Hash Functions</div>
+  </div>
+  <div style="font-size:22px;color:rgba(255,255,255,0.6);flex-shrink:0">&rarr;</div>
 </div>`,
       },
       stage4: {
@@ -4023,6 +4089,10 @@ echo -n "test" | sha256 <span class="comment">// hashes "test"  — -n suppresse
   <div class="concept-box-title">🎂 Back to the Number 23</div>
   <div class="concept-box-body">Collisions appear at roughly the <strong>square root</strong> of the output space — just as 23 people suffice among 365 birthdays. For an n-bit hash, collisions cost about 2<sup>n/2</sup> work, so a 256-bit hash delivers only 128-bit collision resistance. This is why 128-bit hashes are extinct, and why Google&rsquo;s SHAttered attack (2017) was able to retire SHA-1 with a practical collision.</div>
 </div>
+<details class="predict" data-pid="m4-birthday">
+  <summary>Predict: a hash has a 64-bit output. Roughly how many random inputs before you expect a collision?</summary>
+  <div class="predict-body">About 2<sup>32</sup> &mdash; only ~4 billion, not 2<sup>64</sup>. Collisions arrive at the <em>square root</em> of the output space (the birthday bound), which is why 64-bit hashes are unsafe and modern outputs are 256 bits.</div>
+</details>
 <h3>MAC Security — UF-CMA and SUF-CMA</h3>
 <p>A MAC's security is defined in terms of a <strong>chosen-message attack (CMA)</strong> game: an attacker can request tags for any messages of their choice, then tries to forge a valid tag on a new message the server has not yet seen.</p>
 <div class="concept-box">
@@ -4062,8 +4132,20 @@ HMAC(K, m) = H((K ⊕ opad) ‖ H((K ⊕ ipad) ‖ m))
 <h3>Length-Extension Attacks</h3>
 <p>Merkle-Damgård hashes are vulnerable to <strong>length-extension attacks</strong>: given H(K ‖ m), an attacker can compute H(K ‖ m ‖ padding ‖ m') without knowing K. The attack works by resuming the Merkle-Damgård state machine from the digest value — which fully encodes the internal state after processing K ‖ m. SHA-3's sponge construction is immune because the full 1600-bit state is never revealed in the output.</p>
 
+<details class="predict" data-pid="m4-lenext">
+  <summary>Predict: you build a MAC as H(key &#8214; message) with a Merkle&ndash;Damg&aring;rd hash. Why is this broken?</summary>
+  <div class="predict-body">Length-extension. An attacker who sees the tag can append data and compute a valid tag for the longer message <em>without knowing the key</em>, because the hash state carries forward. HMAC&rsquo;s nested construction is what closes this.</div>
+</details>
 <h3>IND-CCA Security via Authenticated Encryption</h3>
-<p><strong>IND-CCA</strong> (Indistinguishability under Chosen Ciphertext Attack) is the gold standard: an adversary given access to a decryption oracle still cannot distinguish challenge ciphertexts. Achieving IND-CCA requires combining encryption with a MAC — specifically the <strong>Encrypt-then-MAC</strong> (EtM) pattern. AES-GCM achieves IND-CCA as an AEAD scheme (EtM with GHASH as the MAC).</p>`,
+<p><strong>IND-CCA</strong> (Indistinguishability under Chosen Ciphertext Attack) is the gold standard: an adversary given access to a decryption oracle still cannot distinguish challenge ciphertexts. Achieving IND-CCA requires combining encryption with a MAC — specifically the <strong>Encrypt-then-MAC</strong> (EtM) pattern. AES-GCM achieves IND-CCA as an AEAD scheme (EtM with GHASH as the MAC).</p>
+<div onclick="openModule(5)" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openModule(5)}" style="cursor:pointer;margin:24px 0 4px;background:linear-gradient(135deg,#0F172A,#1E3A8A);border-radius:var(--radius-sm);padding:16px 18px;display:flex;align-items:center;gap:14px;transition:transform .15s" onmouseover="this.style.transform='translateX(4px)'" onmouseout="this.style.transform='none'">
+  <div style="flex:1;min-width:0">
+    <div style="font-size:10px;font-weight:800;color:rgba(255,255,255,0.5);text-transform:uppercase;letter-spacing:.1em;margin-bottom:6px">Up Next</div>
+    <div style="font-size:13px;color:rgba(255,255,255,0.85);line-height:1.5">Hashes protect integrity when two parties already share a key. But what if they have never met? In 1977, a $100 puzzle hinted at the answer.</div>
+    <div style="font-size:13px;font-weight:700;color:#fff;margin-top:8px">🗝️ Module 5 &middot; Public Key Cryptography I</div>
+  </div>
+  <div style="font-size:22px;color:rgba(255,255,255,0.6);flex-shrink:0">&rarr;</div>
+</div>`,
       },
       stage4: {
         type: 'lab',
@@ -4252,6 +4334,13 @@ Therefore:               (x^e)^d ≡ x^(e·d) ≡ x^1 ≡ x mod n  ✓</div>
   <div class="concept-box-title">💵 Back to the $100 Challenge</div>
   <div class="concept-box-body">RSA-129 was finally factored in 1994 by Atkins, Graff, Lenstra and Leyland, coordinating roughly 600 volunteers&rsquo; machines over the internet. The decrypted message read <strong>&ldquo;THE MAGIC WORDS ARE SQUEAMISH OSSIFRAGE&rdquo;</strong>. At 129 digits (&asymp;426 bits) it is trivial for modern algorithms — which is precisely why RSA moduli are now 2048 bits or more. RSA&rsquo;s entire security budget rests on one assumption: factoring stays expensive faster than computers get cheap.</div>
 </div>
+<div style="border-left:4px solid var(--purple);background:var(--purple-l);border-radius:var(--radius-sm);padding:14px 16px;margin:20px 0">
+  <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+    <span style="width:24px;height:24px;border-radius:50%;background:var(--purple);color:#fff;font-weight:800;font-size:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0">E</span>
+    <span style="font-size:11px;font-weight:800;color:var(--purple);text-transform:uppercase;letter-spacing:.06em">Eve's Notebook</span>
+  </div>
+  <div style="font-size:14px;color:var(--text);line-height:1.6">Eve holds Alice&rsquo;s public modulus n and exponent e &mdash; everything needed to encrypt, nothing needed to decrypt. To read a message she must factor n back into its two primes. At 2048 bits that factorisation is the wall RSA leans on: the public key is an open door that only opens one way.</div>
+</div>
 <h3>RSA Key Generation</h3>
 <div class="code-block"><span class="comment">// RSA key generation</span>
 1. Choose two large primes p and q (each ≥ 1024 bits; 2048-bit total modulus)
@@ -4264,9 +4353,13 @@ Public key:  (e, n)    <span class="comment">// shared with everyone</span>
 Private key: (d, n)    <span class="comment">// p, q, φ(n) MUST be securely deleted</span></div>
 <p>Why e = 65537? It equals 2¹⁶ + 1 in binary (only two 1-bits), making encryption fast (16 squarings, 1 multiplication). It is large enough to avoid small-exponent attacks that affect e = 3.</p>
 
+<details class="predict" data-pid="m5-oneway">
+  <summary>Predict: Eve holds Alice&rsquo;s public key (n, e). Why can she encrypt to Alice but not decrypt Alice&rsquo;s incoming mail?</summary>
+  <div class="predict-body">Encryption uses (n, e), which is public; decryption needs d, derived from the factors of n. Recovering d means factoring n &mdash; the trapdoor opens one way only. The public key is an open door that locks behind you.</div>
+</details>
 <h3>RSA Encryption Standards — PKCS#1</h3>
 <p>Textbook RSA (c = m^e mod n) is deterministic and insecure. The PKCS#1 standard defines two secure padding schemes:</p>
-<div class="concept-box">
+<div class="concept-box cb-fail">
   <div class="concept-box-title">⚠️ RSA-PKCS#1 v1.5 vs RSA-OAEP Encryption</div>
   <div class="concept-box-body">
     <strong>RSA-PKCS#1 v1.5</strong> — adds a deterministic padding prefix before encrypting. Broken by the <strong>Bleichenbacher attack (1998)</strong>: by submitting crafted ciphertexts to a server that reveals whether PKCS#1 padding is valid, an attacker can decrypt any ciphertext with ~1 million queries. Variants of this attack still affect real deployments today (ROBOT attack, 2018).<br><br>
@@ -4274,6 +4367,10 @@ Private key: (d, n)    <span class="comment">// p, q, φ(n) MUST be securely del
   </div>
 </div>
 
+<details class="predict" data-pid="m5-keysize">
+  <summary>Predict: 512-bit RSA was once standard. Why is it trivially broken today while 2048-bit holds?</summary>
+  <div class="predict-body">Factoring cost grows sub-exponentially, not linearly, with modulus size. 512 bits fell to public efforts by 1999; 2048 bits puts factoring beyond any foreseeable hardware. Security tracks the <em>difficulty of factoring n</em>, and that difficulty scales steeply.</div>
+</details>
 <h3>RSA-KEM — Hybrid Encryption</h3>
 <p>Since RSA can only encrypt short messages (limited by the modulus size), real systems use a <strong>KEM-DEM hybrid</strong> scheme. Lecture 5 covers RSA-KEM explicitly:</p>
 <div class="code-block"><span class="comment">// RSA-KEM: Key Encapsulation Mechanism + Data Encryption Mechanism</span>
@@ -4327,7 +4424,15 @@ RSA-7680: ~192-bit security  ← long-term (>2030)
 <span class="comment">// Compare ECC (ECDLP has no known sub-exponential algorithm)</span>
 ECC-256:  ~128-bit security  ← P-256, secp256k1 — 8× smaller key than RSA-3072
 ECC-384:  ~192-bit security  ← P-384</div>
-<p>Shor's algorithm on a sufficiently large quantum computer solves integer factorisation in polynomial time O((log N)³), breaking all RSA key sizes. NIST's post-quantum standards (ML-KEM, ML-DSA — published August 2024) are designed to replace RSA before large-scale quantum computers arrive.</p>`,
+<p>Shor's algorithm on a sufficiently large quantum computer solves integer factorisation in polynomial time O((log N)³), breaking all RSA key sizes. NIST's post-quantum standards (ML-KEM, ML-DSA — published August 2024) are designed to replace RSA before large-scale quantum computers arrive.</p>
+<div onclick="openModule(6)" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openModule(6)}" style="cursor:pointer;margin:24px 0 4px;background:linear-gradient(135deg,#0F172A,#1E3A8A);border-radius:var(--radius-sm);padding:16px 18px;display:flex;align-items:center;gap:14px;transition:transform .15s" onmouseover="this.style.transform='translateX(4px)'" onmouseout="this.style.transform='none'">
+  <div style="flex:1;min-width:0">
+    <div style="font-size:10px;font-weight:800;color:rgba(255,255,255,0.5);text-transform:uppercase;letter-spacing:.1em;margin-bottom:6px">Up Next</div>
+    <div style="font-size:13px;color:rgba(255,255,255,0.85);line-height:1.5">RSA, AES, SHA-256 — five modules of primitives. Before you build protocols on them, one checkpoint stands in the way. She has been watching since Module 0.</div>
+    <div style="font-size:13px;font-weight:700;color:#fff;margin-top:8px">📋 Module 6 &middot; Mid-Module Review</div>
+  </div>
+  <div style="font-size:22px;color:rgba(255,255,255,0.6);flex-shrink:0">&rarr;</div>
+</div>`,
       },
       stage4: {
         type: 'lab',
@@ -4520,6 +4625,14 @@ ECC-384:  ~192-bit security  ← P-384</div>
 <div class="concept-box">
   <div class="concept-box-title">👁️ Eve Is Waiting</div>
   <div class="concept-box-body">The cumulative quiz ahead draws on every module so far — security models, symmetric ciphers, hashes, MACs and RSA. Treat it as the mid-course boss: clear it, and the protocol modules that follow (key establishment, authentication, zero-knowledge) are built on ground you have already secured.</div>
+</div>
+<div onclick="openModule(7)" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openModule(7)}" style="cursor:pointer;margin:24px 0 4px;background:linear-gradient(135deg,#0F172A,#1E3A8A);border-radius:var(--radius-sm);padding:16px 18px;display:flex;align-items:center;gap:14px;transition:transform .15s" onmouseover="this.style.transform='translateX(4px)'" onmouseout="this.style.transform='none'">
+  <div style="flex:1;min-width:0">
+    <div style="font-size:10px;font-weight:800;color:rgba(255,255,255,0.5);text-transform:uppercase;letter-spacing:.1em;margin-bottom:6px">Up Next</div>
+    <div style="font-size:13px;color:rgba(255,255,255,0.85);line-height:1.5">You have proven you can stop Eve watching. Now watch Alice and Bob agree on a secret while she hears every word — and still cannot compute it.</div>
+    <div style="font-size:13px;font-weight:700;color:#fff;margin-top:8px">📐 Module 7 &middot; Public Key Cryptography II</div>
+  </div>
+  <div style="font-size:22px;color:rgba(255,255,255,0.6);flex-shrink:0">&rarr;</div>
 </div>`,
       },
       stage4: {
@@ -4684,6 +4797,17 @@ Bob:   K = A^b mod p = g^(ab) mod p
   <div class="concept-box-title">📢 Back to the Shout</div>
   <div class="concept-box-body">The asymmetry is the discrete logarithm. Eve sees g, p, g<sup>a</sup> and g<sup>b</sup> — everything shouted across the channel — but computing g<sup>ab</sup> from those values is the Computational Diffie–Hellman problem, and recovering a or b is the discrete log problem. Alice and Bob each hold one private exponent, so for them the computation is one modular exponentiation. Public conversation, private conclusion.</div>
 </div>
+<div style="border-left:4px solid var(--primary);background:linear-gradient(135deg,var(--primary-l),var(--secondary-l));border-radius:var(--radius-sm);padding:14px 16px;margin:20px 0">
+  <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+    <span style="width:24px;height:24px;border-radius:50%;background:var(--primary);color:#fff;font-weight:800;font-size:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0">A</span><span style="width:24px;height:24px;border-radius:50%;background:var(--secondary);color:#fff;font-weight:800;font-size:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0">B</span>
+    <span style="font-size:11px;font-weight:800;color:var(--primary);text-transform:uppercase;letter-spacing:.06em">Alice &amp; Bob</span>
+  </div>
+  <div style="font-size:14px;color:var(--text);line-height:1.6">Alice and Bob have never met and share no secret. Across a line Eve is recording, Alice sends one number and Bob sends one back &mdash; and from those two public values each computes the same private key. The entire exchange could be printed in a newspaper and still hold.</div>
+</div>
+<details class="predict" data-pid="m7-dhke">
+  <summary>Predict: Eve sees g, p, g<sup>a</sup> and g<sup>b</sup> on the wire. Which value can she <em>not</em> compute &mdash; and why?</summary>
+  <div class="predict-body">She cannot compute g<sup>ab</sup>. Deriving it needs a or b (the discrete log problem) or solving Computational Diffie&ndash;Hellman directly &mdash; both believed hard. Alice and Bob each hold one private exponent, so for them it is a single exponentiation.</div>
+</details>
 <h3>ElGamal Encryption — DHKE Turned Into Encryption</h3>
 <p>ElGamal (1985) converts the DHKE idea into a full public-key encryption scheme. Unlike RSA, security rests on the <strong>Decisional Diffie–Hellman (DDH) problem</strong> rather than integer factorisation, and ElGamal ciphertexts are inherently randomised (semantically secure) without needing padding schemes like OAEP.</p>
 <div class="concept-box">
@@ -4736,7 +4860,15 @@ Scalar multiplication: k·P = P + P + ... + P  (k times, done efficiently via do
 <h3>ECDH and ECDSA</h3>
 <p><strong>ECDH</strong>: replaces DHKE modular exponentiation with ECC scalar multiplication. Used in TLS 1.3 as ECDHE (ephemeral) for forward-secret key exchange. <strong>ECDSA</strong>: EC version of DSA; requires a fresh random nonce per signature (catastrophic if reused — see Developments module). Used in TLS certificates and Bitcoin transaction signing.</p>
 <h3>Standard Curves</h3>
-<p><strong>P-256 (secp256r1)</strong> — NIST standard, used in TLS and FIDO2. <strong>secp256k1</strong> — Bitcoin and Ethereum transactions. <strong>Curve25519</strong> — designed by Bernstein with explicit side-channel resistance and transparent parameter choices; used in Signal, WireGuard, SSH, and WhatsApp.</p>`,
+<p><strong>P-256 (secp256r1)</strong> — NIST standard, used in TLS and FIDO2. <strong>secp256k1</strong> — Bitcoin and Ethereum transactions. <strong>Curve25519</strong> — designed by Bernstein with explicit side-channel resistance and transparent parameter choices; used in Signal, WireGuard, SSH, and WhatsApp.</p>
+<div onclick="openModule(8)" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openModule(8)}" style="cursor:pointer;margin:24px 0 4px;background:linear-gradient(135deg,#0F172A,#1E3A8A);border-radius:var(--radius-sm);padding:16px 18px;display:flex;align-items:center;gap:14px;transition:transform .15s" onmouseover="this.style.transform='translateX(4px)'" onmouseout="this.style.transform='none'">
+  <div style="flex:1;min-width:0">
+    <div style="font-size:10px;font-weight:800;color:rgba(255,255,255,0.5);text-transform:uppercase;letter-spacing:.1em;margin-bottom:6px">Up Next</div>
+    <div style="font-size:13px;color:rgba(255,255,255,0.85);line-height:1.5">You can generate keys no eavesdropper can derive. But a key is only as safe as where you keep it — ask the man locked out of $220 million.</div>
+    <div style="font-size:13px;font-weight:700;color:#fff;margin-top:8px">🗄️ Module 8 &middot; Key Management</div>
+  </div>
+  <div style="font-size:22px;color:rgba(255,255,255,0.6);flex-shrink:0">&rarr;</div>
+</div>`,
       },
       stage4: {
         type: 'lab',
@@ -4957,7 +5089,7 @@ MIICijCCAXICAQAwRTELMAk...
 
 <h3>Key Distribution — Kerberos</h3>
 <p>Distributing symmetric keys at scale is a fundamental problem: with N users communicating pairwise, you need N(N−1)/2 ≈ N² keys. <strong>Kerberos</strong> solves this by introducing a trusted third party — the <strong>Key Distribution Center (KDC)</strong>. Each user shares only one secret key with the KDC. With N users, only N keys exist in total.</p>
-<div class="concept-box">
+<div class="concept-box cb-wild">
   <div class="concept-box-title">🎫 How Kerberos Works (Simplified)</div>
   <div class="concept-box-body">
     <strong>1.</strong> Alice wants to talk to Bob. She sends a request to the KDC: "I am Alice; I want a session key for Bob."<br><br>
@@ -4996,9 +5128,13 @@ f(0) = 49 · (0−2)/(1−2) + 56 · (0−1)/(2−1)
   <div class="concept-box-title">🔐 Back to the IronKey</div>
   <div class="concept-box-body">Every stage of the key life-cycle you have just studied — backup, recovery, archival, destruction — exists to prevent precisely this. A Shamir 3-of-5 split of the key, with shares held by trusted parties, would have made the fortune recoverable while revealing nothing to any single share-holder. The lesson of the IronKey: in deployed systems, the hard part is never the algorithm — it is the custody of 32 bytes.</div>
 </div>
+<details class="predict" data-pid="m8-shamir">
+  <summary>Predict: a key is split with Shamir 3-of-5. An attacker steals 2 shares. How much of the key do they recover?</summary>
+  <div class="predict-body">Nothing &mdash; not one bit. Below the threshold, the shares are information-theoretically independent of the secret; the polynomial is under-determined. Only the 3rd share suddenly makes reconstruction possible. There is no partial leakage.</div>
+</details>
 <h3>Public Key Infrastructure (PKI)</h3>
 <p>PKI binds public keys to verified identities via digitally signed <strong>X.509 certificates</strong>. Every certificate contains: subject identity (distinguished name), public key, issuer (CA) identity, validity period, permitted key usages, and the CA's digital signature over all the above.</p>
-<div class="concept-box">
+<div class="concept-box cb-wild">
   <div class="concept-box-title">🔑 Certificate Validation — What Your Browser Actually Checks</div>
   <div class="concept-box-body">
     When your browser connects to a website over HTTPS, it performs all of these checks:<br><br>
@@ -5010,6 +5146,10 @@ f(0) = 49 · (0−2)/(1−2) + 56 · (0−1)/(2−1)
   </div>
 </div>
 
+<details class="predict" data-pid="m8-rotate">
+  <summary>Predict: your TLS private key may have leaked, but you are not certain. Why rotate it anyway?</summary>
+  <div class="predict-body">Because key management plans for compromise you cannot detect. Rotation plus revocation bounds the damage window: even an undetected leak stops being useful once the key is retired and its certificate revoked. Assume exposure; limit its lifetime.</div>
+</details>
 <h3>Certificate Transparency (CT)</h3>
 <p>CT (Google, 2013; now RFC 6962) adds public, append-only logs that record every certificate issued by every CA. When a CA issues a certificate, it must submit it to at least two CT logs; the logs return a <em>Signed Certificate Timestamp (SCT)</em> that is embedded in the certificate. Browsers refuse certificates without valid SCTs.</p>
 <p>CT solved a real problem: in 2011, the Dutch CA DigiNotar was compromised and issued fraudulent certificates for Google, Mozilla, and CIA domains — attackers used these for MitM attacks on Iranian citizens. With CT, such misissuance would be publicly visible within hours and the fraudulent certificates could be blocked before they caused harm.</p>
@@ -5021,7 +5161,15 @@ f(0) = 49 · (0−2)/(1−2) + 56 · (0−1)/(2−1)
   <li><strong>Fraudulent issuance</strong> — a CA issuing certificates for domains it has not properly verified. CT logs exist specifically to detect this.</li>
   <li><strong>Revocation failures</strong> — users who cannot access OCSP or CRL endpoints may unknowingly trust revoked certificates. "Soft-fail" OCSP is a common browser default — if the OCSP server is unreachable, the certificate is treated as valid.</li>
   <li><strong>Key compromise</strong> — stealing the private key of any certificate in the chain enables impersonation until revocation.</li>
-</ul>`,
+</ul>
+<div onclick="openModule(9)" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openModule(9)}" style="cursor:pointer;margin:24px 0 4px;background:linear-gradient(135deg,#0F172A,#1E3A8A);border-radius:var(--radius-sm);padding:16px 18px;display:flex;align-items:center;gap:14px;transition:transform .15s" onmouseover="this.style.transform='translateX(4px)'" onmouseout="this.style.transform='none'">
+  <div style="flex:1;min-width:0">
+    <div style="font-size:10px;font-weight:800;color:rgba(255,255,255,0.5);text-transform:uppercase;letter-spacing:.1em;margin-bottom:6px">Up Next</div>
+    <div style="font-size:13px;color:rgba(255,255,255,0.85);line-height:1.5">A well-managed key proves <em>who</em> you are. Unless a thief records the proof and replays it in a car park. The fix is 16 bytes of freshness.</div>
+    <div style="font-size:13px;font-weight:700;color:#fff;margin-top:8px">🔏 Module 9 &middot; Authentication Protocols</div>
+  </div>
+  <div style="font-size:22px;color:rgba(255,255,255,0.6);flex-shrink:0">&rarr;</div>
+</div>`,
       },
       stage4: {
         type: 'lab',
@@ -5219,6 +5367,17 @@ Verifier:  Verify(pk_prover, N, σ) → accept/reject</div>
   <div class="concept-box-title">🚗 Back to the Car Park</div>
   <div class="concept-box-body">A static proof of knowledge can be replayed forever — early fixed-code fobs fell to exactly this. Rolling codes raised the bar; challenge–response closes the gap: the verifier issues a <strong>fresh nonce</strong>, the fob must compute over it, and yesterday&rsquo;s recording answers yesterday&rsquo;s challenge only. Every replayed response fails because the challenge has moved on.</div>
 </div>
+<div style="border-left:4px solid var(--danger);background:var(--danger-l);border-radius:var(--radius-sm);padding:14px 16px;margin:20px 0">
+  <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+    <span style="width:24px;height:24px;border-radius:50%;background:var(--danger);color:#fff;font-weight:800;font-size:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0">M</span>
+    <span style="font-size:11px;font-weight:800;color:var(--danger);text-transform:uppercase;letter-spacing:.06em">Mallory's Move</span>
+  </div>
+  <div style="font-size:14px;color:var(--text);line-height:1.6">A replayed recording is enough against a static proof, but Mallory goes further: she relays a live challenge to the real prover and passes the genuine response back, authenticating as someone she is not. Challenge&ndash;response with a fresh nonce blocks the replay; only mutual authentication closes the relay she exploits.</div>
+</div>
+<details class="predict" data-pid="m9-replay">
+  <summary>Predict: a key fob sends a fixed secret to prove identity. Why does a fresh random challenge each time defeat a recording?</summary>
+  <div class="predict-body">A replayed recording answers the <em>old</em> challenge, but the verifier has already moved to a new nonce. The prover must compute a fresh response over that nonce, which a recording cannot &mdash; freshness binds the proof to <em>now</em>.</div>
+</details>
 <h3>Man-in-the-Middle Attacks on Authentication Protocols</h3>
 <p>Without proper authentication, an attacker can impersonate either party or relay messages to trick both sides. Lecture 8 emphasises three MitM capabilities:</p>
 <ul>
@@ -5227,9 +5386,13 @@ Verifier:  Verify(pk_prover, N, σ) → accept/reject</div>
   <li><strong>Relay or modify messages</strong> — pass messages between Alice and Bob while reading or altering them</li>
 </ul>
 <p>Secure authentication protocols defeat all three by binding each message to a fresh nonce and a verified identity.</p>
+<details class="predict" data-pid="m9-mitm">
+  <summary>Predict: challenge&ndash;response stops replay. Why does it still fall to a live man-in-the-middle relay?</summary>
+  <div class="predict-body">Mallory forwards the verifier&rsquo;s live challenge to the real prover and relays the genuine response back &mdash; authenticating as someone she is not. Only <em>mutual</em> authentication, binding each side&rsquo;s identity into the exchange, closes the relay.</div>
+</details>
 <h3>Kerberos — MAC-Based Authentication in Practice</h3>
 <p>Kerberos is covered in both Lecture 7 (key management) and Lecture 8 (authentication protocols), because it illustrates both concerns. In Lecture 8's framing, Kerberos is a MAC-based authentication protocol that uses symmetric encryption to prove identity without transmitting passwords over the network.</p>
-<div class="concept-box">
+<div class="concept-box cb-wild">
   <div class="concept-box-title">🎫 Kerberos as an Authentication Protocol</div>
   <div class="concept-box-body">
     <strong>Setup:</strong> Each principal (Alice, Bob, services) shares a long-term symmetric key with the KDC. These are derived from passwords via a KDF — the password never travels over the network.<br><br>
@@ -5279,7 +5442,15 @@ Verifier:  Verify(pk_prover, N, σ) → accept/reject</div>
   </div>
 </div>
 <h3>Applications of ZKPs</h3>
-<p><strong>Password authentication</strong> — prove password knowledge without transmitting the password (used in PAKE protocols). <strong>Anonymous credentials</strong> — prove membership of a group without revealing identity. <strong>zk-SNARKs</strong> — succinct non-interactive ZKPs used in Zcash and Ethereum L2 rollups for privacy-preserving computations at scale. <strong>Blockchain privacy</strong> — Lecture 9 explicitly notes that ZKPs let users prove they have sufficient funds without revealing amounts or addresses.</p>`,
+<p><strong>Password authentication</strong> — prove password knowledge without transmitting the password (used in PAKE protocols). <strong>Anonymous credentials</strong> — prove membership of a group without revealing identity. <strong>zk-SNARKs</strong> — succinct non-interactive ZKPs used in Zcash and Ethereum L2 rollups for privacy-preserving computations at scale. <strong>Blockchain privacy</strong> — Lecture 9 explicitly notes that ZKPs let users prove they have sufficient funds without revealing amounts or addresses.</p>
+<div onclick="openModule(10)" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openModule(10)}" style="cursor:pointer;margin:24px 0 4px;background:linear-gradient(135deg,#0F172A,#1E3A8A);border-radius:var(--radius-sm);padding:16px 18px;display:flex;align-items:center;gap:14px;transition:transform .15s" onmouseover="this.style.transform='translateX(4px)'" onmouseout="this.style.transform='none'">
+  <div style="flex:1;min-width:0">
+    <div style="font-size:10px;font-weight:800;color:rgba(255,255,255,0.5);text-transform:uppercase;letter-spacing:.1em;margin-bottom:6px">Up Next</div>
+    <div style="font-size:13px;color:rgba(255,255,255,0.85);line-height:1.5">Challenge–response proves you know a secret. But can you prove it while revealing <em>nothing at all</em>? It sounds impossible. A coin flip says otherwise.</div>
+    <div style="font-size:13px;font-weight:700;color:#fff;margin-top:8px">🛡️ Module 10 &middot; Zero-Knowledge & Auth Proofs</div>
+  </div>
+  <div style="font-size:22px;color:rgba(255,255,255,0.6);flex-shrink:0">&rarr;</div>
+</div>`,
       },
       stage4: {
         type: 'lab',
@@ -5438,6 +5609,14 @@ Verifier: recompute MAC(K, r) and compare</div>
 <div class="concept-box">
   <div class="concept-box-title">🕵️ Back to the Coin Flip</div>
   <div class="concept-box-body">In Schnorr identification, each round&rsquo;s random challenge gives a cheating prover exactly a &frac12; chance of survival. Twenty rounds shrink that to less than one in a million — soundness by repetition — while the responses remain statistically simulatable, so the verifier learns nothing about the secret itself. Impossible-sounding, mathematically routine.</div>
+</div>
+<div onclick="openModule(11)" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openModule(11)}" style="cursor:pointer;margin:24px 0 4px;background:linear-gradient(135deg,#0F172A,#1E3A8A);border-radius:var(--radius-sm);padding:16px 18px;display:flex;align-items:center;gap:14px;transition:transform .15s" onmouseover="this.style.transform='translateX(4px)'" onmouseout="this.style.transform='none'">
+  <div style="flex:1;min-width:0">
+    <div style="font-size:10px;font-weight:800;color:rgba(255,255,255,0.5);text-transform:uppercase;letter-spacing:.1em;margin-bottom:6px">Up Next</div>
+    <div style="font-size:13px;color:rgba(255,255,255,0.85);line-height:1.5">You can prove identity and leak nothing. Now put it on a real wire — where Mallory speaks fluently to both ends and neither side notices.</div>
+    <div style="font-size:13px;font-weight:700;color:#fff;margin-top:8px">🌐 Module 11 &middot; Key Establishment & TLS</div>
+  </div>
+  <div style="font-size:22px;color:rgba(255,255,255,0.6);flex-shrink:0">&rarr;</div>
 </div>`,
       },
       stage4: {
@@ -5646,6 +5825,13 @@ Alice thinks she shares K_AE = 3 with "Bob" (actually Eve)
 Bob   thinks he shares K_BE = 6 with "Alice" (actually Eve)
 Eve knows both K_AE = 3 and K_BE = 6 — she can decrypt, re-encrypt, and relay all traffic</div>
 <p>This is exactly why plain DHKE is insufficient: Alice and Bob cannot tell that the public values they received came from a legitimate party. The STS protocol below fixes this.</p>
+<div style="border-left:4px solid var(--danger);background:var(--danger-l);border-radius:var(--radius-sm);padding:14px 16px;margin:20px 0">
+  <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+    <span style="width:24px;height:24px;border-radius:50%;background:var(--danger);color:#fff;font-weight:800;font-size:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0">M</span>
+    <span style="font-size:11px;font-weight:800;color:var(--danger);text-transform:uppercase;letter-spacing:.06em">Mallory's Move</span>
+  </div>
+  <div style="font-size:14px;color:var(--text);line-height:1.6">Mallory sits on the wire and speaks to both ends at once: she intercepts Alice&rsquo;s key share and sends Bob her own, then does the reverse, holding two shared keys while each side believes it talks to the other. Plain DHKE never asked her to prove who she was &mdash; signing the key shares is what finally does.</div>
+</div>
 <h3>Authenticated DHKE</h3>
 <p>Adding authentication to DHKE requires binding the key exchange to verified identities. Two methods: (1) sign the DH public values with a long-term key; (2) use a pre-shared key to authenticate the exchange. TLS 1.3 uses certificate-based signatures over the transcript.</p>
 <h3>The Station-to-Station (STS) Protocol</h3>
@@ -5669,6 +5855,10 @@ Eve knows both K_AE = 3 and K_BE = 6 — she can decrypt, re-encrypt, and relay 
   <div class="concept-box-title">🦹 Back to the Wire</div>
   <div class="concept-box-body">Plain DHKE authenticates no one — the seminar exercise walks this attack step by step, with Eve playing the active role and computing both shared keys. The fix you have just seen: <strong>sign the key shares</strong>. Authenticated DHKE and STS bind each exchange to a verified identity, so an interceptor can no longer substitute her own values without the forgery being detected. TLS performs this authentication on every connection you make.</div>
 </div>
+<details class="predict" data-pid="m11-signshares">
+  <summary>Predict: plain DHKE resists eavesdroppers. Why does signing the key shares stop Mallory, when encryption alone does not?</summary>
+  <div class="predict-body">Plain DHKE authenticates no one, so Mallory can substitute her own shares to both ends. A signature binds each share to a verified identity &mdash; her substituted value fails verification. Confidentiality was never the gap; <em>authenticity</em> was.</div>
+</details>
 <h3>The Unknown Key Share (UKS) Attack</h3>
 <p>A subtle but serious attack where two honest parties agree on a valid key, but each believes the key is shared with a different partner. Mallory does not learn K — but Alice thinks she's talking to Mallory, while Mallory convinces Bob the key is shared with Alice.</p>
 <div class="code-block"><span class="comment">// UKS Attack — identities are confused, not the key</span>
@@ -5682,7 +5872,7 @@ Result: K = g^(ab) is correct, but:
   - Mallory can later attribute messages from Alice to herself with Bob</div>
 <p>Countermeasure: include explicit identity labels inside the signed transcript (STS-MAC variant). TLS prevents UKS by including the server's certificate identity in the signed handshake transcript.</p>
 <h3>Real-World Key Establishment Protocols</h3>
-<div class="concept-box">
+<div class="concept-box cb-wild">
   <div class="concept-box-title">🌐 TLS · IPSec · SSH</div>
   <div class="concept-box-body">
     <strong>TLS 1.3</strong> — mandates ECDHE (ephemeral) for key agreement; authenticates with certificate signatures over the full transcript; derives session keys via HKDF. No static RSA key exchange (removed for lack of forward secrecy).<br><br>
@@ -5691,7 +5881,15 @@ Result: K = g^(ab) is correct, but:
   </div>
 </div>
 <h3>Password-Authenticated Key Exchange (PAKE)</h3>
-<p><strong>PAKE</strong> (e.g. SRP, OPAQUE) is a special class combining key agreement with password authentication — without transmitting the password or a hash of it. Neither party can mount an offline dictionary attack from the transcript alone. Used in secure password managers and some enterprise VPN systems.</p>`,
+<p><strong>PAKE</strong> (e.g. SRP, OPAQUE) is a special class combining key agreement with password authentication — without transmitting the password or a hash of it. Neither party can mount an offline dictionary attack from the transcript alone. Used in secure password managers and some enterprise VPN systems.</p>
+<div onclick="openModule(12)" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openModule(12)}" style="cursor:pointer;margin:24px 0 4px;background:linear-gradient(135deg,#0F172A,#1E3A8A);border-radius:var(--radius-sm);padding:16px 18px;display:flex;align-items:center;gap:14px;transition:transform .15s" onmouseover="this.style.transform='translateX(4px)'" onmouseout="this.style.transform='none'">
+  <div style="flex:1;min-width:0">
+    <div style="font-size:10px;font-weight:800;color:rgba(255,255,255,0.5);text-transform:uppercase;letter-spacing:.1em;margin-bottom:6px">Up Next</div>
+    <div style="font-size:13px;color:rgba(255,255,255,0.85);line-height:1.5">Authenticated key exchange beats the attacker on the wire. But the next attacker ignores your maths entirely and just times the chip.</div>
+    <div style="font-size:13px;font-weight:700;color:#fff;margin-top:8px">⚔️ Module 12 &middot; Attacks</div>
+  </div>
+  <div style="font-size:22px;color:rgba(255,255,255,0.6);flex-shrink:0">&rarr;</div>
+</div>`,
       },
       stage4: {
         type: 'lab',
@@ -5880,7 +6078,7 @@ Result: K = g^(ab) is correct, but:
 <p>Even theoretically secure algorithms can be broken in practice. This module covers the full attack taxonomy from Lecture 10: side-channel attacks, mathematical cryptanalysis, and integer factorisation — along with the key distinction between what is and is not a side-channel attack.</p>
 
 <h3>Attack Vectors — Two Fundamental Categories</h3>
-<div class="concept-box">
+<div class="concept-box cb-fail">
   <div class="concept-box-title">⚔️ Algorithmic vs Side-Channel Attacks</div>
   <div class="concept-box-body">
     <strong>Algorithmic / mathematical attacks</strong> — exploit mathematical structure in the algorithm itself. Target the cipher, hash, or protocol design. Require no physical access.<br><br>
@@ -5899,6 +6097,13 @@ Brute-force search    → exploit computational search space
 Man-in-the-middle     → exploit message interception/routing
 Unknown Key Share     → exploit protocol design flaw (UKS)</div>
 
+<div style="border-left:4px solid var(--danger);background:var(--danger-l);border-radius:var(--radius-sm);padding:14px 16px;margin:20px 0">
+  <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+    <span style="width:24px;height:24px;border-radius:50%;background:var(--danger);color:#fff;font-weight:800;font-size:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0">M</span>
+    <span style="font-size:11px;font-weight:800;color:var(--danger);text-transform:uppercase;letter-spacing:.06em">Mallory's Move</span>
+  </div>
+  <div style="font-size:14px;color:var(--text);line-height:1.6">Mallory does not attack the mathematics &mdash; she attacks the machine running it. She measures how long each operation takes, or how much power the chip draws, and reads the secret key from the timing and the traces. The algorithm is perfect; the implementation is talking, and she is listening.</div>
+</div>
 <h3>Side-Channel Attacks</h3>
 <ul>
   <li><strong>Timing attacks</strong> — measure execution time variation to infer key bits. RSA decryption time varies depending on which bits of d are set (square-and-multiply). A non-constant-time string comparison leaks the prefix of the correct hash one byte at a time. Kocher (1996) demonstrated practical timing attacks against RSA implementations.</li>
@@ -5906,7 +6111,7 @@ Unknown Key Share     → exploit protocol design flaw (UKS)</div>
   <li><strong>Electromagnetic (EM) leakage</strong> — capture EM emissions from chips during computation. EM analysis can recover AES keys from contactless smart cards at distances of centimetres.</li>
   <li><strong>Cache-timing / Spectre</strong> — exploit CPU cache access patterns. Spectre (2018) showed that speculative execution in modern CPUs creates side channels between processes sharing a CPU, bypassing OS memory isolation.</li>
 </ul>
-<div class="concept-box">
+<div class="concept-box cb-wild">
   <div class="concept-box-title">🛡️ Countermeasures</div>
   <div class="concept-box-body">
     <strong>Constant-time implementations</strong> — all code paths take the same time regardless of secret values (e.g. compare full HMAC tag before returning result, never early-exit)<br>
@@ -5923,7 +6128,7 @@ Unknown Key Share     → exploit protocol design flaw (UKS)</div>
 <h3>Mathematical Cryptanalysis</h3>
 <p><strong>Linear cryptanalysis</strong> (Matsui, 1993) — finds linear approximations of the S-boxes and uses them to build a statistical distinguisher. Given enough plaintext-ciphertext pairs, a bias in the XOR of selected bits reveals key information. Drove the AES S-box design (chosen for low linearity bias).</p>
 <p><strong>Differential cryptanalysis</strong> (Biham & Shamir, 1990) — studies how XOR differences in plaintext pairs propagate through cipher rounds. By choosing many pairs with a fixed input difference Δ, the output difference distribution is not uniform, revealing information about the last round key. AES MixColumns was specifically designed with high branch numbers to defeat this.</p>
-<div class="concept-box">
+<div class="concept-box cb-fail">
   <div class="concept-box-title">🔢 Integer Factorisation — Attacking RSA</div>
   <div class="concept-box-body">
     Integer factorisation is distinct from linear/differential cryptanalysis: it targets asymmetric (public-key) systems, not symmetric ones.<br><br>
@@ -5935,7 +6140,15 @@ Unknown Key Share     → exploit protocol design flaw (UKS)</div>
   </div>
 </div>
 <h3>Provable Security and Formal Methods</h3>
-<p>Provable security formalises the connection between breaking a scheme and solving a known hard problem (e.g. factoring). A proof shows: if you can break RSA-OAEP, then you can solve the RSA problem. This does not mean the scheme is unconditionally secure — it means it is <em>as hard as</em> the underlying assumption. Formal methods (Tamarin, ProVerif) can verify protocol security properties mechanically, finding flaws that mathematical analysis misses.</p>`,
+<p>Provable security formalises the connection between breaking a scheme and solving a known hard problem (e.g. factoring). A proof shows: if you can break RSA-OAEP, then you can solve the RSA problem. This does not mean the scheme is unconditionally secure — it means it is <em>as hard as</em> the underlying assumption. Formal methods (Tamarin, ProVerif) can verify protocol security properties mechanically, finding flaws that mathematical analysis misses.</p>
+<div onclick="openModule(13)" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openModule(13)}" style="cursor:pointer;margin:24px 0 4px;background:linear-gradient(135deg,#0F172A,#1E3A8A);border-radius:var(--radius-sm);padding:16px 18px;display:flex;align-items:center;gap:14px;transition:transform .15s" onmouseover="this.style.transform='translateX(4px)'" onmouseout="this.style.transform='none'">
+  <div style="flex:1;min-width:0">
+    <div style="font-size:10px;font-weight:800;color:rgba(255,255,255,0.5);text-transform:uppercase;letter-spacing:.1em;margin-bottom:6px">Up Next</div>
+    <div style="font-size:13px;color:rgba(255,255,255,0.85);line-height:1.5">You have seen ciphers fall to side channels and cryptanalysis. The final threat has not been built yet — but its victims' data is already being recorded.</div>
+    <div style="font-size:13px;font-weight:700;color:#fff;margin-top:8px">🚀 Module 13 &middot; Developments</div>
+  </div>
+  <div style="font-size:22px;color:rgba(255,255,255,0.6);flex-shrink:0">&rarr;</div>
+</div>`,
       },
       stage4: {
         type: 'lab',
@@ -6114,7 +6327,7 @@ Unknown Key Share     → exploit protocol design flaw (UKS)</div>
 4. s = k⁻¹(d + r·sk) mod n
 Signature σ = (r, s)
 Verify: check (s⁻¹·d·G + s⁻¹·r·pk).x ≡ r mod n</div>
-<div class="concept-box">
+<div class="concept-box cb-fail">
   <div class="concept-box-title">⚠️ ECDSA Nonce Reuse — Catastrophic Failure</div>
   <div class="concept-box-body">
     If the same nonce k is used for two ECDSA signatures on different messages, the private key sk is fully recoverable: sk = (s₁·d₂ − s₂·d₁) / (s₁ − s₂) mod n.<br><br>
@@ -6123,6 +6336,10 @@ Verify: check (s⁻¹·d·G + s⁻¹·r·pk).x ≡ r mod n</div>
     <strong>Fix — EdDSA (Ed25519, Ed448)</strong>: Derives the nonce deterministically from H(sk ‖ m). Cannot repeat for distinct messages. No entropy dependency. Preferred for all new designs.
   </div>
 </div>
+<details class="predict" data-pid="m13-ecdsanonce">
+  <summary>Predict: two ECDSA signatures reuse the same nonce k. What does an attacker recover?</summary>
+  <div class="predict-body">The entire private key. Two signatures sharing k give two linear equations in the unknowns; the nonce cancels and the secret key solves directly. This exact flaw broke the Sony PS3 (2010) &mdash; one fixed nonce, total compromise.</div>
+</details>
 <h3>RSA-PSS</h3>
 <p><strong>RSA-PSS</strong> (Probabilistic Signature Scheme) is the modern RSA signature standard. A randomised salt is included in padding before signing, making each signature unique even for identical messages. RSA-PSS is provably secure in the random oracle model. Older RSA-PKCS#1v1.5 is deterministic and has known bleichenbacher-style vulnerabilities in some contexts.</p>
 <h3>Real-World Applications</h3>
@@ -6176,7 +6393,7 @@ Verify: check (s⁻¹·d·G + s⁻¹·r·pk).x ≡ r mod n</div>
     <strong>Grover's algorithm</strong> (quadratic speedup only) — halves the effective key length of symmetric ciphers and hash functions. AES-128 drops to 64-bit security (borderline); AES-256 retains ~128-bit security — still strong. Symmetric crypto needs key-length doubling at most. The urgent replacement problem is entirely asymmetric.
   </div>
 </div>
-<div class="concept-box">
+<div class="concept-box cb-history">
   <div class="concept-box-title">🔑 NIST PQC Standards — Published August 2024</div>
   <div class="concept-box-body">
     NIST launched a public competition in 2016; 69 candidates submitted, whittled down over four rounds. Three standards published August 2024:<br><br>
@@ -6193,6 +6410,17 @@ Verify: check (s⁻¹·d·G + s⁻¹·r·pk).x ≡ r mod n</div>
   <div class="concept-box-title">⚛️ Back to the Harvest</div>
   <div class="concept-box-body">Any data whose secrecy must outlive the arrival of quantum computers — state records, medical data, long-term contracts — is already exposed to harvest-now-decrypt-later collection. That is why migration began before the threat materialised: FIPS 203/204/205 are published, and hybrid deployments (classical + PQC in one handshake) are live in major browsers and CDNs. The defence had to ship a decade early.</div>
 </div>
+<div style="border-left:4px solid var(--purple);background:var(--purple-l);border-radius:var(--radius-sm);padding:14px 16px;margin:20px 0">
+  <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+    <span style="width:24px;height:24px;border-radius:50%;background:var(--purple);color:#fff;font-weight:800;font-size:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0">E</span>
+    <span style="font-size:11px;font-weight:800;color:var(--purple);text-transform:uppercase;letter-spacing:.06em">Eve's Notebook</span>
+  </div>
+  <div style="font-size:14px;color:var(--text);line-height:1.6">Eve cannot break today&rsquo;s RSA or ECC &mdash; yet. So she records encrypted traffic now and stores it, betting that a future quantum computer will open it later. Against this harvest-now, decrypt-later patience, only post-quantum algorithms deployed <em>today</em> protect data that must stay secret tomorrow.</div>
+</div>
+<details class="predict" data-pid="m13-shorgrover">
+  <summary>Predict: a quantum computer arrives. Which breaks RSA outright &mdash; Shor&rsquo;s algorithm or Grover&rsquo;s?</summary>
+  <div class="predict-body">Shor&rsquo;s. It factors and solves discrete logs in polynomial time, ending RSA, DHKE and ECC. Grover&rsquo;s only halves symmetric security (AES-128 &rarr; 64-bit effort), fixed by doubling key size. Asymmetric crypto needs replacing; symmetric needs resizing.</div>
+</details>
 <h3>Hybrid Deployment Strategy</h3>
 <p>Because PQC schemes are new and may have undiscovered weaknesses, the recommended near-term strategy is <strong>hybrid mode</strong>: combine a classical algorithm (e.g. ECDH P-256) with a PQC algorithm (e.g. ML-KEM) in the same handshake. The session key is derived from both — if either algorithm holds, the session is secure. This provides a safety net while the community gains confidence in the new standards.</p>
 <div class="code-block"><span class="comment">// Hybrid TLS key exchange (experimental, 2024)</span>
@@ -6203,7 +6431,7 @@ Session key = KDF(ECDH_shared_secret ‖ ML-KEM_shared_secret)
 
 <h2 style="margin-top:28px">Part 4 — Blockchain & Cryptocurrency</h2>
 <p>Blockchain systems are not a new type of cryptography — they are a carefully engineered composition of the primitives studied throughout this course. The innovation is architectural, not cryptographic.</p>
-<div class="concept-box">
+<div class="concept-box cb-wild">
   <div class="concept-box-title">🔗 Bitcoin — A Cryptographic Primitive Map</div>
   <div class="concept-box-body">
     <strong>SHA-256 (hash functions)</strong> — two roles: (1) block chaining — each block header includes H(previous block header), making the chain tamper-evident; (2) proof-of-work — miners find a nonce n such that SHA-256(SHA-256(block header ‖ n)) has ≥ T leading zeros (difficulty target T adjusts every 2016 blocks)<br><br>
@@ -6212,6 +6440,10 @@ Session key = KDF(ECDH_shared_secret ‖ ML-KEM_shared_secret)
     <strong>RIPEMD-160(SHA-256(pk)) (address derivation)</strong> — Bitcoin addresses are derived by hashing the public key twice, providing a compact, collision-resistant identifier
   </div>
 </div>
+<details class="predict" data-pid="m13-harvest">
+  <summary>Predict: quantum computers are still years away. Why migrate to post-quantum algorithms <em>today</em>?</summary>
+  <div class="predict-body">Harvest-now, decrypt-later. Adversaries record encrypted traffic now to decrypt once quantum hardware exists. Any secret that must outlive that arrival is already exposed &mdash; so data with long confidentiality needs protecting before the threat is real.</div>
+</details>
 <h3>Zero-Knowledge Proofs in Blockchain</h3>
 <p><strong>zk-SNARKs</strong> (Zero-Knowledge Succinct Non-Interactive Arguments of Knowledge) allow a prover to convince a verifier that a computation was performed correctly, without revealing any of the inputs. Three properties:</p>
 <ul>
@@ -6230,7 +6462,14 @@ Ethereum L2 rollups (zkEVM):
   Posts: one zk-SNARK proof to Ethereum mainnet
   Ethereum: verifies the proof (~200,000 gas vs ~2.1 billion gas for all txns individually)
   Result: ~10,000× throughput increase with full cryptographic security guarantees</div>
-<p>zk-SNARKs are now also used outside blockchain: anonymous credentials (proving age without revealing date of birth), private set intersection (two parties find common elements without revealing their lists), and verifiable computation outsourcing.</p>`,
+<p>zk-SNARKs are now also used outside blockchain: anonymous credentials (proving age without revealing date of birth), private set intersection (two parties find common elements without revealing their lists), and verifiable computation outsourcing.</p>
+<div style="margin:24px 0 4px;background:linear-gradient(135deg,#0F172A,#1E3A8A);border-radius:var(--radius-sm);padding:22px;text-align:center;position:relative;overflow:hidden">
+  <div style="position:absolute;inset:0;opacity:0.06;background:repeating-linear-gradient(45deg,white,white 1px,transparent 1px,transparent 8px)"></div>
+  <div style="font-size:10px;font-weight:800;color:rgba(255,255,255,0.5);text-transform:uppercase;letter-spacing:.12em;margin-bottom:10px">🎓 Course Complete</div>
+  <div style="font-size:16px;font-weight:700;color:#fff;line-height:1.5;max-width:520px;margin:0 auto">You can now read the cryptography in every system you touch — the handshake to your bank, the signature on an update, the proof that reveals nothing.</div>
+  <div style="font-size:13px;color:rgba(255,255,255,0.55);margin-top:12px">Fourteen modules from Caesar to post-quantum. The maths that decides who you can trust — and who you cannot.</div>
+  <div style="margin-top:16px;display:inline-block;background:rgba(255,255,255,0.12);border:1px solid rgba(255,255,255,0.2);border-radius:100px;padding:7px 20px;font-size:12px;font-weight:700;color:rgba(255,255,255,0.85)">You cannot love someone you cannot verify.</div>
+</div>`,
       },
       stage4: {
         type: 'lab',
@@ -7357,7 +7596,7 @@ Verifier learns: ∃ member ∈ G who signed — nothing more</div>
 function getGuidedPractice(id) {
   const practices = {
     0: `<p>Before the lab, trace the four security assurances through this scenario:</p>
-  <div class="concept-box"><div class="concept-box-title">🎯 Scenario</div><div class="concept-box-body">Farida, a journalist in a conflict zone, wants to send a document to her editor. She encrypts it, attaches a digital signature, and sends it over an insecure network. The editor receives it.</div></div>
+  <div class="concept-box cb-wild"><div class="concept-box-title">🎯 Scenario</div><div class="concept-box-body">Farida, a journalist in a conflict zone, wants to send a document to her editor. She encrypts it, attaches a digital signature, and sends it over an insecure network. The editor receives it.</div></div>
   <ol style="padding-left:20px;color:var(--text2);line-height:2.2">
     <li>Which assurance ensures the editor — and only the editor — can read the document?</li>
     <li>Which assurance proves the document has not been altered by a relay server?</li>
@@ -7377,7 +7616,7 @@ function getGuidedPractice(id) {
   <p style="margin-top:12px;color:var(--text2);font-size:13px">Hint: the answer to question 3 is "Hello World. He was here." Verify using the Caesar tab with shift=3.</p>`,
 
     2: `<p>Think through the OTP key-reuse attack before the lab:</p>
-  <div class="concept-box"><div class="concept-box-title">⚠️ Two-time pad scenario</div><div class="concept-box-body">Eve intercepts two ciphertexts: C₁ = P₁ ⊕ K and C₂ = P₂ ⊕ K, both encrypted with the same key K.</div></div>
+  <div class="concept-box cb-fail"><div class="concept-box-title">⚠️ Two-time pad scenario</div><div class="concept-box-body">Eve intercepts two ciphertexts: C₁ = P₁ ⊕ K and C₂ = P₂ ⊕ K, both encrypted with the same key K.</div></div>
   <ol style="padding-left:20px;color:var(--text2);line-height:2.2">
     <li>What is C₁ ⊕ C₂ in terms of P₁, P₂, and K? (Does K appear in the result?)</li>
     <li>If P₁ begins with "Hello" (known plaintext), what can Eve recover about P₂?</li>
@@ -7387,7 +7626,7 @@ function getGuidedPractice(id) {
   <p style="margin-top:12px;color:var(--text2);font-size:13px">The lab lets you XOR text strings directly and observe the two-time pad attack in real time.</p>`,
 
     3: `<p>Predict what happens in each AES-GCM lab step before running it:</p>
-  <div class="concept-box"><div class="concept-box-title">🔬 Lab preview</div><div class="concept-box-body">You will encrypt the same message twice with AES-256-GCM — once with a random nonce and once with the same nonce reused. You will then decrypt and observe the authentication tag behaviour.</div></div>
+  <div class="concept-box cb-wild"><div class="concept-box-title">🔬 Lab preview</div><div class="concept-box-body">You will encrypt the same message twice with AES-256-GCM — once with a random nonce and once with the same nonce reused. You will then decrypt and observe the authentication tag behaviour.</div></div>
   <ol style="padding-left:20px;color:var(--text2);line-height:2.2">
     <li>When the same message is encrypted with a <em>different</em> random nonce, will the ciphertext look the same or different?</li>
     <li>GCM produces an authentication tag alongside the ciphertext. What happens to decryption if you flip one bit of the ciphertext?</li>
@@ -7425,7 +7664,7 @@ function getGuidedPractice(id) {
   </ol>`,
 
     7: `<p>Before the ECDH lab, work through the key exchange steps conceptually:</p>
-  <div class="concept-box"><div class="concept-box-title">📐 ECDH preview</div><div class="concept-box-body">Alice and Bob agree to use the P-256 curve. Both generate secret scalars (a, b) and corresponding public points (A = a·G, B = b·G).</div></div>
+  <div class="concept-box cb-wild"><div class="concept-box-title">📐 ECDH preview</div><div class="concept-box-body">Alice and Bob agree to use the P-256 curve. Both generate secret scalars (a, b) and corresponding public points (A = a·G, B = b·G).</div></div>
   <ol style="padding-left:20px;color:var(--text2);line-height:2.2">
     <li>Alice computes a·B. Bob computes b·A. Why do these equal the same point a·b·G?</li>
     <li>Eve can observe A = a·G and B = b·G on the wire. Why can't she compute a·b·G? (What is the ECDLP?)</li>
@@ -7434,7 +7673,7 @@ function getGuidedPractice(id) {
   </ol>`,
 
     8: `<p>Before the key generation lab, think through the full key life-cycle:</p>
-  <div class="concept-box"><div class="concept-box-title">🗄️ Scenario</div><div class="concept-box-body">Your organisation operates a web server. You need to generate a TLS key pair, obtain a certificate, and plan for rotation and revocation.</div></div>
+  <div class="concept-box cb-wild"><div class="concept-box-title">🗄️ Scenario</div><div class="concept-box-body">Your organisation operates a web server. You need to generate a TLS key pair, obtain a certificate, and plan for rotation and revocation.</div></div>
   <ol style="padding-left:20px;color:var(--text2);line-height:2.2">
     <li>Why must key generation use a CSPRNG and not a predictable source like the system clock?</li>
     <li>The private key should never leave the server. What format would you use to store it securely on disk?</li>
@@ -7461,7 +7700,7 @@ function getGuidedPractice(id) {
   </ol>`,
 
     11: `<p>Before the TLS key exchange lab, trace the TLS 1.3 handshake steps:</p>
-  <div class="concept-box"><div class="concept-box-title">🌐 Handshake preview</div><div class="concept-box-body">Client → Server: ClientHello + ECDHE public key. Server → Client: ServerHello + ECDHE public key + Certificate + CertificateVerify + Finished.</div></div>
+  <div class="concept-box cb-wild"><div class="concept-box-title">🌐 Handshake preview</div><div class="concept-box-body">Client → Server: ClientHello + ECDHE public key. Server → Client: ServerHello + ECDHE public key + Certificate + CertificateVerify + Finished.</div></div>
   <ol style="padding-left:20px;color:var(--text2);line-height:2.2">
     <li>Both sides now hold the ECDHE shared secret. What cryptographic step turns this into an AES session key?</li>
     <li>The CertificateVerify message contains the server's signature over the handshake transcript. What does this prove to the client?</li>
@@ -25241,6 +25480,14 @@ function updateOnlineStatus() {
 window.addEventListener('online', updateOnlineStatus);
 window.addEventListener('offline', updateOnlineStatus);
 window.addEventListener('online', () => { triggerSync(); pullSync(); });
+// ── Predict-then-reveal: log first reveal of each prompt via existing xAPI stream ──
+document.addEventListener('toggle', function(e){
+  const d = e.target;
+  if (!d || !d.classList || !d.classList.contains('predict')) return;
+  if (!d.open || d.dataset.logged === '1') return;
+  d.dataset.logged = '1';
+  try { emitXAPI('interacted', 'predict:' + (d.dataset.pid || 'unknown'), { response: 'revealed' }); } catch(err) {}
+}, true);
 document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') triggerSync(); });
 
 // ============================================================
