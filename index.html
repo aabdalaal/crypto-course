@@ -14264,8 +14264,8 @@ function pushRegistration() {
     body: JSON.stringify({
       name: currentUser.name || '', email: currentUser.email || '',
       role: currentUser.role || 'student', emailVerified: currentUser.emailVerified ?? true,
-      // Include credential hash so the student can recover their account on a new device
       ...(me?.passwordHash ? { passwordHash: me.passwordHash, passwordSalt: me.passwordSalt, passwordIter: me.passwordIter } : {}),
+      ...(state.semesterId ? { semesterId: state.semesterId } : {}),
     }),
   }, 6000).catch(() => {});
 }
@@ -15534,17 +15534,32 @@ async function authLogin(email, password) {
               fresh.push({
                 id: remote.id, email: remote.email || email,
                 name: remote.name || '', role: remote.role || ROLES.STUDENT,
-                emailVerified: remote.emailVerified ?? false,
+                // Correct password = sufficient proof of account ownership on a new device
+                emailVerified: true,
                 passwordHash: remote.passwordHash, passwordSalt: remote.passwordSalt,
                 passwordIter: remote.passwordIter,
               });
               saveUsers(fresh);
+            } else {
+              // Ensure emailVerified is true on existing local record too
+              const idx = fresh.findIndex(u => u.id === remote.id);
+              if (idx >= 0 && !fresh[idx].emailVerified) { fresh[idx].emailVerified = true; saveUsers(fresh); }
             }
             user = fresh.find(u => u.id === remote.id);
             // Restore write token so pullSync() works immediately after login
             if (remote.writeToken) localStorage.setItem('crypto_course_write_token', remote.writeToken);
-            // Restore progress payload so enterApp() loads real state, not defaults
-            if (remote.payload) localStorage.setItem(STATE_KEY + '_' + remote.id, JSON.stringify(remote.payload));
+            // Convert PR13 payload to state format and restore progress + semesterId
+            const p = remote.payload || {};
+            const restoredState = {
+              xp:            p.xpDelta ?? 0,
+              streak:        p.streak ?? 0,
+              badges:        Array.isArray(p.badgeTimestamps) ? p.badgeTimestamps : [],
+              labsCompleted: p.labCompletions?.count ?? 0,
+              labsDone:      p.labCompletions?.done ?? {},
+              ...(p.quizOutcomes && typeof p.quizOutcomes === 'object' ? p.quizOutcomes : {}),
+              ...(remote.semesterId ? { semesterId: remote.semesterId } : {}),
+            };
+            localStorage.setItem(STATE_KEY + '_' + remote.id, JSON.stringify(restoredState));
           }
         }
       } catch(e) {}

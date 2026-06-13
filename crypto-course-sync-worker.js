@@ -151,6 +151,7 @@ export default {
           updated.passwordSalt = String(body.passwordSalt).substring(0, 64);
           if (typeof body.passwordIter === 'number') updated.passwordIter = body.passwordIter;
         }
+        if (body.semesterId) updated.semesterId = String(body.semesterId).substring(0, 64);
         await env.SYNC.put(key, JSON.stringify(updated), { expirationTtl: RETENTION_DAYS * 86400 });
         return json({ ok: true }, 200, cors);
       }
@@ -345,8 +346,9 @@ export default {
               role: rec.role || 'student', emailVerified: rec.emailVerified || false,
               passwordHash: rec.passwordHash, passwordSalt: rec.passwordSalt,
               passwordIter: rec.passwordIter,
-              writeToken,           // lets the new device call pullSync() immediately
-              payload: rec.payload || null, // existing progress for offline restore
+              writeToken,
+              semesterId: rec.semesterId || null,
+              payload: rec.payload || null,
             }, 200, cors);
           }
         }
