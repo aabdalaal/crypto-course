@@ -14249,6 +14249,8 @@ async function triggerSync() {
 }
 
 // Push minimal registration record so teacher can see the student before any progress is synced.
+// Also pushes full credentials (password hash) keyed by email so the student can recover
+// their account on a new device via the cross-device pull in authLogin().
 function pushRegistration() {
   const userId = currentUser?.sub;
   const base = getSyncEndpoint();
@@ -14259,6 +14261,18 @@ function pushRegistration() {
     headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + wt },
     body: JSON.stringify({ name: currentUser.name || '', email: currentUser.email || '', role: currentUser.role || 'student', emailVerified: currentUser.emailVerified ?? true }),
   }, 6000).catch(() => {});
+  const me = loadUsers().find(u => u.id === userId);
+  if (me && me.passwordHash) {
+    fetchWithTimeout(`${base}/account-by-email/${encodeURIComponent((currentUser.email || '').toLowerCase())}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + wt },
+      body: JSON.stringify({
+        id: me.id, name: me.name || '', email: me.email || '',
+        role: me.role || 'student', emailVerified: me.emailVerified ?? false,
+        passwordHash: me.passwordHash, passwordSalt: me.passwordSalt, passwordIter: me.passwordIter,
+      }),
+    }, 6000).catch(() => {});
+  }
 }
 
 // Render cohort student list into the analytics panel.
@@ -15502,7 +15516,41 @@ async function authRegister(name, email, password) {
 async function authLogin(email, password) {
   email = String(email || '').trim().toLowerCase(); // emails are case-insensitive
   const users = loadUsers();
-  const user = users.find(u => (u.email || '').toLowerCase() === email);
+  let user = users.find(u => (u.email || '').toLowerCase() === email);
+
+  // Not found locally — try pulling the account from the sync server.
+  // This recovers accounts when a student moves to a new device.
+  if (!user) {
+    const base = getSyncEndpoint();
+    const wt = localStorage.getItem('crypto_course_write_token');
+    if (base && wt) {
+      try {
+        const r = await fetchWithTimeout(
+          `${base}/account-by-email/${encodeURIComponent(email)}`,
+          { headers: { 'Authorization': 'Bearer ' + wt } },
+          6000
+        );
+        if (r.ok) {
+          const remote = await r.json();
+          if (remote && remote.id && remote.passwordHash) {
+            const fresh = loadUsers();
+            if (!fresh.find(u => u.id === remote.id)) {
+              fresh.push({
+                id: remote.id, email: remote.email || email,
+                name: remote.name || '', role: remote.role || ROLES.STUDENT,
+                emailVerified: remote.emailVerified ?? false,
+                passwordHash: remote.passwordHash, passwordSalt: remote.passwordSalt,
+                passwordIter: remote.passwordIter,
+              });
+              saveUsers(fresh);
+            }
+            user = fresh.find(u => u.id === remote.id);
+          }
+        }
+      } catch(e) {}
+    }
+  }
+
   if (!user) return { error: 'Invalid email or password' };
 
   let valid = false;
