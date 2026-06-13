@@ -15515,14 +15515,15 @@ async function authLogin(email, password) {
 
   // Not found locally — try pulling the account from the sync server.
   // This recovers accounts when a student moves to a new device.
+  // bootstrapSyncConfig() runs first so a fresh device can auto-discover the server URL.
   if (!user) {
+    await bootstrapSyncConfig();
     const base = getSyncEndpoint();
-    const wt = localStorage.getItem('crypto_course_write_token');
-    if (base && wt) {
+    if (base) {
       try {
         const r = await fetchWithTimeout(
           `${base}/account-by-email/${encodeURIComponent(email)}`,
-          { headers: { 'Authorization': 'Bearer ' + wt } },
+          {}, // no auth — endpoint is public (returns hash only, never plaintext)
           6000
         );
         if (r.ok) {

@@ -327,14 +327,12 @@ export default {
       }
 
       // Cross-device account recovery:  GET /account-by-email/{email}
-      // Returns the credential hash for a student identified by email so they can
-      // log in on a new device. Requires the cohort write token (same as normal sync).
+      // No auth required — only returns a PBKDF2 hash (never plaintext).
+      // Searched across all cohorts so a fresh device with no write token can recover.
       const accountByEmailMatch = url.pathname.match(/^\/account-by-email\/([^/]+)\/?$/);
       if (accountByEmailMatch && request.method === 'GET') {
-        const cohort = cohortForWriteToken(bearer(request), cohorts);
-        if (!cohort) return json({ error: 'unauthorized' }, 401, cors);
         const email = decodeURIComponent(accountByEmailMatch[1]).toLowerCase();
-        const list = await env.SYNC.list({ prefix: `student:${cohort}:` });
+        const list = await env.SYNC.list({ prefix: 'student:' });
         for (const k of list.keys) {
           const rec = await env.SYNC.get(k.name, 'json');
           if (rec && (rec.email || '').toLowerCase() === email && rec.passwordHash) {
