@@ -133,7 +133,7 @@ export default {
         const cohort = cohortForWriteToken(bearer(request), cohorts);
         if (!cohort) return json({ error: 'unauthorized' }, 401, cors);
         const raw = await request.text();
-        if (raw.length > 512) return json({ error: 'payload too large' }, 413, cors);
+        if (raw.length > 1024) return json({ error: 'payload too large' }, 413, cors);
         let body;
         try { body = JSON.parse(raw); } catch { return json({ error: 'invalid JSON' }, 400, cors); }
         const key = `student:${cohort}:${userId}`;
@@ -145,6 +145,12 @@ export default {
           role:  String(body.role  || 'student'),
           registeredAt: existing.registeredAt || new Date().toISOString(),
         };
+        // Store credential hash for cross-device account recovery (never plaintext password)
+        if (body.passwordHash && body.passwordSalt) {
+          updated.passwordHash = String(body.passwordHash).substring(0, 128);
+          updated.passwordSalt = String(body.passwordSalt).substring(0, 64);
+          if (typeof body.passwordIter === 'number') updated.passwordIter = body.passwordIter;
+        }
         await env.SYNC.put(key, JSON.stringify(updated), { expirationTtl: RETENTION_DAYS * 86400 });
         return json({ ok: true }, 200, cors);
       }
@@ -318,6 +324,30 @@ export default {
           if (!rec) return new Response(null, { status: 204, headers: cors });
           return json(rec, 200, cors);
         }
+      }
+
+      // Cross-device account recovery:  GET /account-by-email/{email}
+      // Returns the credential hash for a student identified by email so they can
+      // log in on a new device. Requires the cohort write token (same as normal sync).
+      const accountByEmailMatch = url.pathname.match(/^\/account-by-email\/([^/]+)\/?$/);
+      if (accountByEmailMatch && request.method === 'GET') {
+        const cohort = cohortForWriteToken(bearer(request), cohorts);
+        if (!cohort) return json({ error: 'unauthorized' }, 401, cors);
+        const email = decodeURIComponent(accountByEmailMatch[1]).toLowerCase();
+        const list = await env.SYNC.list({ prefix: `student:${cohort}:` });
+        for (const k of list.keys) {
+          const rec = await env.SYNC.get(k.name, 'json');
+          if (rec && (rec.email || '').toLowerCase() === email && rec.passwordHash) {
+            const userId = k.name.split(':').slice(2).join(':');
+            return json({
+              id: userId, name: rec.name || '', email: rec.email || '',
+              role: rec.role || 'student', emailVerified: rec.emailVerified || false,
+              passwordHash: rec.passwordHash, passwordSalt: rec.passwordSalt,
+              passwordIter: rec.passwordIter,
+            }, 200, cors);
+          }
+        }
+        return new Response(null, { status: 204, headers: cors });
       }
 
       // Per-student routes:  /{userId}

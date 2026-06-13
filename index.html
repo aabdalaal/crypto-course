@@ -14257,23 +14257,17 @@ function pushRegistration() {
   const base = getSyncEndpoint();
   const wt = localStorage.getItem('crypto_course_write_token');
   if (!userId || !base || !wt) return;
+  const me = loadUsers().find(u => u.id === userId);
   fetchWithTimeout(`${base}/register/${encodeURIComponent(userId)}`, {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + wt },
-    body: JSON.stringify({ name: currentUser.name || '', email: currentUser.email || '', role: currentUser.role || 'student', emailVerified: currentUser.emailVerified ?? true }),
+    body: JSON.stringify({
+      name: currentUser.name || '', email: currentUser.email || '',
+      role: currentUser.role || 'student', emailVerified: currentUser.emailVerified ?? true,
+      // Include credential hash so the student can recover their account on a new device
+      ...(me?.passwordHash ? { passwordHash: me.passwordHash, passwordSalt: me.passwordSalt, passwordIter: me.passwordIter } : {}),
+    }),
   }, 6000).catch(() => {});
-  const me = loadUsers().find(u => u.id === userId);
-  if (me && me.passwordHash) {
-    fetchWithTimeout(`${base}/account-by-email/${encodeURIComponent((currentUser.email || '').toLowerCase())}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + wt },
-      body: JSON.stringify({
-        id: me.id, name: me.name || '', email: me.email || '',
-        role: me.role || 'student', emailVerified: me.emailVerified ?? false,
-        passwordHash: me.passwordHash, passwordSalt: me.passwordSalt, passwordIter: me.passwordIter,
-      }),
-    }, 6000).catch(() => {});
-  }
 }
 
 // Render cohort student list into the analytics panel.
