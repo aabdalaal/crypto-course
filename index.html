@@ -1747,6 +1747,8 @@ body.high-contrast {
 
         <div id="diag-home-card-wrap"></div>
 
+        <div id="activity-code-wrap"></div>
+
         <div id="p3-revisit-cards"></div>
 
         <div id="announcements-banner"></div>
@@ -7546,6 +7548,12 @@ function renderHome() {
       </div>`;
   }
 
+  // Activity code launcher — offline-proof QR fallback for printed textbooks
+  const acWrap = document.getElementById('activity-code-wrap');
+  if (acWrap) {
+    acWrap.innerHTML = `<div class="card" style="margin:0 20px 12px;padding:14px"><div style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:8px">${t('activity_code_label')}</div><div style="display:flex;gap:8px"><input id="activity-code-input" class="lab-input" type="text" placeholder="${t('activity_code_placeholder')}" style="flex:1;padding:10px 12px;font-size:14px" onkeydown="if(event.key==='Enter')goToActivityCode()"><button class="btn btn-primary" style="width:auto;padding:10px 16px;font-size:14px" onclick="goToActivityCode()">${t('activity_code_go')}</button></div></div>`;
+  }
+
   // Continue / Start button
   const allModsForCompletion = getAllModules();
   const courseComplete = completed >= allModsForCompletion.length && allModsForCompletion.length > 0;
@@ -7872,6 +7880,59 @@ function renderModules() {
   const countEl = document.getElementById('module-search-count');
   if (countEl) countEl.textContent = '';
   renderModuleList('all-modules-list', 0);
+}
+
+// ============================================================
+// LAB DEEP-LINK — QR-code & activity-code routing
+// Maps the short IDs printed on textbook QR codes to module labs.
+// Existing labs: caesar/frequency/vigenere/xor all live in Module 1 (vigenere_lab).
+// railfence, stego are not yet implemented — show "coming soon".
+// ============================================================
+const LAB_DEEP_LINK_MAP = {
+  caesar:    { moduleId: 1, tab: 'caesar' },
+  frequency: { moduleId: 1, tab: 'freq' },
+  vigenere:  { moduleId: 1, tab: 'vigenere' },
+  xor:       { moduleId: 1, tab: null },    // Part B of vigenere_lab (OTP/XOR section)
+  playfair:  { moduleId: 1, tab: 'playfair' },
+  hill:      { moduleId: 1, tab: 'hill' },
+  railfence: { moduleId: 1, tab: 'railfence' },
+  stego:     { moduleId: 1, tab: 'stego' },
+};
+
+// Printed activity codes → lab short IDs (1.1–1.6 series, textbook Chapter 1 labs)
+const ACTIVITY_CODE_MAP = {
+  '1.1': 'caesar', '1.2': 'frequency', '1.3': 'vigenere',
+  '1.4': 'playfair', '1.5': 'hill', '1.6': 'railfence',
+};
+
+// Open a lab directly by short ID (from QR code or activity code).
+// Jumps to stage 4 of the host module — identical component, XP, and completion hooks.
+function openLabDeepLink(shortId) {
+  const mapping = LAB_DEEP_LINK_MAP[shortId];
+  if (mapping === undefined) { showToast(t('lab_not_found'));    return; }
+  if (mapping === null)      { showToast(t('lab_coming_soon')); return; }
+  lessonState = {
+    moduleId: mapping.moduleId, stage: 4,
+    quizAnswered: false, quizAttempts: 0, quizPassed: false,
+    labRecallValue: null, masteryGateAttempts: 0,
+    currentTier: 'core', tierResults: {}, labCompleted: false,
+    startTime: Date.now()
+  };
+  startLesson();
+  if (mapping.tab) {
+    requestAnimationFrame(() => {
+      if (typeof switchCipherTab === 'function') switchCipherTab(mapping.tab);
+    });
+  }
+}
+
+function goToActivityCode() {
+  const input = document.getElementById('activity-code-input');
+  if (!input) return;
+  const code = input.value.trim().toLowerCase();
+  const labId = ACTIVITY_CODE_MAP[code];
+  if (!labId) { showToast(t('activity_code_invalid')); return; }
+  openLabDeepLink(labId);
 }
 
 // ============================================================
@@ -8994,12 +9055,16 @@ function renderLab(content, mod) {
       <div class="lab-container">
         <div class="lab-header">
           <span class="lab-icon">🔠</span>
-          <div><div class="lab-title">${content.heading}</div><div class="lab-subtitle">Classical cipher toolkit · Caesar + Vigenère + Frequency Analysis</div></div>
+          <div><div class="lab-title">${content.heading}</div><div class="lab-subtitle">Classical cipher toolkit · Caesar · Vigenère · Freq. Analysis · Playfair · Hill 2&#215;2 · Rail Fence · Steganography</div></div>
         </div>
-        <div style="display:flex;gap:8px;margin-bottom:12px">
-          <button class="btn btn-secondary" id="tab-caesar-btn" onclick="switchCipherTab('caesar')" style="flex:1;font-size:12px">Caesar</button>
-          <button class="btn btn-primary" id="tab-vigenere-btn" onclick="switchCipherTab('vigenere')" style="flex:1;font-size:12px">Vigenère</button>
-          <button class="btn btn-secondary" id="tab-freq-btn" onclick="switchCipherTab('freq')" style="flex:1;font-size:12px">Freq. Analysis</button>
+        <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px">
+          <button class="btn btn-secondary" id="tab-caesar-btn" onclick="switchCipherTab('caesar')" style="flex:1 1 calc(50% - 4px);font-size:12px">Caesar</button>
+          <button class="btn btn-primary" id="tab-vigenere-btn" onclick="switchCipherTab('vigenere')" style="flex:1 1 calc(50% - 4px);font-size:12px">Vigenère</button>
+          <button class="btn btn-secondary" id="tab-freq-btn" onclick="switchCipherTab('freq')" style="flex:1 1 calc(50% - 4px);font-size:12px">Freq. Analysis</button>
+          <button class="btn btn-secondary" id="tab-playfair-btn" onclick="switchCipherTab('playfair')" style="flex:1 1 calc(50% - 4px);font-size:12px">&#128310; Playfair</button>
+          <button class="btn btn-secondary" id="tab-hill-btn" onclick="switchCipherTab('hill')" style="flex:1 1 calc(50% - 4px);font-size:12px">&#9636; Hill 2&#215;2</button>
+          <button class="btn btn-secondary" id="tab-railfence-btn" onclick="switchCipherTab('railfence')" style="flex:1 1 calc(50% - 4px);font-size:12px">&#8767; Rail Fence</button>
+          <button class="btn btn-secondary" id="tab-stego-btn" onclick="switchCipherTab('stego')" style="flex:1 1 calc(50% - 4px);font-size:12px">&#128444; Steganography</button>
         </div>
 
         <div id="tab-caesar" style="display:none">
@@ -9055,6 +9120,352 @@ function renderLab(content, mod) {
             <div class="lab-output" id="lab-output-freq" style="font-size:12px">Run analysis to see frequency ranking...</div>
           </div>
         </div>
+
+        <div id="tab-playfair" style="display:none">
+          <div class="concept-box" style="margin-bottom:14px">
+            <div class="concept-box-title">&#128273; Playfair Cipher</div>
+            <div class="concept-box-body" style="font-size:12px;line-height:1.7">
+              Invented by Charles Wheatstone in 1854. Encrypts <strong>pairs of letters</strong> (digraphs) using a 5&#215;5 key square — far harder to break than Caesar or simple substitution.<br>
+              <strong>Key square:</strong> fill with keyword letters (J merged into I, no duplicates), then remaining A&#8211;Z (no J).<br>
+              <strong>Rule 1 &#8212; Same row:</strong> each letter shifts <em>right</em> one cell (wraps around).<br>
+              <strong>Rule 2 &#8212; Same column:</strong> each letter shifts <em>down</em> one cell (wraps around).<br>
+              <strong>Rule 3 &#8212; Rectangle:</strong> each letter moves to its own row but the <em>other</em> letter&#39;s column.<br>
+              <strong>Padding:</strong> consecutive identical letters get X inserted between them; an odd final letter gets X appended.
+            </div>
+          </div>
+
+          <div class="lab-field">
+            <label class="lab-label">Keyword &#8212; builds the 5&#215;5 key square</label>
+            <input class="lab-input" id="pf-keyword" type="text" value="PLAYFAIR"
+              placeholder="Enter keyword..."
+              autocorrect="off" autocapitalize="characters" spellcheck="false"
+              oninput="pfUpdateGrid()"
+              style="font-family:var(--mono);text-transform:uppercase;letter-spacing:2px"
+              aria-label="Playfair keyword">
+          </div>
+          <div id="pf-grid" role="grid" aria-label="5 by 5 Playfair key square"></div>
+          <div style="font-size:11px;color:var(--muted);margin:4px 0 14px;text-align:center">J &#8594; I &#183; grid rebuilds as you type &#183; <span style="color:#2563EB;font-weight:700">blue</span> = input pair &#183; <span style="color:#10B981;font-weight:700">green</span> = output pair</div>
+
+          <div style="display:flex;gap:6px;margin-bottom:14px;background:var(--bg);border-radius:var(--radius-xs);padding:4px" role="group" aria-label="Cipher direction">
+            <button id="pf-mode-enc" onclick="pfSetMode('encrypt')"
+              style="flex:1;padding:8px;border:none;border-radius:6px;font-weight:700;font-size:12px;cursor:pointer;font-family:var(--font);background:var(--primary);color:white"
+              aria-pressed="true">&#128274; Encrypt</button>
+            <button id="pf-mode-dec" onclick="pfSetMode('decrypt')"
+              style="flex:1;padding:8px;border:none;border-radius:6px;font-weight:700;font-size:12px;cursor:pointer;font-family:var(--font);background:transparent;color:var(--text2)"
+              aria-pressed="false">&#128275; Decrypt</button>
+          </div>
+
+          <div class="lab-field">
+            <label class="lab-label" id="pf-input-lbl">Plaintext message</label>
+            <input class="lab-input" id="pf-msg" type="text" value="HIDE THE GOLD"
+              placeholder="Type a message (A&#8211;Z)..."
+              autocorrect="off" autocapitalize="characters" spellcheck="false"
+              oninput="pfRun()"
+              style="font-family:var(--mono);letter-spacing:1px"
+              aria-label="Message to encrypt or decrypt">
+          </div>
+
+          <div id="pf-prepared" style="font-size:12px;color:var(--text2);margin-bottom:10px;min-height:18px"></div>
+
+          <div class="lab-field">
+            <label class="lab-label" id="pf-output-lbl">Encrypted result</label>
+            <div class="lab-output" id="pf-output" aria-live="polite"
+              style="font-family:var(--mono);letter-spacing:2px;min-height:48px;font-size:15px">
+              Enter a message above...
+            </div>
+          </div>
+
+          <div id="pf-stepper" aria-live="polite"></div>
+
+          <div style="margin-top:18px;border:2px solid var(--accent);border-radius:var(--radius-sm);padding:14px;background:var(--accent-l)">
+            <div style="font-size:12px;font-weight:800;color:var(--accent-dd);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px">&#127919; Mission &#8212; earn your XP</div>
+            <p style="font-size:12px;color:var(--text2);margin:0 0 10px">
+              Using keyword <strong style="font-family:var(--mono)">CRYPTO</strong>, decrypt the ciphertext
+              <strong style="font-family:var(--mono)">CQBRGOGP</strong>.
+              What is the plaintext? (Hint: it is the name of this cipher.)
+            </p>
+            <div style="display:flex;gap:8px">
+              <input class="lab-input" id="pf-mission-answer" type="text" placeholder="Your answer..."
+                style="flex:1;font-family:var(--mono);text-transform:uppercase;letter-spacing:1px"
+                autocorrect="off" spellcheck="false" maxlength="10"
+                aria-label="Mission answer">
+              <button class="btn btn-primary" style="width:auto;flex-shrink:0" onclick="pfCheckMission()">&#10003; Check</button>
+            </div>
+            <div id="pf-mission-out" style="font-size:13px;margin-top:8px;font-weight:700;min-height:20px" aria-live="polite"></div>
+          </div>
+        </div>
+
+        <div id="tab-hill" style="display:none">
+          <div class="concept-box" style="margin-bottom:14px">
+            <div class="concept-box-title">&#9636; Hill Cipher &#8212; Linear Algebra mod 26</div>
+            <div class="concept-box-body" style="font-size:12px;line-height:1.8">
+              Invented by Lester S. Hill in 1929. Unlike Caesar or Vigenère, Hill encrypts <strong>pairs of letters</strong> simultaneously using <strong>matrix multiplication mod 26</strong>.<br>
+              <strong>Letter mapping:</strong> A&#8202;=&#8202;0, B&#8202;=&#8202;1, &#8230; Z&#8202;=&#8202;25.<br>
+              <strong>Encryption:</strong> split plaintext into 2-letter vectors. For pair [x,&#160;y] and key K&#160;=&#160;[[a,b],[c,d]]:<br>
+              &nbsp;&nbsp;c&#8321;&#8202;=&#8202;(a&#183;x&#8202;+&#8202;b&#183;y) mod 26<br>
+              &nbsp;&nbsp;c&#8322;&#8202;=&#8202;(c&#183;x&#8202;+&#8202;d&#183;y) mod 26<br>
+              <strong>Decryption:</strong> multiply by K&#8315;&#185; mod 26 (the modular inverse of K).<br>
+              <strong>Invertibility:</strong> K is only invertible when <code>gcd(det(K) mod 26, 26) = 1</code>. If not, decryption is <em>impossible</em> &#8212; multiple plaintexts map to the same ciphertext.<br>
+              <strong>Odd-length padding:</strong> a trailing X is appended so the message splits into even-length pairs.
+            </div>
+          </div>
+
+          <div class="lab-field">
+            <label class="lab-label">Key Matrix K &#8212; entries 0&#8211;25 (A&#8202;=&#8202;0 &#183; Z&#8202;=&#8202;25)</label>
+            <div style="display:grid;grid-template-columns:64px 64px;gap:6px;margin-bottom:6px" role="group" aria-label="2 by 2 key matrix entries">
+              <input class="lab-input" id="hk-a" type="number" min="0" max="25" value="3"
+                oninput="hillUpdateMatrix()" style="font-family:var(--mono);text-align:center;padding:10px;font-size:16px;font-weight:700"
+                aria-label="Matrix entry a row 1 column 1">
+              <input class="lab-input" id="hk-b" type="number" min="0" max="25" value="3"
+                oninput="hillUpdateMatrix()" style="font-family:var(--mono);text-align:center;padding:10px;font-size:16px;font-weight:700"
+                aria-label="Matrix entry b row 1 column 2">
+              <input class="lab-input" id="hk-c" type="number" min="0" max="25" value="2"
+                oninput="hillUpdateMatrix()" style="font-family:var(--mono);text-align:center;padding:10px;font-size:16px;font-weight:700"
+                aria-label="Matrix entry c row 2 column 1">
+              <input class="lab-input" id="hk-d" type="number" min="0" max="25" value="5"
+                oninput="hillUpdateMatrix()" style="font-family:var(--mono);text-align:center;padding:10px;font-size:16px;font-weight:700"
+                aria-label="Matrix entry d row 2 column 2">
+            </div>
+            <div style="font-size:11px;color:var(--text2)">K&#160;=&#160;[[a,&#160;b],[c,&#160;d]] &#183; change any entry and watch the invertibility panel update live</div>
+          </div>
+
+          <div id="hill-inv-panel" aria-live="polite" style="margin-bottom:14px"></div>
+
+          <div style="display:flex;gap:6px;margin-bottom:14px;background:var(--bg);border-radius:var(--radius-xs);padding:4px" role="group" aria-label="Cipher direction">
+            <button id="hill-mode-enc" onclick="hillSetMode('encrypt')"
+              style="flex:1;padding:8px;border:none;border-radius:6px;font-weight:700;font-size:12px;cursor:pointer;font-family:var(--font);background:var(--primary);color:white"
+              aria-pressed="true">&#128274; Encrypt</button>
+            <button id="hill-mode-dec" onclick="hillSetMode('decrypt')"
+              style="flex:1;padding:8px;border:none;border-radius:6px;font-weight:700;font-size:12px;cursor:pointer;font-family:var(--font);background:transparent;color:var(--text2)"
+              aria-pressed="false">&#128275; Decrypt</button>
+          </div>
+
+          <div class="lab-field">
+            <label class="lab-label" id="hill-input-lbl">Plaintext message (letters only)</label>
+            <input class="lab-input" id="hill-msg" type="text" value="HI"
+              placeholder="Type a message (A&#8211;Z)..."
+              autocorrect="off" autocapitalize="characters" spellcheck="false"
+              oninput="hillRun()"
+              style="font-family:var(--mono);letter-spacing:2px;text-transform:uppercase"
+              aria-label="Message to encrypt or decrypt">
+          </div>
+
+          <div id="hill-pairs" style="font-size:12px;color:var(--text2);margin-bottom:10px;min-height:18px" aria-live="polite"></div>
+
+          <div id="hill-viz" aria-live="polite"></div>
+
+          <div class="lab-field">
+            <label class="lab-label" id="hill-output-lbl">Encrypted result</label>
+            <div class="lab-output" id="hill-output" aria-live="polite"
+              style="font-family:var(--mono);letter-spacing:2px;min-height:48px;font-size:15px">
+              Enter a message above&#8230;
+            </div>
+          </div>
+
+          <div style="margin-top:18px;border:2px solid var(--accent);border-radius:var(--radius-sm);padding:14px;background:rgba(245,158,11,0.06)">
+            <div style="font-size:12px;font-weight:800;color:#92400E;text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px">&#127919; Mission &#8212; earn your XP</div>
+            <p style="font-size:12px;color:var(--text2);margin:0 0 6px">
+              Key K&#160;=&#160;[[3,3],[2,5]] is already loaded. The ciphertext is
+              <strong style="font-family:var(--mono)">TC</strong>.
+              Switch to <strong>Decrypt</strong>, type <strong style="font-family:var(--mono)">TC</strong>, and read off the plaintext. Enter your answer below.
+            </p>
+            <p style="font-size:11px;color:var(--text2);margin:0 0 10px">
+              Tip: verify invertibility first &#8212; check the green panel above before decrypting.
+            </p>
+            <div style="display:flex;gap:8px">
+              <input class="lab-input" id="hill-mission-answer" type="text" placeholder="Two-letter answer..."
+                style="flex:1;font-family:var(--mono);text-transform:uppercase;letter-spacing:2px"
+                autocorrect="off" spellcheck="false" maxlength="6"
+                aria-label="Mission answer">
+              <button class="btn btn-primary" style="width:auto;flex-shrink:0" onclick="hillCheckMission()">&#10003; Check</button>
+            </div>
+            <div id="hill-mission-out" style="font-size:13px;margin-top:8px;font-weight:700;min-height:20px" aria-live="polite"></div>
+          </div>
+        </div>
+
+        <div id="tab-railfence" style="display:none">
+          <div class="concept-box" style="margin-bottom:14px">
+            <div class="concept-box-title">&#8767; Rail Fence Cipher &#8212; Transposition</div>
+            <div class="concept-box-body" style="font-size:12px;line-height:1.8">
+              Unlike Caesar or Hill, the Rail Fence <em>reorders</em> letters without changing them &#8212; a <strong>transposition cipher</strong>. The alphabet is unchanged; only the positions are shuffled.<br>
+              Write the message diagonally across N <em>rails</em> (rows), bouncing from rail 0 up to rail N&#8722;1 and back, creating a <strong>zigzag (W) pattern</strong>. Read the ciphertext row by row, top to bottom.<br>
+              <strong>Example &#8212; HELLOWORLD with 3 rails:</strong>
+            </div>
+            <div class="code-block" style="font-size:11px;line-height:1.9;margin:6px 0 4px">Rail 0: H . . . O . . . L .
+Rail 1: . E . L . W . R . D
+Rail 2: . . L . . . O . . .</div>
+            <div style="font-size:12px;color:var(--text2);margin-top:4px">Read off: <strong>HOL</strong> &#43; <strong>ELWRD</strong> &#43; <strong>LO</strong> &#8594; ciphertext <strong>HOLELWRDLO</strong></div>
+          </div>
+
+          <div class="lab-field">
+            <label class="lab-label">Number of rails (N)</label>
+            <div style="display:flex;align-items:center;gap:4px;background:var(--bg);border-radius:var(--radius-xs);padding:4px" role="group" aria-label="Rail count 2 to 6">
+              <span style="font-size:11px;font-weight:700;color:var(--text2);white-space:nowrap;padding:0 6px">N =</span>
+              <button id="rf-rail-2" onclick="rfSetRails(2)"
+                style="flex:1;padding:8px 0;border:none;border-radius:6px;font-weight:700;font-size:14px;cursor:pointer;font-family:var(--mono);background:transparent;color:var(--text2)"
+                aria-pressed="false">2</button>
+              <button id="rf-rail-3" onclick="rfSetRails(3)"
+                style="flex:1;padding:8px 0;border:none;border-radius:6px;font-weight:700;font-size:14px;cursor:pointer;font-family:var(--mono);background:var(--primary);color:white"
+                aria-pressed="true">3</button>
+              <button id="rf-rail-4" onclick="rfSetRails(4)"
+                style="flex:1;padding:8px 0;border:none;border-radius:6px;font-weight:700;font-size:14px;cursor:pointer;font-family:var(--mono);background:transparent;color:var(--text2)"
+                aria-pressed="false">4</button>
+              <button id="rf-rail-5" onclick="rfSetRails(5)"
+                style="flex:1;padding:8px 0;border:none;border-radius:6px;font-weight:700;font-size:14px;cursor:pointer;font-family:var(--mono);background:transparent;color:var(--text2)"
+                aria-pressed="false">5</button>
+              <button id="rf-rail-6" onclick="rfSetRails(6)"
+                style="flex:1;padding:8px 0;border:none;border-radius:6px;font-weight:700;font-size:14px;cursor:pointer;font-family:var(--mono);background:transparent;color:var(--text2)"
+                aria-pressed="false">6</button>
+            </div>
+            <div style="font-size:11px;color:var(--text2);margin-top:4px">Change N and the grid rebuilds live &#183; each rail gets its own colour</div>
+          </div>
+
+          <div style="display:flex;gap:6px;margin-bottom:14px;background:var(--bg);border-radius:var(--radius-xs);padding:4px" role="group" aria-label="Cipher direction">
+            <button id="rf-mode-enc" onclick="rfSetMode('encrypt')"
+              style="flex:1;padding:8px;border:none;border-radius:6px;font-weight:700;font-size:12px;cursor:pointer;font-family:var(--font);background:var(--primary);color:white"
+              aria-pressed="true">&#128274; Encrypt</button>
+            <button id="rf-mode-dec" onclick="rfSetMode('decrypt')"
+              style="flex:1;padding:8px;border:none;border-radius:6px;font-weight:700;font-size:12px;cursor:pointer;font-family:var(--font);background:transparent;color:var(--text2)"
+              aria-pressed="false">&#128275; Decrypt</button>
+          </div>
+
+          <div class="lab-field">
+            <label class="lab-label" id="rf-input-lbl">Plaintext message (letters only)</label>
+            <input class="lab-input" id="rf-msg" type="text" value="HELLO WORLD"
+              placeholder="Type a message (A&#8211;Z)&#8230;"
+              autocorrect="off" autocapitalize="characters" spellcheck="false"
+              oninput="rfRun()"
+              style="font-family:var(--mono);text-transform:uppercase;letter-spacing:1px"
+              aria-label="Message to encrypt or decrypt">
+          </div>
+
+          <div id="rf-grid" aria-live="polite" style="margin-bottom:12px">
+            <div style="color:var(--text2);font-size:12px;padding:6px">Enter a message to see the zigzag grid.</div>
+          </div>
+
+          <div class="lab-field">
+            <label class="lab-label" id="rf-output-lbl">Encrypted result</label>
+            <div class="lab-output" id="rf-output" aria-live="polite"
+              style="font-family:var(--mono);letter-spacing:2px;min-height:48px;font-size:15px">
+              Enter a message above&#8230;
+            </div>
+          </div>
+
+          <div style="margin-top:14px;border:1px solid var(--border);border-radius:var(--radius-sm);padding:14px;background:var(--bg)">
+            <div style="font-size:12px;font-weight:700;color:var(--text);margin-bottom:6px">&#128270; Break Mode &#8212; brute-force all rail counts (2&#8211;6)</div>
+            <p style="font-size:12px;color:var(--text2);margin:0 0 10px">Paste a ciphertext and the lab will try every rail count, ranking candidates by English bigram frequency to highlight the most likely reading.</p>
+            <div class="lab-field" style="margin-bottom:8px">
+              <input class="lab-input" id="rf-break-input" type="text"
+                placeholder="Paste ciphertext to break&#8230;"
+                autocorrect="off" autocapitalize="characters" spellcheck="false"
+                style="font-family:var(--mono);text-transform:uppercase;letter-spacing:1px"
+                aria-label="Ciphertext to brute-force">
+            </div>
+            <button class="btn btn-secondary" style="width:auto" onclick="rfBreak()">&#128295; Try all rail counts</button>
+            <div id="rf-break-out" style="margin-top:10px" aria-live="polite"></div>
+          </div>
+
+          <div style="margin-top:18px;border:2px solid var(--accent);border-radius:var(--radius-sm);padding:14px;background:rgba(245,158,11,0.06)">
+            <div style="font-size:12px;font-weight:800;color:#92400E;text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px">&#127919; Mission &#8212; earn your XP</div>
+            <div style="font-size:12px;color:var(--text2);margin-bottom:10px;line-height:1.7">
+              <strong>Step 1 &#8212; Compare rail counts:</strong> keep the default message <strong>HELLO WORLD</strong>, switch between N&#160;=&#160;2, 3, and 4 in encrypt mode. Note how the ciphertext changes each time.<br>
+              <strong>Step 2 &#8212; Decrypt:</strong> switch to <strong>Decrypt</strong>, set <strong>N&#160;=&#160;3</strong>, type <strong style="font-family:var(--mono)">HOLELWRDLO</strong>. Read off the plaintext.<br>
+              <strong>Step 3 &#8212; Wrong key:</strong> keep the same ciphertext but try N&#160;=&#160;2 or 4 &#8212; the output should look garbled, proving rail count is the secret.
+            </div>
+            <p style="font-size:12px;color:var(--text2);margin:0 0 10px">Enter the plaintext you recovered in Step 2:</p>
+            <div style="display:flex;gap:8px">
+              <input class="lab-input" id="rf-mission-answer" type="text" placeholder="Your answer&#8230;"
+                style="flex:1;font-family:var(--mono);text-transform:uppercase;letter-spacing:2px"
+                autocorrect="off" spellcheck="false" maxlength="12"
+                aria-label="Mission answer">
+              <button class="btn btn-primary" style="width:auto;flex-shrink:0" onclick="rfCheckMission()">&#10003; Check</button>
+            </div>
+            <div id="rf-mission-out" style="font-size:13px;margin-top:8px;font-weight:700;min-height:20px" aria-live="polite"></div>
+          </div>
+        </div>
+
+        <div id="tab-stego" style="display:none">
+          <div class="concept-box" style="margin-bottom:14px">
+            <div class="concept-box-title">&#128444; Image Steganography &#8212; LSB Hiding</div>
+            <div class="concept-box-body" style="font-size:12px;line-height:1.8">
+              <strong>Steganography</strong> hides a secret message inside an ordinary-looking carrier &#8212; here, a PNG image &#8212; without visibly altering it. Unlike encryption, it conceals the <em>existence</em> of the message.<br>
+              <strong>Least-Significant Bit (LSB):</strong> each pixel channel (R, G, B) is 0&#8211;255 (8 bits). Flipping the last bit changes the value by 1 &#8212; just 0.4% &#8212; imperceptible to the human eye. One bit of secret data fits per channel &#8658; 3 bits per pixel.<br>
+              <strong>Protocol:</strong> UTF-8 encode the message &#8594; prepend a 32-bit length header &#8594; write one bit per channel LSB (R, G, B in sequence; alpha skipped) &#8594; export as PNG (lossless &#8212; JPEG would destroy the LSBs).<br>
+              <strong>Capacity</strong> &#8776; (width &#215; height &#215; 3) &#247; 8 bytes, minus 4 bytes for the header.
+            </div>
+            <div style="background:#FEF2F2;border:1px solid #EF4444;border-radius:6px;padding:8px 10px;margin-top:8px;font-size:11px;color:#991B1B;line-height:1.6">
+              <strong>&#9888; Learning demo only.</strong> LSB steganography is NOT encryption. The message is hidden but completely unencrypted &#8212; any steganalysis tool extracts it in milliseconds. Never use this technique for real sensitive data.
+            </div>
+          </div>
+
+          <div class="lab-field">
+            <label class="lab-label">Source image</label>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+              <button class="btn btn-secondary" style="width:auto" onclick="stegoLoadSample()">&#128444; Use sample image</button>
+              <label class="btn btn-secondary" style="width:auto;cursor:pointer;margin:0;display:inline-flex;align-items:center;gap:4px">
+                &#128193; Upload image
+                <input type="file" id="stego-file-input" accept="image/*" style="display:none" onchange="stegoHandleFile(this.files[0])">
+              </label>
+            </div>
+            <div style="font-size:11px;color:var(--text2);margin-top:4px">Any image format accepted &#183; output is always PNG (lossless)</div>
+          </div>
+
+          <div style="display:flex;gap:12px;margin-bottom:6px;flex-wrap:wrap">
+            <div style="flex:1;min-width:110px">
+              <div style="font-size:10px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">Original</div>
+              <canvas id="stego-src-canvas" style="max-width:100%;border-radius:6px;border:1px solid var(--border);image-rendering:pixelated;display:block" aria-label="Original source image"></canvas>
+            </div>
+            <div style="flex:1;min-width:110px">
+              <div style="font-size:10px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">Stego output</div>
+              <canvas id="stego-out-canvas" style="max-width:100%;border-radius:6px;border:1px dashed var(--border);image-rendering:pixelated;display:block;opacity:0.3" aria-label="Steganographic output image"></canvas>
+            </div>
+          </div>
+          <div style="font-size:11px;color:var(--text2);margin-bottom:10px">These images look <em>identical</em> to the human eye &#8212; the hidden bits are visually imperceptible</div>
+
+          <div id="stego-capacity" style="font-size:12px;color:var(--text2);margin-bottom:10px;font-family:var(--mono)" aria-live="polite">Capacity: loading&#8230;</div>
+
+          <div class="lab-field">
+            <label class="lab-label">Secret message to hide</label>
+            <textarea class="lab-input" id="stego-msg" rows="3"
+              placeholder="Type the message you want to hide&#8230;"
+              oninput="stegoCheckCap()"
+              style="resize:vertical;font-size:14px"
+              aria-label="Secret message"></textarea>
+            <div id="stego-cap-warn" style="font-size:12px;min-height:18px;margin-top:4px" aria-live="polite"></div>
+          </div>
+
+          <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px">
+            <button class="btn btn-primary" style="flex:1;min-width:120px" onclick="stegoHide()">&#128274; Hide Message</button>
+            <button class="btn btn-secondary" style="flex:1;min-width:120px" onclick="stegoExtract()">&#128269; Extract Hidden</button>
+          </div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px">
+            <button class="btn btn-secondary" id="stego-dl-btn" style="flex:1;opacity:0.4;pointer-events:none" onclick="stegoDownload()">&#11015; Download stego PNG</button>
+            <button class="btn btn-secondary" id="stego-bp-btn" style="flex:1" onclick="stegoToggleBitplane()">&#128300; Toggle LSB bit-plane</button>
+          </div>
+
+          <div class="lab-field">
+            <label class="lab-label">Result</label>
+            <div class="lab-output" id="stego-result" style="min-height:44px;font-size:13px;word-break:break-all" aria-live="polite">
+              Click Hide Message or Extract Hidden&#8230;
+            </div>
+          </div>
+          <div style="font-size:11px;color:var(--text2);margin-top:4px;margin-bottom:12px">
+            &#128300; The bit-plane view sets each channel to 0 or 255 based on its LSB &#8212; white pixels show where data is encoded, revealing the hidden data region.
+          </div>
+
+          <div style="margin-top:14px;border:2px solid var(--accent);border-radius:var(--radius-sm);padding:14px;background:rgba(245,158,11,0.06)">
+            <div style="font-size:12px;font-weight:800;color:#92400E;text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px">&#127919; Mission &#8212; earn your XP</div>
+            <div style="font-size:12px;color:var(--text2);line-height:1.7;margin-bottom:10px">
+              <strong>Step 1:</strong> Keep the sample image (or upload your own).<br>
+              <strong>Step 2:</strong> Type any message in the secret message box.<br>
+              <strong>Step 3:</strong> Click <strong>Hide Message</strong> &#8212; can you see any difference between the two images?<br>
+              <strong>Step 4:</strong> Click <strong>Extract Hidden</strong> &#8212; your exact message should come back. The mission completes automatically on a successful round-trip.<br>
+              <strong>Step 5 (stretch):</strong> Toggle the LSB bit-plane to reveal where the data lives in the pixel grid.
+            </div>
+            <div id="stego-mission-out" style="font-size:13px;font-weight:700;min-height:20px" aria-live="polite"></div>
+          </div>
+        </div>
+
         <div style="margin-top:24px;border-top:2px solid var(--border);padding-top:18px">
           <div style="font-size:11px;font-weight:800;color:var(--primary);text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px">Part B · One-Time Pad — Week 2 Challenge</div>
           <p style="font-size:13px;color:var(--text2);margin-bottom:14px">The one-time pad XORs each plaintext byte with a key byte. With a truly random, never-reused key as long as the message it is provably unbreakable — but here the key is a single repeating byte, exactly as in the Week 2 formative challenge.</p>
@@ -10344,12 +10755,16 @@ function runCaesarDecrypt() {
 }
 
 function switchCipherTab(tab) {
-  ['caesar','vigenere','freq'].forEach(t => {
+  ['caesar','vigenere','freq','playfair','hill','railfence','stego'].forEach(t => {
     const el = document.getElementById('tab-' + t);
     const btn = document.getElementById('tab-' + t + '-btn');
     if (el) el.style.display = t === tab ? 'block' : 'none';
-    if (btn) { btn.className = t === tab ? 'btn btn-primary' : 'btn btn-secondary'; btn.style.flex = '1'; btn.style.fontSize = '12px'; }
+    if (btn) { btn.className = t === tab ? 'btn btn-primary' : 'btn btn-secondary'; btn.style.flex = '1 1 calc(50% - 4px)'; btn.style.fontSize = '12px'; }
   });
+  if (tab === 'playfair' && typeof pfUpdateGrid === 'function') pfUpdateGrid();
+  if (tab === 'hill' && typeof hillUpdateMatrix === 'function') hillUpdateMatrix();
+  if (tab === 'railfence' && typeof rfRun === 'function') rfRun();
+  if (tab === 'stego' && typeof stegoInit === 'function') stegoInit();
 }
 
 function runVigenereEncrypt() {
@@ -10401,6 +10816,828 @@ function runFreqAnalysis() {
   document.getElementById('lab-output-freq').textContent = lines.join('\n');
   completeLabStage();
 }
+
+// ── PLAYFAIR CIPHER LAB ─────────────────────────────────────────────────────
+let _pfMode = 'encrypt';
+let _pfSquare = [];
+let _pfSteps = [];
+let _pfStepIdx = 0;
+let _pfMissionDone = false;
+
+function buildPlayfairSquare(keyword) {
+  const kw = (keyword || 'PLAYFAIR').toUpperCase().replace(/J/g, 'I').replace(/[^A-Z]/g, '');
+  const seen = new Set();
+  const sq = [];
+  for (const c of kw) { if (!seen.has(c)) { seen.add(c); sq.push(c); } }
+  for (let i = 0; i < 26; i++) {
+    const c = String.fromCharCode(65 + i);
+    if (c === 'J') continue;
+    if (!seen.has(c)) { seen.add(c); sq.push(c); }
+  }
+  return sq;
+}
+
+function pfFindPos(sq, ch) {
+  const idx = sq.indexOf(ch === 'J' ? 'I' : ch);
+  return [Math.floor(idx / 5), idx % 5];
+}
+
+function pfPrepareText(text) {
+  const clean = text.toUpperCase().replace(/J/g, 'I').replace(/[^A-Z]/g, '');
+  const pairs = [];
+  let i = 0;
+  while (i < clean.length) {
+    const a = clean[i];
+    const b = i + 1 < clean.length ? clean[i + 1] : 'X';
+    if (a === b) { pairs.push([a, 'X']); i++; }
+    else { pairs.push([a, b]); i += 2; }
+  }
+  if (pairs.length === 0) return pairs;
+  const last = pairs[pairs.length - 1];
+  if (last[1] === '' || last[1] === undefined) last[1] = 'X';
+  return pairs;
+}
+
+function pfEncDec(a, b, sq, enc) {
+  const [ra, ca] = pfFindPos(sq, a);
+  const [rb, cb] = pfFindPos(sq, b);
+  const sh = enc ? 1 : 4;
+  let oa, ob, rule;
+  if (ra === rb) {
+    oa = sq[ra * 5 + (ca + sh) % 5];
+    ob = sq[rb * 5 + (cb + sh) % 5];
+    rule = 'Same row → shift right';
+  } else if (ca === cb) {
+    oa = sq[((ra + sh) % 5) * 5 + ca];
+    ob = sq[((rb + sh) % 5) * 5 + cb];
+    rule = 'Same column → shift down';
+  } else {
+    oa = sq[ra * 5 + cb];
+    ob = sq[rb * 5 + ca];
+    rule = 'Rectangle → swap columns';
+  }
+  return { oa, ob, rule, ra, ca, rb, cb, roa: pfFindPos(sq, oa)[0], coa: pfFindPos(sq, oa)[1], rob: pfFindPos(sq, ob)[0], cob: pfFindPos(sq, ob)[1] };
+}
+
+function renderPlayfairGrid(sq, highlights) {
+  const container = document.getElementById('pf-grid');
+  if (!container) return;
+  const hl = highlights || {};
+  let html = '<div style="display:grid;grid-template-columns:repeat(5,1fr);gap:3px;max-width:220px;margin:0 auto 8px">';
+  for (let i = 0; i < 25; i++) {
+    const r = Math.floor(i / 5), c = i % 5;
+    let bg = 'var(--bg)', color = 'var(--text)', fw = '600', border = '1px solid var(--border)';
+    if (hl.inA && hl.inA[0] === r && hl.inA[1] === c) { bg = '#2563EB'; color = 'white'; border = 'none'; }
+    else if (hl.inB && hl.inB[0] === r && hl.inB[1] === c) { bg = '#2563EB'; color = 'white'; border = 'none'; }
+    else if (hl.outA && hl.outA[0] === r && hl.outA[1] === c) { bg = '#10B981'; color = 'white'; border = 'none'; }
+    else if (hl.outB && hl.outB[0] === r && hl.outB[1] === c) { bg = '#10B981'; color = 'white'; border = 'none'; }
+    html += '<div style="aspect-ratio:1;display:flex;align-items:center;justify-content:center;background:' + bg + ';color:' + color + ';font-family:var(--mono);font-size:13px;font-weight:' + fw + ';border-radius:4px;border:' + border + '">' + sq[i] + '</div>';
+  }
+  html += '</div>';
+  container.innerHTML = html;
+}
+
+function pfUpdateGrid() {
+  const kw = (document.getElementById('pf-keyword') || {}).value || 'PLAYFAIR';
+  _pfSquare = buildPlayfairSquare(kw);
+  renderPlayfairGrid(_pfSquare, null);
+  pfRun();
+}
+
+function pfSetMode(mode) {
+  _pfMode = mode;
+  const encBtn = document.getElementById('pf-mode-enc');
+  const decBtn = document.getElementById('pf-mode-dec');
+  const inLbl  = document.getElementById('pf-input-lbl');
+  const outLbl = document.getElementById('pf-output-lbl');
+  if (encBtn) { encBtn.style.background = mode === 'encrypt' ? 'var(--primary)' : 'transparent'; encBtn.style.color = mode === 'encrypt' ? 'white' : 'var(--text2)'; encBtn.setAttribute('aria-pressed', mode === 'encrypt'); }
+  if (decBtn) { decBtn.style.background = mode === 'decrypt' ? 'var(--primary)' : 'transparent'; decBtn.style.color = mode === 'decrypt' ? 'white' : 'var(--text2)'; decBtn.setAttribute('aria-pressed', mode === 'decrypt'); }
+  if (inLbl)  inLbl.textContent  = mode === 'encrypt' ? 'Plaintext message' : 'Ciphertext message';
+  if (outLbl) outLbl.textContent = mode === 'encrypt' ? 'Encrypted result'  : 'Decrypted result';
+  pfRun();
+}
+
+function pfRun() {
+  const msgEl = document.getElementById('pf-msg');
+  const outEl = document.getElementById('pf-output');
+  const prepEl = document.getElementById('pf-prepared');
+  if (!msgEl || !outEl) return;
+  const msg = msgEl.value;
+  if (!msg.trim()) { outEl.textContent = 'Enter a message above...'; if (prepEl) prepEl.textContent = ''; document.getElementById('pf-stepper').innerHTML = ''; return; }
+  if (!_pfSquare.length) pfUpdateGrid();
+  const enc = _pfMode === 'encrypt';
+  const pairs = pfPrepareText(msg);
+  if (!pairs.length) { outEl.textContent = 'No valid letters found.'; if (prepEl) prepEl.textContent = ''; return; }
+  if (prepEl) prepEl.textContent = 'Digraph pairs: ' + pairs.map(p => p[0] + p[1]).join(' ');
+  _pfSteps = [];
+  let result = '';
+  for (const [a, b] of pairs) {
+    const res = pfEncDec(a, b, _pfSquare, enc);
+    result += res.oa + res.ob;
+    _pfSteps.push({ a, b, ...res });
+  }
+  outEl.textContent = result.match(/.{1,5}/g).join(' ');
+  _pfStepIdx = 0;
+  pfRenderStep();
+  completeLabStage();
+}
+
+function pfRenderStep() {
+  const container = document.getElementById('pf-stepper');
+  if (!container || !_pfSteps.length) return;
+  const s = _pfSteps[_pfStepIdx];
+  const total = _pfSteps.length;
+  const reduceAnim = state && state.reduceAnim;
+
+  const hl = { inA: [s.ra, s.ca], inB: [s.rb, s.cb], outA: [s.roa, s.coa], outB: [s.rob, s.cob] };
+  renderPlayfairGrid(_pfSquare, hl);
+
+  container.innerHTML = '<div style="background:var(--bg);border-radius:var(--radius-xs);padding:12px;margin-top:12px">'
+    + '<div style="font-size:11px;font-weight:700;color:var(--text2);margin-bottom:6px">STEP-BY-STEP STEPPER</div>'
+    + '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">'
+    + '<button onclick="pfStepNav(-1)" style="border:1px solid var(--border);background:var(--surface);border-radius:6px;padding:6px 12px;cursor:pointer;font-family:var(--font)" aria-label="Previous step">&#8592; Prev</button>'
+    + '<span style="font-size:12px;font-weight:700;color:var(--text)">Pair ' + (_pfStepIdx + 1) + ' / ' + total + '</span>'
+    + '<button onclick="pfStepNav(1)" style="border:1px solid var(--border);background:var(--surface);border-radius:6px;padding:6px 12px;cursor:pointer;font-family:var(--font)" aria-label="Next step">Next &#8594;</button>'
+    + '</div>'
+    + '<div style="display:flex;gap:8px;margin-bottom:8px">'
+    + '<div style="flex:1;background:var(--surface);border-radius:6px;padding:8px;text-align:center;border:2px solid #2563EB"><div style="font-size:10px;font-weight:700;color:#2563EB;margin-bottom:2px">INPUT</div><div style="font-family:var(--mono);font-size:20px;font-weight:800;letter-spacing:4px">' + s.a + s.b + '</div></div>'
+    + '<div style="display:flex;align-items:center;font-size:18px">&#8594;</div>'
+    + '<div style="flex:1;background:var(--surface);border-radius:6px;padding:8px;text-align:center;border:2px solid #10B981"><div style="font-size:10px;font-weight:700;color:#10B981;margin-bottom:2px">OUTPUT</div><div style="font-family:var(--mono);font-size:20px;font-weight:800;letter-spacing:4px">' + s.oa + s.ob + '</div></div>'
+    + '</div>'
+    + '<div style="font-size:12px;background:white;border-radius:4px;padding:6px 8px;color:var(--text2);font-style:italic">&#9654; Rule applied: <strong style="color:var(--text)">' + s.rule + '</strong></div>'
+    + '</div>';
+}
+
+function pfStepNav(dir) {
+  _pfStepIdx = Math.max(0, Math.min(_pfSteps.length - 1, _pfStepIdx + dir));
+  pfRenderStep();
+}
+
+function pfCheckMission() {
+  if (_pfMissionDone) return;
+  const ans = (document.getElementById('pf-mission-answer') || {}).value || '';
+  const outEl = document.getElementById('pf-mission-out');
+  if (!outEl) return;
+  const clean = ans.toUpperCase().replace(/[^A-Z]/g, '');
+  if (clean === 'PLAYFAIR') {
+    _pfMissionDone = true;
+    outEl.style.color = 'var(--secondary)';
+    outEl.textContent = '✓ Correct! CQBRGOGP decrypts to PLAYFAIR. +10 XP awarded!';
+    awardXP(10, 'Playfair cipher mission');
+  } else {
+    outEl.style.color = 'var(--danger)';
+    outEl.textContent = '✗ Not quite. Tip: set keyword to CRYPTO, switch to Decrypt, type CQBRGOGP.';
+  }
+}
+// ── END PLAYFAIR CIPHER LAB ─────────────────────────────────────────────────
+
+// ── HILL CIPHER LAB (2×2) ────────────────────────────────────────────────────
+let _hillMode = 'encrypt';
+let _hillMissionDone = false;
+
+function hillMod26(n) { return ((n % 26) + 26) % 26; }
+
+function hillGcd(a, b) { return b === 0 ? a : hillGcd(b, a % b); }
+
+function hillModInverse(a, m) {
+  a = ((a % m) + m) % m;
+  for (let x = 1; x < m; x++) { if ((a * x) % m === 1) return x; }
+  return null;
+}
+
+function hillGetK() {
+  const g = id => { const v = parseInt((document.getElementById(id) || {}).value, 10); return isNaN(v) ? 0 : hillMod26(v); };
+  return [g('hk-a'), g('hk-b'), g('hk-c'), g('hk-d')];
+}
+
+function hillGetInverse(a, b, c, d) {
+  const det = hillMod26(a * d - b * c);
+  const detInv = hillModInverse(det, 26);
+  if (detInv === null) return null;
+  return [hillMod26(detInv * d), hillMod26(detInv * (-b)), hillMod26(detInv * (-c)), hillMod26(detInv * a)];
+}
+
+function hillPrepareText(text) {
+  const clean = text.toUpperCase().replace(/[^A-Z]/g, '');
+  const padded = clean.length % 2 === 1 ? clean + 'X' : clean;
+  const pairs = [];
+  for (let i = 0; i < padded.length; i += 2) pairs.push([padded[i], padded[i + 1]]);
+  return { clean, padded, pairs };
+}
+
+function hillEncPair(ka, kb, kc, kd, x, y) {
+  return [hillMod26(ka * x + kb * y), hillMod26(kc * x + kd * y)];
+}
+
+function hillBuildViz(ka, kb, kc, kd, p1, p2, matLabel) {
+  const x = p1.charCodeAt(0) - 65;
+  const y = p2.charCodeAt(0) - 65;
+  const raw1 = ka * x + kb * y;
+  const raw2 = kc * x + kd * y;
+  const c1 = hillMod26(raw1);
+  const c2 = hillMod26(raw2);
+  const r1 = String.fromCharCode(c1 + 65);
+  const r2 = String.fromCharCode(c2 + 65);
+  return '<div style="background:var(--bg);border-radius:var(--radius-xs);padding:12px;margin-bottom:12px">'
+    + '<div style="font-weight:700;color:var(--text2);font-size:11px;text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">'
+    + matLabel + ' &#215; vector (first letter pair)</div>'
+    + '<div style="font-family:var(--mono);font-size:12px;line-height:2.1;color:var(--text)">'
+    + matLabel + ' &#215; [' + p1 + '(' + x + '),&#160;' + p2 + '(' + y + ')]<br>'
+    + 'row 1: ' + ka + '&#215;' + x + ' + ' + kb + '&#215;' + y
+    + ' = ' + (ka * x) + '+' + (kb * y) + ' = ' + raw1
+    + ' mod 26 = <strong style="color:var(--primary)">' + c1 + ' &#8594; ' + r1 + '</strong><br>'
+    + 'row 2: ' + kc + '&#215;' + x + ' + ' + kd + '&#215;' + y
+    + ' = ' + (kc * x) + '+' + (kd * y) + ' = ' + raw2
+    + ' mod 26 = <strong style="color:var(--primary)">' + c2 + ' &#8594; ' + r2 + '</strong>'
+    + '</div></div>';
+}
+
+function hillUpdateMatrix() {
+  const [a, b, c, d] = hillGetK();
+  const det = hillMod26(a * d - b * c);
+  const g = hillGcd(det, 26);
+  const detInv = hillModInverse(det, 26);
+  const inv = hillGetInverse(a, b, c, d);
+  const panel = document.getElementById('hill-inv-panel');
+  if (panel) {
+    if (g === 1 && inv !== null) {
+      panel.innerHTML = '<div style="background:#ECFDF5;border:1px solid #10B981;border-radius:var(--radius-xs);padding:10px 12px;font-size:12px">'
+        + '<div style="font-weight:700;color:#059669;margin-bottom:6px">&#10003; Invertible key &#8212; encryption and decryption both work</div>'
+        + '<div style="color:var(--text2);font-family:var(--mono);line-height:2">'
+        + 'det(K) = ' + a + '&#215;' + d + ' &#8722; ' + b + '&#215;' + c + ' = ' + hillMod26(a*d - b*c) + ' mod 26<br>'
+        + 'gcd(' + det + ',&#160;26) = ' + g + ' &#10003;<br>'
+        + 'det&#8315;&#185; &#8801; ' + detInv + ' mod 26<br>'
+        + 'K&#8315;&#185; = [[' + inv[0] + ',&#160;' + inv[1] + '],[' + inv[2] + ',&#160;' + inv[3] + ']]'
+        + '</div></div>';
+    } else {
+      panel.innerHTML = '<div style="background:#FEF2F2;border:1px solid #EF4444;border-radius:var(--radius-xs);padding:10px 12px;font-size:12px">'
+        + '<div style="font-weight:700;color:#DC2626;margin-bottom:4px">&#10005; Not invertible &#8212; decryption is impossible with this key</div>'
+        + '<div style="color:var(--text2);font-family:var(--mono)">'
+        + 'det(K) = ' + det + ' mod 26 &#183; gcd(' + det + ',&#160;26) = ' + g + ' &#8800; 1<br>'
+        + 'Adjust the matrix entries until gcd(det,&#160;26)&#160;=&#160;1.'
+        + '</div></div>';
+    }
+  }
+  hillRun();
+}
+
+function hillSetMode(mode) {
+  _hillMode = mode;
+  const encBtn = document.getElementById('hill-mode-enc');
+  const decBtn = document.getElementById('hill-mode-dec');
+  const inLbl  = document.getElementById('hill-input-lbl');
+  const outLbl = document.getElementById('hill-output-lbl');
+  const onStyle  = 'var(--primary)'; const offStyle = 'transparent';
+  if (encBtn) { encBtn.style.background = mode === 'encrypt' ? onStyle : offStyle; encBtn.style.color = mode === 'encrypt' ? 'white' : 'var(--text2)'; encBtn.setAttribute('aria-pressed', mode === 'encrypt'); }
+  if (decBtn) { decBtn.style.background = mode === 'decrypt' ? onStyle : offStyle; decBtn.style.color = mode === 'decrypt' ? 'white' : 'var(--text2)'; decBtn.setAttribute('aria-pressed', mode === 'decrypt'); }
+  if (inLbl)  inLbl.textContent  = mode === 'encrypt' ? 'Plaintext message (letters only)' : 'Ciphertext message (letters only)';
+  if (outLbl) outLbl.textContent = mode === 'encrypt' ? 'Encrypted result' : 'Decrypted result';
+  hillRun();
+}
+
+function hillRun() {
+  const msgEl  = document.getElementById('hill-msg');
+  const outEl  = document.getElementById('hill-output');
+  const pairsEl = document.getElementById('hill-pairs');
+  const vizEl  = document.getElementById('hill-viz');
+  if (!msgEl || !outEl) return;
+  const [a, b, c, d] = hillGetK();
+  const enc = _hillMode === 'encrypt';
+  const { clean, pairs } = hillPrepareText(msgEl.value);
+  if (!pairs.length) {
+    outEl.textContent = 'Enter a message above…';
+    if (pairsEl) pairsEl.textContent = '';
+    if (vizEl)   vizEl.innerHTML = '';
+    return;
+  }
+  if (pairsEl) pairsEl.textContent = 'Letter pairs: ' + pairs.map(p => p[0] + p[1]).join(' ')
+    + (clean.length % 2 === 1 ? ' (X appended for padding)' : '');
+  let ka, kb, kc, kd, matLabel;
+  if (!enc) {
+    const inv = hillGetInverse(a, b, c, d);
+    if (!inv) {
+      outEl.textContent = 'Key is not invertible — cannot decrypt. Adjust the matrix.';
+      if (vizEl) vizEl.innerHTML = '';
+      return;
+    }
+    [ka, kb, kc, kd] = inv;
+    matLabel = 'K&#8315;&#185;';
+  } else {
+    [ka, kb, kc, kd] = [a, b, c, d];
+    matLabel = 'K';
+  }
+  let result = '';
+  for (const [p1, p2] of pairs) {
+    const x = p1.charCodeAt(0) - 65, y = p2.charCodeAt(0) - 65;
+    const [c1, c2] = hillEncPair(ka, kb, kc, kd, x, y);
+    result += String.fromCharCode(c1 + 65) + String.fromCharCode(c2 + 65);
+  }
+  outEl.textContent = result.match(/.{1,5}/g).join(' ');
+  if (vizEl) vizEl.innerHTML = hillBuildViz(ka, kb, kc, kd, pairs[0][0], pairs[0][1], matLabel);
+  completeLabStage();
+}
+
+function hillCheckMission() {
+  if (_hillMissionDone) return;
+  const ans = ((document.getElementById('hill-mission-answer') || {}).value || '').toUpperCase().replace(/[^A-Z]/g, '');
+  const outEl = document.getElementById('hill-mission-out');
+  if (!outEl) return;
+  if (ans === 'HI') {
+    _hillMissionDone = true;
+    outEl.style.color = 'var(--secondary)';
+    outEl.innerHTML = '&#10003; Correct! TC decrypts to HI with K&#160;=&#160;[[3,3],[2,5]]. +10 XP awarded!';
+    awardXP(10, 'Hill cipher mission');
+  } else {
+    outEl.style.color = 'var(--danger)';
+    outEl.innerHTML = '&#10005; Not quite. Switch to Decrypt, keep K&#160;=&#160;[[3,3],[2,5]], type TC, read the result.';
+  }
+}
+// ── END HILL CIPHER LAB ───────────────────────────────────────────────────────
+
+// ── RAIL FENCE CIPHER LAB ─────────────────────────────────────────────────────
+let _rfMode = 'encrypt';
+let _rfRails = 3;
+let _rfMissionDone = false;
+let _rfAnimTimers = [];
+
+const RF_COLORS = ['#2563EB', '#10B981', '#F59E0B', '#8B5CF6', '#EF4444', '#0EA5E9'];
+
+// Build the zigzag rail-index pattern for a given message length and rail count.
+// Returns an array where entry i is the rail (0..rails-1) that character i sits on.
+function rfPattern(len, rails) {
+  if (rails < 2) rails = 2;
+  const period = 2 * (rails - 1);
+  const pat = [];
+  for (let i = 0; i < len; i++) {
+    const pos = i % period;
+    pat.push(pos < rails ? pos : period - pos);
+  }
+  return pat;
+}
+
+function rfEncrypt(clean, rails) {
+  const pat = rfPattern(clean.length, rails);
+  const rows = Array.from({ length: rails }, () => []);
+  for (let i = 0; i < clean.length; i++) rows[pat[i]].push(clean[i]);
+  return rows.map(r => r.join('')).join('');
+}
+
+function rfDecrypt(clean, rails) {
+  const len = clean.length;
+  const pat = rfPattern(len, rails);
+  const railLens = new Array(rails).fill(0);
+  for (const r of pat) railLens[r]++;
+  const slices = [];
+  let off = 0;
+  for (let r = 0; r < rails; r++) { slices.push(clean.slice(off, off + railLens[r])); off += railLens[r]; }
+  const ptrs = new Array(rails).fill(0);
+  const out = [];
+  for (let i = 0; i < len; i++) { const r = pat[i]; out.push(slices[r][ptrs[r]++]); }
+  return out.join('');
+}
+
+function rfBigramScore(text) {
+  const BG = new Set(['TH','HE','IN','ER','AN','RE','ON','EN','AT','OU','ND','ST','ES','TE','OF','ED','IS','IT','AL','AR','NT','TO','AS','HA','SE','HI','NG','NO','WH','WE','OR','ME','EL','LO','WO','RL','LD','EL']);
+  let n = 0;
+  for (let i = 0; i < text.length - 1; i++) { if (BG.has(text.slice(i, i + 2))) n++; }
+  return n / Math.max(text.length - 1, 1);
+}
+
+function rfBuildGrid(clean, rails) {
+  const len = clean.length;
+  if (!len || rails < 2) return '<div style="color:var(--text2);font-size:12px;padding:6px">Enter a message to see the zigzag grid.</div>';
+  const pat = rfPattern(len, rails);
+  const CAP = 36;
+  const vis = Math.min(len, CAP);
+  const cellPx = vis <= 16 ? 28 : vis <= 24 ? 22 : 18;
+  const fsPx   = cellPx >= 26 ? 13 : cellPx >= 20 ? 11 : 10;
+  let html = '<div style="overflow-x:auto;padding-bottom:4px"><div style="display:inline-block">';
+  for (let r = 0; r < rails; r++) {
+    html += '<div style="display:flex;align-items:center;margin-bottom:3px">';
+    html += '<div style="width:24px;font-size:10px;font-weight:700;color:' + RF_COLORS[r] + ';flex-shrink:0;text-align:right;padding-right:5px">R' + r + '</div>';
+    for (let c = 0; c < vis; c++) {
+      const ch = pat[c] === r ? clean[c] : '';
+      if (ch) {
+        html += '<div class="rf-cell" style="width:' + cellPx + 'px;height:' + cellPx + 'px;display:inline-flex;align-items:center;justify-content:center;background:' + RF_COLORS[r] + ';border-radius:4px;font-family:var(--mono);font-size:' + fsPx + 'px;font-weight:700;color:white;flex-shrink:0;margin:0 1px;transition:opacity 0.15s">' + ch + '</div>';
+      } else {
+        html += '<div style="width:' + cellPx + 'px;height:' + cellPx + 'px;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;margin:0 1px"><div style="width:3px;height:3px;border-radius:50%;background:var(--border)"></div></div>';
+      }
+    }
+    html += '</div>';
+  }
+  if (len > CAP) html += '<div style="font-size:11px;color:var(--text2);margin-top:2px">&#8230; showing first ' + CAP + ' of ' + len + ' characters</div>';
+  html += '</div></div>';
+  html += '<div style="font-size:11px;font-weight:700;color:var(--text2);margin:8px 0 4px;text-transform:uppercase;letter-spacing:.05em">Read off — top rail to bottom:</div>';
+  for (let r = 0; r < rails; r++) {
+    const chars = [];
+    for (let i = 0; i < Math.min(len, CAP); i++) { if (pat[i] === r) chars.push(clean[i]); }
+    if (chars.length) {
+      html += '<div style="font-size:12px;font-family:var(--mono);margin-bottom:3px"><span style="font-weight:700;color:' + RF_COLORS[r] + '">Rail&#160;' + r + ':</span>&#160;' + chars.join('') + '</div>';
+    }
+  }
+  return html;
+}
+
+function rfAnimateCells() {
+  _rfAnimTimers.forEach(clearTimeout);
+  _rfAnimTimers = [];
+  if (state && state.reduceAnim) return;
+  const cells = document.querySelectorAll('#rf-grid .rf-cell');
+  cells.forEach((cell, i) => {
+    cell.style.opacity = '0';
+    _rfAnimTimers.push(setTimeout(() => { cell.style.opacity = '1'; }, 10 + i * 22));
+  });
+}
+
+function rfSetRails(n) {
+  _rfRails = Math.max(2, Math.min(6, n));
+  for (let i = 2; i <= 6; i++) {
+    const btn = document.getElementById('rf-rail-' + i);
+    if (!btn) continue;
+    btn.style.background = i === _rfRails ? 'var(--primary)' : 'transparent';
+    btn.style.color      = i === _rfRails ? 'white' : 'var(--text2)';
+    btn.setAttribute('aria-pressed', i === _rfRails);
+  }
+  rfRun();
+}
+
+function rfSetMode(mode) {
+  _rfMode = mode;
+  const eBtn = document.getElementById('rf-mode-enc');
+  const dBtn = document.getElementById('rf-mode-dec');
+  const iLbl = document.getElementById('rf-input-lbl');
+  const oLbl = document.getElementById('rf-output-lbl');
+  if (eBtn) { eBtn.style.background = mode === 'encrypt' ? 'var(--primary)' : 'transparent'; eBtn.style.color = mode === 'encrypt' ? 'white' : 'var(--text2)'; eBtn.setAttribute('aria-pressed', mode === 'encrypt'); }
+  if (dBtn) { dBtn.style.background = mode === 'decrypt' ? 'var(--primary)' : 'transparent'; dBtn.style.color = mode === 'decrypt' ? 'white' : 'var(--text2)'; dBtn.setAttribute('aria-pressed', mode === 'decrypt'); }
+  if (iLbl) iLbl.textContent = mode === 'encrypt' ? 'Plaintext message (letters only)' : 'Ciphertext message (letters only)';
+  if (oLbl) oLbl.textContent = mode === 'encrypt' ? 'Encrypted result' : 'Decrypted result';
+  rfRun();
+}
+
+function rfRun() {
+  const msgEl = document.getElementById('rf-msg');
+  const outEl = document.getElementById('rf-output');
+  const gridEl = document.getElementById('rf-grid');
+  if (!msgEl || !outEl) return;
+  const clean = msgEl.value.toUpperCase().replace(/[^A-Z]/g, '');
+  if (!clean) {
+    outEl.textContent = 'Enter a message above…';
+    if (gridEl) gridEl.innerHTML = '<div style="color:var(--text2);font-size:12px;padding:6px">Enter a message to see the zigzag grid.</div>';
+    return;
+  }
+  const result = _rfMode === 'encrypt' ? rfEncrypt(clean, _rfRails) : rfDecrypt(clean, _rfRails);
+  outEl.textContent = result.match(/.{1,5}/g).join(' ');
+  if (gridEl) {
+    // Show the zigzag of the plaintext (source text) regardless of mode so the pattern is always clear
+    const vizText = _rfMode === 'encrypt' ? clean : result;
+    gridEl.innerHTML = rfBuildGrid(vizText, _rfRails);
+    rfAnimateCells();
+  }
+  completeLabStage();
+}
+
+function rfBreak() {
+  const ctEl = document.getElementById('rf-break-input');
+  const outEl = document.getElementById('rf-break-out');
+  if (!ctEl || !outEl) return;
+  const ct = ctEl.value.toUpperCase().replace(/[^A-Z]/g, '');
+  if (ct.length < 4) { outEl.innerHTML = '<div style="color:var(--text2);font-size:12px">Enter at least 4 ciphertext letters.</div>'; return; }
+  const cands = [];
+  for (let r = 2; r <= 6; r++) { const pt = rfDecrypt(ct, r); cands.push({ r, pt, score: rfBigramScore(pt) }); }
+  cands.sort((a, b) => b.score - a.score);
+  let html = '<div style="font-size:11px;font-weight:700;color:var(--text2);margin-bottom:8px;text-transform:uppercase;letter-spacing:.05em">Candidates ranked by bigram score</div>';
+  cands.forEach((c, idx) => {
+    const best = idx === 0;
+    html += '<div style="padding:8px 10px;border-radius:6px;margin-bottom:6px;border:'
+      + (best ? '2px solid #10B981' : '1px solid var(--border)') + ';background:' + (best ? '#ECFDF5' : 'var(--surface)') + '">'
+      + '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:3px">'
+      + '<span style="font-weight:700;font-size:12px;color:' + (best ? '#059669' : 'var(--text2)') + '">'
+      + (best ? '&#9733; ' : '') + 'N&#160;=&#160;' + c.r + '</span>'
+      + '<span style="font-size:11px;color:var(--text2)">bigram score ' + (c.score * 100).toFixed(1) + '%</span>'
+      + '</div>'
+      + '<div style="font-family:var(--mono);font-size:13px;letter-spacing:1px;color:var(--text)">' + c.pt + '</div>'
+      + '</div>';
+  });
+  outEl.innerHTML = html;
+}
+
+function rfCheckMission() {
+  if (_rfMissionDone) return;
+  const ans = ((document.getElementById('rf-mission-answer') || {}).value || '').toUpperCase().replace(/[^A-Z]/g, '');
+  const outEl = document.getElementById('rf-mission-out');
+  if (!outEl) return;
+  if (ans === 'HELLOWORLD') {
+    _rfMissionDone = true;
+    outEl.style.color = 'var(--secondary)';
+    outEl.innerHTML = '&#10003; Correct! HOLELWRDLO (3 rails) decrypts to HELLOWORLD. +10 XP awarded!';
+    awardXP(10, 'Rail fence mission');
+  } else {
+    outEl.style.color = 'var(--danger)';
+    outEl.innerHTML = '&#10005; Not quite. Set N&#160;=&#160;3, switch to Decrypt, type HOLELWRDLO and read the result.';
+  }
+}
+// ── END RAIL FENCE CIPHER LAB ────────────────────────────────────────────────
+
+// ── LSB IMAGE STEGANOGRAPHY LAB ───────────────────────────────────────────────
+let _stegoHiddenMsg = null;
+let _stegoMissionDone = false;
+let _stegoBitplaneOn = false;
+let _stegoOutSnapshot = null;
+
+// Build the 120×80 sample image programmatically — no external asset needed.
+function stegoMakeSample() {
+  const c = document.createElement('canvas');
+  c.width = 120; c.height = 80;
+  const ctx = c.getContext('2d');
+  const g = ctx.createLinearGradient(0, 0, 120, 80);
+  g.addColorStop(0, '#1E3A8A');
+  g.addColorStop(0.45, '#7C3AED');
+  g.addColorStop(1, '#065F46');
+  ctx.fillStyle = g;
+  ctx.fillRect(0, 0, 120, 80);
+  // Subtle grid overlay
+  ctx.strokeStyle = 'rgba(255,255,255,0.07)';
+  ctx.lineWidth = 1;
+  for (let x = 0; x < 120; x += 10) { ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, 80); ctx.stroke(); }
+  for (let y = 0; y < 80; y += 10) { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(120, y); ctx.stroke(); }
+  // Labels
+  ctx.fillStyle = 'rgba(255,255,255,0.88)';
+  ctx.font = 'bold 12px sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText('CryptoCourse', 60, 34);
+  ctx.font = '9px sans-serif';
+  ctx.fillStyle = 'rgba(255,255,255,0.6)';
+  ctx.fillText('LSB Steganography', 60, 52);
+  return c;
+}
+
+function stegoSetDisplay(canvas, w, h) {
+  const maxW = 180;
+  const dw = Math.min(w, maxW);
+  canvas.style.width = dw + 'px';
+  canvas.style.height = Math.round(h * dw / w) + 'px';
+}
+
+function stegoCapBytes(w, h) {
+  return Math.max(0, Math.floor((w * h * 3) / 8) - 4);
+}
+
+function stegoUpdateCapacity() {
+  const src = document.getElementById('stego-src-canvas');
+  const el  = document.getElementById('stego-capacity');
+  if (!src || !el || !src.width) return;
+  const cap = stegoCapBytes(src.width, src.height);
+  el.textContent = 'Capacity: ' + cap.toLocaleString() + ' chars (' + src.width + '×' + src.height + ' px · ' + (src.width * src.height * 3) + ' channels)';
+}
+
+function stegoCheckCap() {
+  const src  = document.getElementById('stego-src-canvas');
+  const msg  = (document.getElementById('stego-msg') || {}).value || '';
+  const warn = document.getElementById('stego-cap-warn');
+  if (!warn) return;
+  if (!msg) { warn.textContent = ''; return; }
+  const bytes = new TextEncoder().encode(msg).length;
+  const cap   = src ? stegoCapBytes(src.width, src.height) : 0;
+  if (bytes > cap) {
+    warn.style.color = 'var(--danger)';
+    warn.textContent = '⚠ Too large: ' + bytes + ' bytes vs. capacity ' + cap + '. Shorten the message or use a larger image.';
+  } else {
+    warn.style.color = 'var(--secondary)';
+    warn.textContent = bytes + ' of ' + cap + ' bytes used (' + Math.round(bytes / Math.max(cap, 1) * 100) + '%)';
+  }
+}
+
+function stegoInit() {
+  const srcCanvas = document.getElementById('stego-src-canvas');
+  if (!srcCanvas) return;
+  // dataset flag survives tab switches but is reset when the lab HTML is re-injected
+  if (srcCanvas.dataset.stegoLoaded) { stegoUpdateCapacity(); stegoCheckCap(); return; }
+  stegoLoadSample();
+}
+
+function stegoLoadSample() {
+  const srcCanvas = document.getElementById('stego-src-canvas');
+  if (!srcCanvas) return;
+  const sample = stegoMakeSample();
+  srcCanvas.width = sample.width;
+  srcCanvas.height = sample.height;
+  srcCanvas.getContext('2d').drawImage(sample, 0, 0);
+  srcCanvas.dataset.stegoLoaded = '1';
+  stegoSetDisplay(srcCanvas, sample.width, sample.height);
+  const outCanvas = document.getElementById('stego-out-canvas');
+  if (outCanvas) {
+    outCanvas.width = sample.width;
+    outCanvas.height = sample.height;
+    outCanvas.getContext('2d').clearRect(0, 0, sample.width, sample.height);
+    outCanvas.style.opacity = '0.3';
+    stegoSetDisplay(outCanvas, sample.width, sample.height);
+  }
+  _stegoHiddenMsg = null;
+  _stegoBitplaneOn = false;
+  _stegoOutSnapshot = null;
+  const dlBtn = document.getElementById('stego-dl-btn');
+  if (dlBtn) { dlBtn.style.opacity = '0.4'; dlBtn.style.pointerEvents = 'none'; }
+  const bpBtn = document.getElementById('stego-bp-btn');
+  if (bpBtn) bpBtn.textContent = '🔬 Toggle LSB bit-plane';
+  stegoUpdateCapacity();
+  stegoCheckCap();
+}
+
+function stegoHandleFile(file) {
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    const img = new Image();
+    img.onload = function() {
+      const srcCanvas = document.getElementById('stego-src-canvas');
+      if (!srcCanvas) return;
+      srcCanvas.width = img.width;
+      srcCanvas.height = img.height;
+      srcCanvas.getContext('2d').drawImage(img, 0, 0);
+      srcCanvas.dataset.stegoLoaded = '1';
+      stegoSetDisplay(srcCanvas, img.width, img.height);
+      const outCanvas = document.getElementById('stego-out-canvas');
+      if (outCanvas) {
+        outCanvas.width = img.width;
+        outCanvas.height = img.height;
+        outCanvas.getContext('2d').clearRect(0, 0, img.width, img.height);
+        outCanvas.style.opacity = '0.3';
+        stegoSetDisplay(outCanvas, img.width, img.height);
+      }
+      _stegoHiddenMsg = null;
+      _stegoBitplaneOn = false;
+      _stegoOutSnapshot = null;
+      stegoUpdateCapacity();
+      stegoCheckCap();
+      const res = document.getElementById('stego-result');
+      if (res) res.textContent = 'Image loaded: ' + img.width + '×' + img.height + ' px. Ready to hide a message.';
+    };
+    img.onerror = function() {
+      const res = document.getElementById('stego-result');
+      if (res) res.textContent = 'Could not load image. Please upload a valid image file.';
+    };
+    img.src = e.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+// Encode: UTF-8 bytes + 4-byte big-endian length header → LSBs of R,G,B channels.
+function stegoEncode(srcCanvas, message) {
+  const msgBytes  = new TextEncoder().encode(message);
+  const len       = msgBytes.length;
+  const allBytes  = new Uint8Array(4 + len);
+  allBytes[0] = (len >>> 24) & 0xFF;
+  allBytes[1] = (len >>> 16) & 0xFF;
+  allBytes[2] = (len >>> 8)  & 0xFF;
+  allBytes[3] =  len         & 0xFF;
+  allBytes.set(msgBytes, 4);
+  if (allBytes.length * 8 > srcCanvas.width * srcCanvas.height * 3) return null;
+  const outCanvas = document.createElement('canvas');
+  outCanvas.width  = srcCanvas.width;
+  outCanvas.height = srcCanvas.height;
+  const ctx = outCanvas.getContext('2d');
+  ctx.drawImage(srcCanvas, 0, 0);
+  const imgData = ctx.getImageData(0, 0, outCanvas.width, outCanvas.height);
+  const d = imgData.data;
+  let bitIdx = 0;
+  for (let bi = 0; bi < allBytes.length; bi++) {
+    const byte = allBytes[bi];
+    for (let shift = 7; shift >= 0; shift--) {
+      const bit = (byte >> shift) & 1;
+      const px  = Math.floor(bitIdx / 3);
+      const ch  = bitIdx % 3;        // 0=R, 1=G, 2=B
+      d[px * 4 + ch] = (d[px * 4 + ch] & 0xFE) | bit;
+      bitIdx++;
+    }
+  }
+  ctx.putImageData(imgData, 0, 0);
+  return outCanvas;
+}
+
+// Decode: read LSBs back → reconstruct 32-bit length → UTF-8 decode message bytes.
+function stegoDecode(stegoCanvas) {
+  const ctx = stegoCanvas.getContext('2d');
+  const imgData = ctx.getImageData(0, 0, stegoCanvas.width, stegoCanvas.height);
+  const d = imgData.data;
+  // Read 32-bit length header
+  let len = 0;
+  for (let i = 0; i < 32; i++) {
+    const px  = Math.floor(i / 3);
+    const ch  = i % 3;
+    len = len * 2 + (d[px * 4 + ch] & 1);
+  }
+  const maxMsg = Math.floor((stegoCanvas.width * stegoCanvas.height * 3 - 32) / 8);
+  if (len <= 0 || len > maxMsg || len > 2000000) return null;
+  const msgBytes = new Uint8Array(len);
+  for (let b = 0; b < len; b++) {
+    let byte = 0;
+    for (let bit = 0; bit < 8; bit++) {
+      const bitIdx = 32 + b * 8 + bit;
+      const px  = Math.floor(bitIdx / 3);
+      const ch  = bitIdx % 3;
+      byte = byte * 2 + (d[px * 4 + ch] & 1);
+    }
+    msgBytes[b] = byte;
+  }
+  try { return new TextDecoder().decode(msgBytes); } catch (e) { return null; }
+}
+
+function stegoHide() {
+  const srcCanvas = document.getElementById('stego-src-canvas');
+  const outCanvas = document.getElementById('stego-out-canvas');
+  const msgEl     = document.getElementById('stego-msg');
+  const resEl     = document.getElementById('stego-result');
+  if (!srcCanvas || !outCanvas || !msgEl || !resEl) return;
+  const message = msgEl.value;
+  if (!message) { resEl.textContent = 'Please enter a message to hide.'; return; }
+  if (!srcCanvas.width) { resEl.textContent = 'No image loaded. Use the sample or upload an image.'; return; }
+  const result = stegoEncode(srcCanvas, message);
+  if (!result) {
+    resEl.innerHTML = '<span style="color:var(--danger)">⚠ Message too large for this image (' + new TextEncoder().encode(message).length + ' bytes). Shorten the message or upload a larger image.</span>';
+    return;
+  }
+  outCanvas.width  = result.width;
+  outCanvas.height = result.height;
+  outCanvas.getContext('2d').drawImage(result, 0, 0);
+  outCanvas.style.opacity = '1';
+  stegoSetDisplay(outCanvas, result.width, result.height);
+  _stegoHiddenMsg  = message;
+  _stegoBitplaneOn = false;
+  _stegoOutSnapshot = null;
+  const dlBtn = document.getElementById('stego-dl-btn');
+  if (dlBtn) { dlBtn.style.opacity = '1'; dlBtn.style.pointerEvents = 'auto'; }
+  const bpBtn = document.getElementById('stego-bp-btn');
+  if (bpBtn) bpBtn.textContent = '🔬 Toggle LSB bit-plane';
+  const bytes = new TextEncoder().encode(message).length;
+  resEl.innerHTML = '✓ Hidden: ' + bytes + ' byte' + (bytes !== 1 ? 's' : '') + ' encoded into ' + result.width + '×' + result.height + ' px. Can you see any difference? Click <strong>Extract Hidden</strong> to confirm the round-trip.';
+  completeLabStage();
+}
+
+function stegoExtract() {
+  const outCanvas = document.getElementById('stego-out-canvas');
+  const resEl     = document.getElementById('stego-result');
+  if (!outCanvas || !resEl) return;
+  if (!outCanvas.width || outCanvas.style.opacity === '0.3') {
+    resEl.textContent = 'No stego image yet — click Hide Message first.';
+    return;
+  }
+  if (_stegoBitplaneOn) stegoToggleBitplane();
+  const message = stegoDecode(outCanvas);
+  if (message === null) {
+    resEl.innerHTML = '<span style="color:var(--danger)">⚠ No valid hidden message found. Hide a message first, then extract.</span>';
+    return;
+  }
+  const safe = message.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  resEl.innerHTML = '✓ Extracted: <strong style="font-family:var(--mono)">' + safe + '</strong>';
+  // Auto-complete mission on successful round-trip
+  if (!_stegoMissionDone && _stegoHiddenMsg !== null && message === _stegoHiddenMsg) {
+    _stegoMissionDone = true;
+    const mOut = document.getElementById('stego-mission-out');
+    if (mOut) {
+      mOut.style.color = 'var(--secondary)';
+      mOut.innerHTML = '✓ Round-trip confirmed — your hidden message came back byte-perfect! +10 XP awarded!';
+    }
+    awardXP(10, 'Steganography mission');
+  }
+}
+
+function stegoDownload() {
+  const outCanvas = document.getElementById('stego-out-canvas');
+  if (!outCanvas || !outCanvas.width) return;
+  if (_stegoBitplaneOn) stegoToggleBitplane();
+  const a = document.createElement('a');
+  a.href     = outCanvas.toDataURL('image/png');
+  a.download = 'stego-image.png';
+  a.click();
+}
+
+function stegoToggleBitplane() {
+  const outCanvas = document.getElementById('stego-out-canvas');
+  const btn       = document.getElementById('stego-bp-btn');
+  if (!outCanvas || !outCanvas.width || outCanvas.style.opacity === '0.3') {
+    showToast('Hide a message first, then toggle the bit-plane.');
+    return;
+  }
+  const ctx = outCanvas.getContext('2d');
+  if (!_stegoBitplaneOn) {
+    _stegoOutSnapshot = ctx.getImageData(0, 0, outCanvas.width, outCanvas.height);
+    const imgData = ctx.getImageData(0, 0, outCanvas.width, outCanvas.height);
+    const d = imgData.data;
+    for (let i = 0; i < d.length; i += 4) {
+      d[i]   = (d[i]   & 1) * 255;
+      d[i+1] = (d[i+1] & 1) * 255;
+      d[i+2] = (d[i+2] & 1) * 255;
+    }
+    ctx.putImageData(imgData, 0, 0);
+    _stegoBitplaneOn = true;
+    if (btn) btn.textContent = '🎨 Restore stego view';
+  } else {
+    if (_stegoOutSnapshot) ctx.putImageData(_stegoOutSnapshot, 0, 0);
+    _stegoBitplaneOn = false;
+    if (btn) btn.textContent = '🔬 Toggle LSB bit-plane';
+  }
+}
+// ── END LSB STEGANOGRAPHY LAB ─────────────────────────────────────────────────
 
 async function runAESLab() {
   const plain = document.getElementById('lab-aes-plain').value;
@@ -13638,6 +14875,10 @@ const i18n = {
     sync_off_status: 'Backup off', turn_off_backup: 'Turn off backup',
     backup_off_toast: 'Backup turned off — your progress stays on this device only.',
     backup_on_toast: '✓ Backup turned on.',
+    // Lab deep-link & activity codes
+    lab_coming_soon: 'This lab is coming soon', lab_not_found: 'Lab not found',
+    activity_code_label: 'Go to Activity', activity_code_placeholder: 'Enter code (e.g. 1.1)',
+    activity_code_go: 'Go', activity_code_invalid: 'Unknown activity code',
   },
   ar: {
     // Navigation
@@ -13766,6 +15007,10 @@ const i18n = {
     sync_off_status: 'النسخ الاحتياطي متوقف', turn_off_backup: 'إيقاف النسخ الاحتياطي',
     backup_off_toast: 'تم إيقاف النسخ الاحتياطي — يبقى تقدمك على هذا الجهاز فقط.',
     backup_on_toast: '✓ تم تشغيل النسخ الاحتياطي.',
+    // Lab deep-link & activity codes
+    lab_coming_soon: 'هذا المختبر قادم قريبًا', lab_not_found: 'المختبر غير موجود',
+    activity_code_label: 'الانتقال إلى نشاط', activity_code_placeholder: 'أدخل الرمز (مثال: 1.1)',
+    activity_code_go: 'انتقال', activity_code_invalid: 'رمز النشاط غير معروف',
   }
 };
 
@@ -16282,6 +17527,12 @@ async function enterApp() {
   // Show admin tab if teacher/admin
   updateNavForRole();
   navigate('home');
+  // Honour any #/lab/<id> deep link that was captured at page load.
+  const _pendingLabLink = sessionStorage.getItem('_pending_lab_deeplink');
+  if (_pendingLabLink) {
+    sessionStorage.removeItem('_pending_lab_deeplink');
+    setTimeout(() => openLabDeepLink(_pendingLabLink), 200);
+  }
   checkSemesterEnrollment();
   // Prompt invited students to set their own password on first login
   const users = loadUsers();
@@ -25483,6 +26734,7 @@ function _updateStepChrome(player, next, total) {
   var indEl = player.querySelector('.idag-ind');
   if (indEl) indEl.textContent = (next + 1) + ' / ' + total;
   // Buttons
+  
   var prevBtn = player.querySelector('.idag-prev');
   var nextBtn = player.querySelector('.idag-next');
   if (prevBtn) prevBtn.disabled = next === 0;
@@ -26264,6 +27516,14 @@ document.addEventListener('DOMContentLoaded', () => {
   renderVersionStamps();
   showWhatsNewOnce();
   try {
+    // Handle #/lab/<id> deep links from printed textbook QR codes.
+    // Stored in sessionStorage so it survives the login screen if the user is not logged in.
+    const _labHashMatch = window.location.hash.match(/^#\/lab\/([a-z0-9_-]+)$/i);
+    if (_labHashMatch) {
+      sessionStorage.setItem('_pending_lab_deeplink', _labHashMatch[1].toLowerCase());
+      history.replaceState({}, '', window.location.pathname + window.location.search);
+    }
+
     // Handle invite URL params: ?email=...&name=...&join=...
     const _urlParams = new URLSearchParams(window.location.search);
     const _inviteEmail = _urlParams.get('email');
