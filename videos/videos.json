@@ -1,0 +1,548 @@
+[
+  {
+    "module": 1,
+    "title_ar": "مقدمة إلى التشفير",
+    "title_en": "Introduction to Cryptography",
+    "videos": [
+      {
+        "type": "concept_intro",
+        "title_ar": "مقدمة إلى التشفير — مقدمة المفهوم",
+        "title_en": "Introduction to Cryptography — Concept Introduction",
+        "primary_url": "https://PLACEHOLDER-PRIMARY-M01-CONCEPT-INTRO",
+        "mirror_url": "https://PLACEHOLDER-MIRROR-M01-CONCEPT-INTRO",
+        "download_url": "https://PLACEHOLDER-DOWNLOAD-M01-CONCEPT-INTRO"
+      },
+      {
+        "type": "worked_example",
+        "title_ar": "مقدمة إلى التشفير — مثال محلول",
+        "title_en": "Introduction to Cryptography — Worked Example",
+        "primary_url": "https://PLACEHOLDER-PRIMARY-M01-WORKED-EXAMPLE",
+        "mirror_url": "https://PLACEHOLDER-MIRROR-M01-WORKED-EXAMPLE",
+        "download_url": "https://PLACEHOLDER-DOWNLOAD-M01-WORKED-EXAMPLE"
+      },
+      {
+        "type": "lab_walkthrough",
+        "title_ar": "مقدمة إلى التشفير — شرح المختبر",
+        "title_en": "Introduction to Cryptography — Lab Walkthrough",
+        "primary_url": "https://PLACEHOLDER-PRIMARY-M01-LAB-WALKTHROUGH",
+        "mirror_url": "https://PLACEHOLDER-MIRROR-M01-LAB-WALKTHROUGH",
+        "download_url": "https://PLACEHOLDER-DOWNLOAD-M01-LAB-WALKTHROUGH"
+      },
+      {
+        "type": "quiz_review",
+        "title_ar": "مقدمة إلى التشفير — مراجعة الاختبار",
+        "title_en": "Introduction to Cryptography — Quiz Review",
+        "primary_url": "https://PLACEHOLDER-PRIMARY-M01-QUIZ-REVIEW",
+        "mirror_url": "https://PLACEHOLDER-MIRROR-M01-QUIZ-REVIEW",
+        "download_url": "https://PLACEHOLDER-DOWNLOAD-M01-QUIZ-REVIEW"
+      }
+    ]
+  },
+  {
+    "module": 2,
+    "title_ar": "مقدمة إلى التشفير (موسَّعة)",
+    "title_en": "Introduction to Cryptography (Extended)",
+    "videos": [
+      {
+        "type": "concept_intro",
+        "title_ar": "مقدمة إلى التشفير (موسَّعة) — مقدمة المفهوم",
+        "title_en": "Introduction to Cryptography (Extended) — Concept Introduction",
+        "primary_url": "https://PLACEHOLDER-PRIMARY-M02-CONCEPT-INTRO",
+        "mirror_url": "https://PLACEHOLDER-MIRROR-M02-CONCEPT-INTRO",
+        "download_url": "https://PLACEHOLDER-DOWNLOAD-M02-CONCEPT-INTRO"
+      },
+      {
+        "type": "worked_example",
+        "title_ar": "مقدمة إلى التشفير (موسَّعة) — مثال محلول",
+        "title_en": "Introduction to Cryptography (Extended) — Worked Example",
+        "primary_url": "https://PLACEHOLDER-PRIMARY-M02-WORKED-EXAMPLE",
+        "mirror_url": "https://PLACEHOLDER-MIRROR-M02-WORKED-EXAMPLE",
+        "download_url": "https://PLACEHOLDER-DOWNLOAD-M02-WORKED-EXAMPLE"
+      },
+      {
+        "type": "lab_walkthrough",
+        "title_ar": "مقدمة إلى التشفير (موسَّعة) — شرح المختبر",
+        "title_en": "Introduction to Cryptography (Extended) — Lab Walkthrough",
+        "primary_url": "https://PLACEHOLDER-PRIMARY-M02-LAB-WALKTHROUGH",
+        "mirror_url": "https://PLACEHOLDER-MIRROR-M02-LAB-WALKTHROUGH",
+        "download_url": "https://PLACEHOLDER-DOWNLOAD-M02-LAB-WALKTHROUGH"
+      },
+      {
+        "type": "quiz_review",
+        "title_ar": "مقدمة إلى التشفير (موسَّعة) — مراجعة الاختبار",
+        "title_en": "Introduction to Cryptography (Extended) — Quiz Review",
+        "primary_url": "https://PLACEHOLDER-PRIMARY-M02-QUIZ-REVIEW",
+        "mirror_url": "https://PLACEHOLDER-MIRROR-M02-QUIZ-REVIEW",
+        "download_url": "https://PLACEHOLDER-DOWNLOAD-M02-QUIZ-REVIEW"
+      }
+    ]
+  },
+  {
+    "module": 3,
+    "title_ar": "التشفير المتماثل — الجزء الأول",
+    "title_en": "Symmetric Cryptography I",
+    "videos": [
+      {
+        "type": "concept_intro",
+        "title_ar": "التشفير المتماثل (الجزء الأول) — مقدمة المفهوم",
+        "title_en": "Symmetric Cryptography I — Concept Introduction",
+        "primary_url": "https://PLACEHOLDER-PRIMARY-M03-CONCEPT-INTRO",
+        "mirror_url": "https://PLACEHOLDER-MIRROR-M03-CONCEPT-INTRO",
+        "download_url": "https://PLACEHOLDER-DOWNLOAD-M03-CONCEPT-INTRO"
+      },
+      {
+        "type": "worked_example",
+        "title_ar": "التشفير المتماثل (الجزء الأول) — مثال محلول",
+        "title_en": "Symmetric Cryptography I — Worked Example",
+        "primary_url": "https://PLACEHOLDER-PRIMARY-M03-WORKED-EXAMPLE",
+        "mirror_url": "https://PLACEHOLDER-MIRROR-M03-WORKED-EXAMPLE",
+        "download_url": "https://PLACEHOLDER-DOWNLOAD-M03-WORKED-EXAMPLE"
+      },
+      {
+        "type": "lab_walkthrough",
+        "title_ar": "التشفير المتماثل (الجزء الأول) — شرح المختبر",
+        "title_en": "Symmetric Cryptography I — Lab Walkthrough",
+        "primary_url": "https://PLACEHOLDER-PRIMARY-M03-LAB-WALKTHROUGH",
+        "mirror_url": "https://PLACEHOLDER-MIRROR-M03-LAB-WALKTHROUGH",
+        "download_url": "https://PLACEHOLDER-DOWNLOAD-M03-LAB-WALKTHROUGH"
+      },
+      {
+        "type": "quiz_review",
+        "title_ar": "التشفير المتماثل (الجزء الأول) — مراجعة الاختبار",
+        "title_en": "Symmetric Cryptography I — Quiz Review",
+        "primary_url": "https://PLACEHOLDER-PRIMARY-M03-QUIZ-REVIEW",
+        "mirror_url": "https://PLACEHOLDER-MIRROR-M03-QUIZ-REVIEW",
+        "download_url": "https://PLACEHOLDER-DOWNLOAD-M03-QUIZ-REVIEW"
+      }
+    ]
+  },
+  {
+    "module": 4,
+    "title_ar": "التشفير المتماثل — الجزء الثاني",
+    "title_en": "Symmetric Cryptography II",
+    "videos": [
+      {
+        "type": "concept_intro",
+        "title_ar": "التشفير المتماثل (الجزء الثاني) — مقدمة المفهوم",
+        "title_en": "Symmetric Cryptography II — Concept Introduction",
+        "primary_url": "https://PLACEHOLDER-PRIMARY-M04-CONCEPT-INTRO",
+        "mirror_url": "https://PLACEHOLDER-MIRROR-M04-CONCEPT-INTRO",
+        "download_url": "https://PLACEHOLDER-DOWNLOAD-M04-CONCEPT-INTRO"
+      },
+      {
+        "type": "worked_example",
+        "title_ar": "التشفير المتماثل (الجزء الثاني) — مثال محلول",
+        "title_en": "Symmetric Cryptography II — Worked Example",
+        "primary_url": "https://PLACEHOLDER-PRIMARY-M04-WORKED-EXAMPLE",
+        "mirror_url": "https://PLACEHOLDER-MIRROR-M04-WORKED-EXAMPLE",
+        "download_url": "https://PLACEHOLDER-DOWNLOAD-M04-WORKED-EXAMPLE"
+      },
+      {
+        "type": "lab_walkthrough",
+        "title_ar": "التشفير المتماثل (الجزء الثاني) — شرح المختبر",
+        "title_en": "Symmetric Cryptography II — Lab Walkthrough",
+        "primary_url": "https://PLACEHOLDER-PRIMARY-M04-LAB-WALKTHROUGH",
+        "mirror_url": "https://PLACEHOLDER-MIRROR-M04-LAB-WALKTHROUGH",
+        "download_url": "https://PLACEHOLDER-DOWNLOAD-M04-LAB-WALKTHROUGH"
+      },
+      {
+        "type": "quiz_review",
+        "title_ar": "التشفير المتماثل (الجزء الثاني) — مراجعة الاختبار",
+        "title_en": "Symmetric Cryptography II — Quiz Review",
+        "primary_url": "https://PLACEHOLDER-PRIMARY-M04-QUIZ-REVIEW",
+        "mirror_url": "https://PLACEHOLDER-MIRROR-M04-QUIZ-REVIEW",
+        "download_url": "https://PLACEHOLDER-DOWNLOAD-M04-QUIZ-REVIEW"
+      }
+    ]
+  },
+  {
+    "module": 5,
+    "title_ar": "دوال التجزئة",
+    "title_en": "Hash Functions",
+    "videos": [
+      {
+        "type": "concept_intro",
+        "title_ar": "دوال التجزئة — مقدمة المفهوم",
+        "title_en": "Hash Functions — Concept Introduction",
+        "primary_url": "https://PLACEHOLDER-PRIMARY-M05-CONCEPT-INTRO",
+        "mirror_url": "https://PLACEHOLDER-MIRROR-M05-CONCEPT-INTRO",
+        "download_url": "https://PLACEHOLDER-DOWNLOAD-M05-CONCEPT-INTRO"
+      },
+      {
+        "type": "worked_example",
+        "title_ar": "دوال التجزئة — مثال محلول",
+        "title_en": "Hash Functions — Worked Example",
+        "primary_url": "https://PLACEHOLDER-PRIMARY-M05-WORKED-EXAMPLE",
+        "mirror_url": "https://PLACEHOLDER-MIRROR-M05-WORKED-EXAMPLE",
+        "download_url": "https://PLACEHOLDER-DOWNLOAD-M05-WORKED-EXAMPLE"
+      },
+      {
+        "type": "lab_walkthrough",
+        "title_ar": "دوال التجزئة — شرح المختبر",
+        "title_en": "Hash Functions — Lab Walkthrough",
+        "primary_url": "https://PLACEHOLDER-PRIMARY-M05-LAB-WALKTHROUGH",
+        "mirror_url": "https://PLACEHOLDER-MIRROR-M05-LAB-WALKTHROUGH",
+        "download_url": "https://PLACEHOLDER-DOWNLOAD-M05-LAB-WALKTHROUGH"
+      },
+      {
+        "type": "quiz_review",
+        "title_ar": "دوال التجزئة — مراجعة الاختبار",
+        "title_en": "Hash Functions — Quiz Review",
+        "primary_url": "https://PLACEHOLDER-PRIMARY-M05-QUIZ-REVIEW",
+        "mirror_url": "https://PLACEHOLDER-MIRROR-M05-QUIZ-REVIEW",
+        "download_url": "https://PLACEHOLDER-DOWNLOAD-M05-QUIZ-REVIEW"
+      }
+    ]
+  },
+  {
+    "module": 6,
+    "title_ar": "تشفير المفتاح العام — الجزء الأول",
+    "title_en": "Public Key Cryptography I",
+    "videos": [
+      {
+        "type": "concept_intro",
+        "title_ar": "تشفير المفتاح العام (الجزء الأول) — مقدمة المفهوم",
+        "title_en": "Public Key Cryptography I — Concept Introduction",
+        "primary_url": "https://PLACEHOLDER-PRIMARY-M06-CONCEPT-INTRO",
+        "mirror_url": "https://PLACEHOLDER-MIRROR-M06-CONCEPT-INTRO",
+        "download_url": "https://PLACEHOLDER-DOWNLOAD-M06-CONCEPT-INTRO"
+      },
+      {
+        "type": "worked_example",
+        "title_ar": "تشفير المفتاح العام (الجزء الأول) — مثال محلول",
+        "title_en": "Public Key Cryptography I — Worked Example",
+        "primary_url": "https://PLACEHOLDER-PRIMARY-M06-WORKED-EXAMPLE",
+        "mirror_url": "https://PLACEHOLDER-MIRROR-M06-WORKED-EXAMPLE",
+        "download_url": "https://PLACEHOLDER-DOWNLOAD-M06-WORKED-EXAMPLE"
+      },
+      {
+        "type": "lab_walkthrough",
+        "title_ar": "تشفير المفتاح العام (الجزء الأول) — شرح المختبر",
+        "title_en": "Public Key Cryptography I — Lab Walkthrough",
+        "primary_url": "https://PLACEHOLDER-PRIMARY-M06-LAB-WALKTHROUGH",
+        "mirror_url": "https://PLACEHOLDER-MIRROR-M06-LAB-WALKTHROUGH",
+        "download_url": "https://PLACEHOLDER-DOWNLOAD-M06-LAB-WALKTHROUGH"
+      },
+      {
+        "type": "quiz_review",
+        "title_ar": "تشفير المفتاح العام (الجزء الأول) — مراجعة الاختبار",
+        "title_en": "Public Key Cryptography I — Quiz Review",
+        "primary_url": "https://PLACEHOLDER-PRIMARY-M06-QUIZ-REVIEW",
+        "mirror_url": "https://PLACEHOLDER-MIRROR-M06-QUIZ-REVIEW",
+        "download_url": "https://PLACEHOLDER-DOWNLOAD-M06-QUIZ-REVIEW"
+      }
+    ]
+  },
+  {
+    "module": 7,
+    "title_ar": "مراجعة منتصف الوحدات",
+    "title_en": "Mid-Module Review",
+    "videos": [
+      {
+        "type": "concept_intro",
+        "title_ar": "مراجعة منتصف الوحدات — مقدمة المفهوم",
+        "title_en": "Mid-Module Review — Concept Introduction",
+        "primary_url": "https://PLACEHOLDER-PRIMARY-M07-CONCEPT-INTRO",
+        "mirror_url": "https://PLACEHOLDER-MIRROR-M07-CONCEPT-INTRO",
+        "download_url": "https://PLACEHOLDER-DOWNLOAD-M07-CONCEPT-INTRO"
+      },
+      {
+        "type": "worked_example",
+        "title_ar": "مراجعة منتصف الوحدات — مثال محلول",
+        "title_en": "Mid-Module Review — Worked Example",
+        "primary_url": "https://PLACEHOLDER-PRIMARY-M07-WORKED-EXAMPLE",
+        "mirror_url": "https://PLACEHOLDER-MIRROR-M07-WORKED-EXAMPLE",
+        "download_url": "https://PLACEHOLDER-DOWNLOAD-M07-WORKED-EXAMPLE"
+      },
+      {
+        "type": "lab_walkthrough",
+        "title_ar": "مراجعة منتصف الوحدات — شرح المختبر",
+        "title_en": "Mid-Module Review — Lab Walkthrough",
+        "primary_url": "https://PLACEHOLDER-PRIMARY-M07-LAB-WALKTHROUGH",
+        "mirror_url": "https://PLACEHOLDER-MIRROR-M07-LAB-WALKTHROUGH",
+        "download_url": "https://PLACEHOLDER-DOWNLOAD-M07-LAB-WALKTHROUGH"
+      },
+      {
+        "type": "quiz_review",
+        "title_ar": "مراجعة منتصف الوحدات — مراجعة الاختبار",
+        "title_en": "Mid-Module Review — Quiz Review",
+        "primary_url": "https://PLACEHOLDER-PRIMARY-M07-QUIZ-REVIEW",
+        "mirror_url": "https://PLACEHOLDER-MIRROR-M07-QUIZ-REVIEW",
+        "download_url": "https://PLACEHOLDER-DOWNLOAD-M07-QUIZ-REVIEW"
+      }
+    ]
+  },
+  {
+    "module": 8,
+    "title_ar": "تشفير المفتاح العام — الجزء الثاني",
+    "title_en": "Public Key Cryptography II",
+    "videos": [
+      {
+        "type": "concept_intro",
+        "title_ar": "تشفير المفتاح العام (الجزء الثاني) — مقدمة المفهوم",
+        "title_en": "Public Key Cryptography II — Concept Introduction",
+        "primary_url": "https://PLACEHOLDER-PRIMARY-M08-CONCEPT-INTRO",
+        "mirror_url": "https://PLACEHOLDER-MIRROR-M08-CONCEPT-INTRO",
+        "download_url": "https://PLACEHOLDER-DOWNLOAD-M08-CONCEPT-INTRO"
+      },
+      {
+        "type": "worked_example",
+        "title_ar": "تشفير المفتاح العام (الجزء الثاني) — مثال محلول",
+        "title_en": "Public Key Cryptography II — Worked Example",
+        "primary_url": "https://PLACEHOLDER-PRIMARY-M08-WORKED-EXAMPLE",
+        "mirror_url": "https://PLACEHOLDER-MIRROR-M08-WORKED-EXAMPLE",
+        "download_url": "https://PLACEHOLDER-DOWNLOAD-M08-WORKED-EXAMPLE"
+      },
+      {
+        "type": "lab_walkthrough",
+        "title_ar": "تشفير المفتاح العام (الجزء الثاني) — شرح المختبر",
+        "title_en": "Public Key Cryptography II — Lab Walkthrough",
+        "primary_url": "https://PLACEHOLDER-PRIMARY-M08-LAB-WALKTHROUGH",
+        "mirror_url": "https://PLACEHOLDER-MIRROR-M08-LAB-WALKTHROUGH",
+        "download_url": "https://PLACEHOLDER-DOWNLOAD-M08-LAB-WALKTHROUGH"
+      },
+      {
+        "type": "quiz_review",
+        "title_ar": "تشفير المفتاح العام (الجزء الثاني) — مراجعة الاختبار",
+        "title_en": "Public Key Cryptography II — Quiz Review",
+        "primary_url": "https://PLACEHOLDER-PRIMARY-M08-QUIZ-REVIEW",
+        "mirror_url": "https://PLACEHOLDER-MIRROR-M08-QUIZ-REVIEW",
+        "download_url": "https://PLACEHOLDER-DOWNLOAD-M08-QUIZ-REVIEW"
+      }
+    ]
+  },
+  {
+    "module": 9,
+    "title_ar": "إدارة المفاتيح",
+    "title_en": "Key Management",
+    "videos": [
+      {
+        "type": "concept_intro",
+        "title_ar": "إدارة المفاتيح — مقدمة المفهوم",
+        "title_en": "Key Management — Concept Introduction",
+        "primary_url": "https://PLACEHOLDER-PRIMARY-M09-CONCEPT-INTRO",
+        "mirror_url": "https://PLACEHOLDER-MIRROR-M09-CONCEPT-INTRO",
+        "download_url": "https://PLACEHOLDER-DOWNLOAD-M09-CONCEPT-INTRO"
+      },
+      {
+        "type": "worked_example",
+        "title_ar": "إدارة المفاتيح — مثال محلول",
+        "title_en": "Key Management — Worked Example",
+        "primary_url": "https://PLACEHOLDER-PRIMARY-M09-WORKED-EXAMPLE",
+        "mirror_url": "https://PLACEHOLDER-MIRROR-M09-WORKED-EXAMPLE",
+        "download_url": "https://PLACEHOLDER-DOWNLOAD-M09-WORKED-EXAMPLE"
+      },
+      {
+        "type": "lab_walkthrough",
+        "title_ar": "إدارة المفاتيح — شرح المختبر",
+        "title_en": "Key Management — Lab Walkthrough",
+        "primary_url": "https://PLACEHOLDER-PRIMARY-M09-LAB-WALKTHROUGH",
+        "mirror_url": "https://PLACEHOLDER-MIRROR-M09-LAB-WALKTHROUGH",
+        "download_url": "https://PLACEHOLDER-DOWNLOAD-M09-LAB-WALKTHROUGH"
+      },
+      {
+        "type": "quiz_review",
+        "title_ar": "إدارة المفاتيح — مراجعة الاختبار",
+        "title_en": "Key Management — Quiz Review",
+        "primary_url": "https://PLACEHOLDER-PRIMARY-M09-QUIZ-REVIEW",
+        "mirror_url": "https://PLACEHOLDER-MIRROR-M09-QUIZ-REVIEW",
+        "download_url": "https://PLACEHOLDER-DOWNLOAD-M09-QUIZ-REVIEW"
+      }
+    ]
+  },
+  {
+    "module": 10,
+    "title_ar": "بروتوكولات المصادقة",
+    "title_en": "Authentication Protocols",
+    "videos": [
+      {
+        "type": "concept_intro",
+        "title_ar": "بروتوكولات المصادقة — مقدمة المفهوم",
+        "title_en": "Authentication Protocols — Concept Introduction",
+        "primary_url": "https://PLACEHOLDER-PRIMARY-M10-CONCEPT-INTRO",
+        "mirror_url": "https://PLACEHOLDER-MIRROR-M10-CONCEPT-INTRO",
+        "download_url": "https://PLACEHOLDER-DOWNLOAD-M10-CONCEPT-INTRO"
+      },
+      {
+        "type": "worked_example",
+        "title_ar": "بروتوكولات المصادقة — مثال محلول",
+        "title_en": "Authentication Protocols — Worked Example",
+        "primary_url": "https://PLACEHOLDER-PRIMARY-M10-WORKED-EXAMPLE",
+        "mirror_url": "https://PLACEHOLDER-MIRROR-M10-WORKED-EXAMPLE",
+        "download_url": "https://PLACEHOLDER-DOWNLOAD-M10-WORKED-EXAMPLE"
+      },
+      {
+        "type": "lab_walkthrough",
+        "title_ar": "بروتوكولات المصادقة — شرح المختبر",
+        "title_en": "Authentication Protocols — Lab Walkthrough",
+        "primary_url": "https://PLACEHOLDER-PRIMARY-M10-LAB-WALKTHROUGH",
+        "mirror_url": "https://PLACEHOLDER-MIRROR-M10-LAB-WALKTHROUGH",
+        "download_url": "https://PLACEHOLDER-DOWNLOAD-M10-LAB-WALKTHROUGH"
+      },
+      {
+        "type": "quiz_review",
+        "title_ar": "بروتوكولات المصادقة — مراجعة الاختبار",
+        "title_en": "Authentication Protocols — Quiz Review",
+        "primary_url": "https://PLACEHOLDER-PRIMARY-M10-QUIZ-REVIEW",
+        "mirror_url": "https://PLACEHOLDER-MIRROR-M10-QUIZ-REVIEW",
+        "download_url": "https://PLACEHOLDER-DOWNLOAD-M10-QUIZ-REVIEW"
+      }
+    ]
+  },
+  {
+    "module": 11,
+    "title_ar": "الإثبات دون معرفة وبراهين المصادقة",
+    "title_en": "Zero-Knowledge & Auth Proofs",
+    "videos": [
+      {
+        "type": "concept_intro",
+        "title_ar": "الإثبات دون معرفة وبراهين المصادقة — مقدمة المفهوم",
+        "title_en": "Zero-Knowledge & Auth Proofs — Concept Introduction",
+        "primary_url": "https://PLACEHOLDER-PRIMARY-M11-CONCEPT-INTRO",
+        "mirror_url": "https://PLACEHOLDER-MIRROR-M11-CONCEPT-INTRO",
+        "download_url": "https://PLACEHOLDER-DOWNLOAD-M11-CONCEPT-INTRO"
+      },
+      {
+        "type": "worked_example",
+        "title_ar": "الإثبات دون معرفة وبراهين المصادقة — مثال محلول",
+        "title_en": "Zero-Knowledge & Auth Proofs — Worked Example",
+        "primary_url": "https://PLACEHOLDER-PRIMARY-M11-WORKED-EXAMPLE",
+        "mirror_url": "https://PLACEHOLDER-MIRROR-M11-WORKED-EXAMPLE",
+        "download_url": "https://PLACEHOLDER-DOWNLOAD-M11-WORKED-EXAMPLE"
+      },
+      {
+        "type": "lab_walkthrough",
+        "title_ar": "الإثبات دون معرفة وبراهين المصادقة — شرح المختبر",
+        "title_en": "Zero-Knowledge & Auth Proofs — Lab Walkthrough",
+        "primary_url": "https://PLACEHOLDER-PRIMARY-M11-LAB-WALKTHROUGH",
+        "mirror_url": "https://PLACEHOLDER-MIRROR-M11-LAB-WALKTHROUGH",
+        "download_url": "https://PLACEHOLDER-DOWNLOAD-M11-LAB-WALKTHROUGH"
+      },
+      {
+        "type": "quiz_review",
+        "title_ar": "الإثبات دون معرفة وبراهين المصادقة — مراجعة الاختبار",
+        "title_en": "Zero-Knowledge & Auth Proofs — Quiz Review",
+        "primary_url": "https://PLACEHOLDER-PRIMARY-M11-QUIZ-REVIEW",
+        "mirror_url": "https://PLACEHOLDER-MIRROR-M11-QUIZ-REVIEW",
+        "download_url": "https://PLACEHOLDER-DOWNLOAD-M11-QUIZ-REVIEW"
+      }
+    ]
+  },
+  {
+    "module": 12,
+    "title_ar": "إنشاء المفتاح وبروتوكول TLS",
+    "title_en": "Key Establishment & TLS",
+    "videos": [
+      {
+        "type": "concept_intro",
+        "title_ar": "إنشاء المفتاح وبروتوكول TLS — مقدمة المفهوم",
+        "title_en": "Key Establishment & TLS — Concept Introduction",
+        "primary_url": "https://PLACEHOLDER-PRIMARY-M12-CONCEPT-INTRO",
+        "mirror_url": "https://PLACEHOLDER-MIRROR-M12-CONCEPT-INTRO",
+        "download_url": "https://PLACEHOLDER-DOWNLOAD-M12-CONCEPT-INTRO"
+      },
+      {
+        "type": "worked_example",
+        "title_ar": "إنشاء المفتاح وبروتوكول TLS — مثال محلول",
+        "title_en": "Key Establishment & TLS — Worked Example",
+        "primary_url": "https://PLACEHOLDER-PRIMARY-M12-WORKED-EXAMPLE",
+        "mirror_url": "https://PLACEHOLDER-MIRROR-M12-WORKED-EXAMPLE",
+        "download_url": "https://PLACEHOLDER-DOWNLOAD-M12-WORKED-EXAMPLE"
+      },
+      {
+        "type": "lab_walkthrough",
+        "title_ar": "إنشاء المفتاح وبروتوكول TLS — شرح المختبر",
+        "title_en": "Key Establishment & TLS — Lab Walkthrough",
+        "primary_url": "https://PLACEHOLDER-PRIMARY-M12-LAB-WALKTHROUGH",
+        "mirror_url": "https://PLACEHOLDER-MIRROR-M12-LAB-WALKTHROUGH",
+        "download_url": "https://PLACEHOLDER-DOWNLOAD-M12-LAB-WALKTHROUGH"
+      },
+      {
+        "type": "quiz_review",
+        "title_ar": "إنشاء المفتاح وبروتوكول TLS — مراجعة الاختبار",
+        "title_en": "Key Establishment & TLS — Quiz Review",
+        "primary_url": "https://PLACEHOLDER-PRIMARY-M12-QUIZ-REVIEW",
+        "mirror_url": "https://PLACEHOLDER-MIRROR-M12-QUIZ-REVIEW",
+        "download_url": "https://PLACEHOLDER-DOWNLOAD-M12-QUIZ-REVIEW"
+      }
+    ]
+  },
+  {
+    "module": 13,
+    "title_ar": "الهجمات التشفيرية",
+    "title_en": "Attacks",
+    "videos": [
+      {
+        "type": "concept_intro",
+        "title_ar": "الهجمات التشفيرية — مقدمة المفهوم",
+        "title_en": "Attacks — Concept Introduction",
+        "primary_url": "https://PLACEHOLDER-PRIMARY-M13-CONCEPT-INTRO",
+        "mirror_url": "https://PLACEHOLDER-MIRROR-M13-CONCEPT-INTRO",
+        "download_url": "https://PLACEHOLDER-DOWNLOAD-M13-CONCEPT-INTRO"
+      },
+      {
+        "type": "worked_example",
+        "title_ar": "الهجمات التشفيرية — مثال محلول",
+        "title_en": "Attacks — Worked Example",
+        "primary_url": "https://PLACEHOLDER-PRIMARY-M13-WORKED-EXAMPLE",
+        "mirror_url": "https://PLACEHOLDER-MIRROR-M13-WORKED-EXAMPLE",
+        "download_url": "https://PLACEHOLDER-DOWNLOAD-M13-WORKED-EXAMPLE"
+      },
+      {
+        "type": "lab_walkthrough",
+        "title_ar": "الهجمات التشفيرية — شرح المختبر",
+        "title_en": "Attacks — Lab Walkthrough",
+        "primary_url": "https://PLACEHOLDER-PRIMARY-M13-LAB-WALKTHROUGH",
+        "mirror_url": "https://PLACEHOLDER-MIRROR-M13-LAB-WALKTHROUGH",
+        "download_url": "https://PLACEHOLDER-DOWNLOAD-M13-LAB-WALKTHROUGH"
+      },
+      {
+        "type": "quiz_review",
+        "title_ar": "الهجمات التشفيرية — مراجعة الاختبار",
+        "title_en": "Attacks — Quiz Review",
+        "primary_url": "https://PLACEHOLDER-PRIMARY-M13-QUIZ-REVIEW",
+        "mirror_url": "https://PLACEHOLDER-MIRROR-M13-QUIZ-REVIEW",
+        "download_url": "https://PLACEHOLDER-DOWNLOAD-M13-QUIZ-REVIEW"
+      }
+    ]
+  },
+  {
+    "module": 14,
+    "title_ar": "التطورات الحديثة في التشفير",
+    "title_en": "Developments in Cryptography",
+    "videos": [
+      {
+        "type": "concept_intro",
+        "title_ar": "التطورات الحديثة في التشفير — مقدمة المفهوم",
+        "title_en": "Developments in Cryptography — Concept Introduction",
+        "primary_url": "https://PLACEHOLDER-PRIMARY-M14-CONCEPT-INTRO",
+        "mirror_url": "https://PLACEHOLDER-MIRROR-M14-CONCEPT-INTRO",
+        "download_url": "https://PLACEHOLDER-DOWNLOAD-M14-CONCEPT-INTRO"
+      },
+      {
+        "type": "worked_example",
+        "title_ar": "التطورات الحديثة في التشفير — مثال محلول",
+        "title_en": "Developments in Cryptography — Worked Example",
+        "primary_url": "https://PLACEHOLDER-PRIMARY-M14-WORKED-EXAMPLE",
+        "mirror_url": "https://PLACEHOLDER-MIRROR-M14-WORKED-EXAMPLE",
+        "download_url": "https://PLACEHOLDER-DOWNLOAD-M14-WORKED-EXAMPLE"
+      },
+      {
+        "type": "lab_walkthrough",
+        "title_ar": "التطورات الحديثة في التشفير — شرح المختبر",
+        "title_en": "Developments in Cryptography — Lab Walkthrough",
+        "primary_url": "https://PLACEHOLDER-PRIMARY-M14-LAB-WALKTHROUGH",
+        "mirror_url": "https://PLACEHOLDER-MIRROR-M14-LAB-WALKTHROUGH",
+        "download_url": "https://PLACEHOLDER-DOWNLOAD-M14-LAB-WALKTHROUGH"
+      },
+      {
+        "type": "quiz_review",
+        "title_ar": "التطورات الحديثة في التشفير — مراجعة الاختبار",
+        "title_en": "Developments in Cryptography — Quiz Review",
+        "primary_url": "https://PLACEHOLDER-PRIMARY-M14-QUIZ-REVIEW",
+        "mirror_url": "https://PLACEHOLDER-MIRROR-M14-QUIZ-REVIEW",
+        "download_url": "https://PLACEHOLDER-DOWNLOAD-M14-QUIZ-REVIEW"
+      }
+    ]
+  }
+]
