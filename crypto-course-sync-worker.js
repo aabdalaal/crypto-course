@@ -204,6 +204,18 @@ export default {
           await env.SYNC.put(key, JSON.stringify(clean), { expirationTtl: RETENTION_DAYS * 86400 });
           return json({ ok: true }, 200, cors);
         }
+
+        // DELETE /semester/{code} — teacher removes a semester from the public list.
+        // Write-token auth, scoped to the cohort that owns this record (same pattern as PUT).
+        if (request.method === 'DELETE') {
+          const cohort = cohortForWriteToken(bearer(request), cohorts);
+          if (!cohort) return json({ error: 'unauthorized' }, 401, cors);
+          const rec = await env.SYNC.get(key, 'json');
+          if (!rec) return json({ ok: true }, 200, cors); // already gone
+          if (rec.cohort !== cohort) return json({ error: 'unauthorized' }, 401, cors);
+          await env.SYNC.delete(key);
+          return json({ ok: true }, 200, cors);
+        }
       }
 
       // Student list by semester code:  GET /students/{semCode}  (teacher token auth)

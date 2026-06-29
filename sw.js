@@ -15,8 +15,8 @@
 //                   Covers YouTube thumbnails (optional, nice UX).
 // ============================================================
 
-const VERSION      = 'v8';
-const SW_VERSION   = '1.0.2';  // keep in lockstep with APP_VERSION in index.html
+const VERSION      = 'v9';
+const SW_VERSION   = '1.0.3';  // keep in lockstep with APP_VERSION in index.html
 const CACHE_NAME   = 'crypto-course-v' + SW_VERSION;  // logical name; shell/cdn/img use VERSION below
 const SHELL_CACHE  = `cc-shell-${VERSION}`;
 const CDN_CACHE    = `cc-cdn-${VERSION}`;
