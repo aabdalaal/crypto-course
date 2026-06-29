@@ -14449,9 +14449,10 @@ function showAESContrast() {
   const letters = 'ABCDEFGHIJKL'.split('');
   const seededRandom = (i) => ((Math.sin(i * 9301 + 49297) * 233280) % 1 + 1) / 2;
   barsEl.innerHTML = letters.map((l, i) => {
-    const h = Math.round(seededRandom(i) * 30 + 55); // narrow range 55-85%, looks flat
+    const pct = Math.round(seededRandom(i) * 30 + 55); // narrow range 55-85%, looks flat
+    const h = Math.round(pct / 100 * 60); // px — barsEl is height:60px; % height fails against an auto-height parent
     return `<div style="display:flex;flex-direction:column;align-items:center;gap:2px;flex:1">
-      <div style="width:100%;height:${h}%;background:var(--secondary);border-radius:2px 2px 0 0;opacity:0.7"></div>
+      <div style="width:100%;height:${h}px;min-height:3px;background:var(--secondary);border-radius:2px 2px 0 0;opacity:0.7"></div>
       <div style="font-size:9px;font-weight:700;color:var(--muted);font-family:var(--mono)">${l}</div>
     </div>`;
   }).join('');
