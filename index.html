@@ -7897,12 +7897,14 @@ const LAB_DEEP_LINK_MAP = {
   hill:      { moduleId: 1, tab: 'hill' },
   railfence: { moduleId: 1, tab: 'railfence' },
   stego:     { moduleId: 1, tab: 'stego' },
+  break:     { moduleId: 1, tab: 'break' },
 };
 
-// Printed activity codes → lab short IDs (1.1–1.6 series, textbook Chapter 1 labs)
+// Printed activity codes → lab short IDs (1–8 series, textbook Chapter 1 labs)
 const ACTIVITY_CODE_MAP = {
-  '1.1': 'caesar', '1.2': 'frequency', '1.3': 'vigenere',
-  '1.4': 'playfair', '1.5': 'hill', '1.6': 'railfence',
+  '1': 'caesar', '2': 'frequency', '3': 'vigenere',
+  '4': 'playfair', '5': 'hill', '6': 'railfence',
+  '7': 'stego', '8': 'break',
 };
 
 // Open a lab directly by short ID (from QR code or activity code).
@@ -14942,7 +14944,7 @@ const i18n = {
     backup_on_toast: '✓ Backup turned on.',
     // Lab deep-link & activity codes
     lab_coming_soon: 'This lab is coming soon', lab_not_found: 'Lab not found',
-    activity_code_label: 'Go to Activity', activity_code_placeholder: 'Enter code (e.g. 1.1)',
+    activity_code_label: 'Go to Activity', activity_code_placeholder: 'Enter code (e.g. 1)',
     activity_code_go: 'Go', activity_code_invalid: 'Unknown activity code',
   },
   ar: {
@@ -15074,7 +15076,7 @@ const i18n = {
     backup_on_toast: '✓ تم تشغيل النسخ الاحتياطي.',
     // Lab deep-link & activity codes
     lab_coming_soon: 'هذا المختبر قادم قريبًا', lab_not_found: 'المختبر غير موجود',
-    activity_code_label: 'الانتقال إلى نشاط', activity_code_placeholder: 'أدخل الرمز (مثال: 1.1)',
+    activity_code_label: 'الانتقال إلى نشاط', activity_code_placeholder: 'أدخل الرمز (مثال: 1)',
     activity_code_go: 'انتقال', activity_code_invalid: 'رمز النشاط غير معروف',
   }
 };
