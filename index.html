@@ -4159,7 +4159,7 @@ Modern approach:  "Algorithm is public; only the key is secret"
       stage4: {
         type: 'lab',
         heading: 'Lab: Classical Ciphers & the One-Time Pad',
-        scenario: '🗞️ Scenario: Part A — a message was intercepted, encrypted with a substitution cipher just like the CipherPulse daily puzzle. Use the Caesar tool and frequency analysis to crack it. Part B — the Week 2 formative challenge: XOR-decrypt a real one-time-pad ciphertext, then see why reusing a pad destroys its perfect secrecy.',
+        scenario: '🗞️ Scenario: Part A — a message was intercepted, encrypted with a substitution cipher just like the CipherPulse daily puzzle. Use the Caesar tool and frequency analysis to crack it. Part B — the Week 2 formative challenge: XOR-decrypt a real one-time-pad ciphertext, then see why reusing a pad destroys its perfect secrecy. Use the Break Mode tab for a guided paste-and-crack workflow matching the printed textbook callout.',
         labId: 'vigenere_lab'
       },
       stage5: {
@@ -9065,6 +9065,7 @@ function renderLab(content, mod) {
           <button class="btn btn-secondary" id="tab-hill-btn" onclick="switchCipherTab('hill')" style="flex:1 1 calc(50% - 4px);font-size:12px">&#9636; Hill 2&#215;2</button>
           <button class="btn btn-secondary" id="tab-railfence-btn" onclick="switchCipherTab('railfence')" style="flex:1 1 calc(50% - 4px);font-size:12px">&#8767; Rail Fence</button>
           <button class="btn btn-secondary" id="tab-stego-btn" onclick="switchCipherTab('stego')" style="flex:1 1 calc(50% - 4px);font-size:12px">&#128444; Steganography</button>
+          <button class="btn btn-secondary" id="tab-break-btn" onclick="switchCipherTab('break')" style="flex:1 1 calc(50% - 4px);font-size:12px">&#128274; Break Mode</button>
         </div>
 
         <div id="tab-caesar" style="display:none">
@@ -9463,6 +9464,65 @@ Rail 2: . . L . . . O . . .</div>
               <strong>Step 5 (stretch):</strong> Toggle the LSB bit-plane to reveal where the data lives in the pixel grid.
             </div>
             <div id="stego-mission-out" style="font-size:13px;font-weight:700;min-height:20px" aria-live="polite"></div>
+          </div>
+        </div>
+
+        <div id="tab-break" style="display:none">
+          <div style="background:linear-gradient(135deg,#0F172A,#1E3A8A);border-radius:var(--radius-xs);padding:14px;margin-bottom:14px">
+            <div style="font-size:10px;font-weight:800;color:rgba(255,255,255,0.5);text-transform:uppercase;letter-spacing:.1em;margin-bottom:8px">&#128272; CipherPulse cryptogram — paste below or use this example</div>
+            <div style="font-family:var(--mono);font-size:15px;letter-spacing:3px;color:white;line-height:1.6">WKH FDW VDW RQ WKH PDW</div>
+          </div>
+
+          <div class="lab-field">
+            <label class="lab-label">Ciphertext (paste CipherPulse cryptogram here)</label>
+            <textarea class="lab-input" id="metro-cipher-input" rows="3" placeholder="Paste the cryptogram..."
+              oninput="updateMetroFreq()" style="font-family:var(--mono);letter-spacing:2px">WKH FDW VDW RQ WKH PDW</textarea>
+          </div>
+
+          <div style="margin-bottom:14px">
+            <label class="lab-label">Letter frequency analysis</label>
+            <div style="background:var(--bg);border-radius:var(--radius-xs);padding:12px">
+              <div id="metro-freq-bars" style="display:flex;align-items:flex-end;gap:3px;height:60px;margin-bottom:8px"></div>
+              <div id="metro-freq-hint" style="font-size:11px;color:var(--primary);font-weight:600;margin-bottom:4px"></div>
+              <div style="font-size:10px;color:var(--muted)">English: E(13%) T(9%) A(8%) O(7%) I(7%) N(7%)</div>
+            </div>
+          </div>
+
+          <div class="lab-field">
+            <label class="lab-label">Try a shift</label>
+            <div style="display:flex;align-items:center;gap:10px">
+              <input type="range" id="metro-shift-slider" min="1" max="25" value="3"
+                oninput="document.getElementById('metro-shift-num').value=this.value;runMetroDecrypt()"
+                style="flex:1">
+              <input type="number" id="metro-shift-num" value="3" min="1" max="25"
+                oninput="document.getElementById('metro-shift-slider').value=this.value;runMetroDecrypt()"
+                style="width:52px;padding:8px;border:2px solid var(--border);border-radius:var(--radius-xs);font-size:14px;font-family:var(--mono);text-align:center;background:var(--bg);color:var(--text)">
+            </div>
+          </div>
+
+          <div style="margin-bottom:14px">
+            <label class="lab-label">Decrypted result</label>
+            <div class="lab-output" id="metro-result" style="font-family:var(--mono);letter-spacing:2px;min-height:52px;transition:background 0.3s">Adjust the shift above...</div>
+          </div>
+
+          <div style="border-top:1px solid var(--border);padding-top:14px">
+            <div style="font-size:12px;font-weight:800;color:var(--text2);margin-bottom:8px">&#128300; Compare: AES-256 vs Caesar frequency bars</div>
+            <button class="btn btn-secondary btn-sm" onclick="showAESContrast()" style="width:auto;margin-bottom:10px">Show AES frequency bars</button>
+            <div id="aes-contrast-panel" style="display:none">
+              <div style="background:var(--bg);border-radius:var(--radius-xs);padding:12px;margin-bottom:8px">
+                <div id="aes-contrast-bars" style="display:flex;align-items:flex-end;gap:3px;height:60px;margin-bottom:6px"></div>
+                <div style="font-size:11px;color:var(--secondary-d);font-weight:600">AES-256-GCM output — bars nearly flat (confusion + diffusion)</div>
+              </div>
+              <div style="font-size:12px;color:var(--secondary-d);line-height:1.6;background:var(--secondary-l);border-radius:var(--radius-xs);padding:10px;border-left:3px solid var(--secondary)">
+                The CipherPulse cryptogram exposes its statistical structure — the most frequent cipher letter is almost certainly E or T. AES destroys all statistical structure through <strong>confusion</strong> (S-boxes) and <strong>diffusion</strong> (ShiftRows/MixColumns). Every output byte is statistically independent.
+              </div>
+            </div>
+          </div>
+
+          <div style="margin-top:14px">
+            <button class="btn btn-primary" id="metro-solved-btn" onclick="solveMetroPuzzle()" style="display:none">
+              &#9989; I cracked it! Claim XP &amp; &#128240; Badge
+            </button>
           </div>
         </div>
 
@@ -10755,7 +10815,7 @@ function runCaesarDecrypt() {
 }
 
 function switchCipherTab(tab) {
-  ['caesar','vigenere','freq','playfair','hill','railfence','stego'].forEach(t => {
+  ['caesar','vigenere','freq','playfair','hill','railfence','stego','break'].forEach(t => {
     const el = document.getElementById('tab-' + t);
     const btn = document.getElementById('tab-' + t + '-btn');
     if (el) el.style.display = t === tab ? 'block' : 'none';
@@ -10765,6 +10825,10 @@ function switchCipherTab(tab) {
   if (tab === 'hill' && typeof hillUpdateMatrix === 'function') hillUpdateMatrix();
   if (tab === 'railfence' && typeof rfRun === 'function') rfRun();
   if (tab === 'stego' && typeof stegoInit === 'function') stegoInit();
+  if (tab === 'break') {
+    if (typeof updateMetroFreq === 'function') updateMetroFreq();
+    if (typeof runMetroDecrypt === 'function') runMetroDecrypt();
+  }
 }
 
 function runVigenereEncrypt() {
