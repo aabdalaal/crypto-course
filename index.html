@@ -23539,11 +23539,14 @@ async function deleteSemester(id) {
   renderAdmin('dashboard');
 
   const base = getSyncEndpoint();
-  if (sem?.code && sem?.writeToken && base) {
+  // Fall back to the cohort-wide write token from Settings — older semesters
+  // created before a per-semester token was entered won't have sem.writeToken.
+  const wt = sem?.writeToken || localStorage.getItem('crypto_course_write_token');
+  if (sem?.code && wt && base) {
     try {
       const r = await fetchWithTimeout(`${base}/semester/${encodeURIComponent(sem.code)}`, {
         method: 'DELETE',
-        headers: { 'Authorization': 'Bearer ' + sem.writeToken },
+        headers: { 'Authorization': 'Bearer ' + wt },
       }, 8000);
       showToast(r.ok ? 'Semester deleted' : 'Removed locally — server cleanup failed (' + r.status + ')');
       return;
