@@ -6806,9 +6806,9 @@ Unknown Key Share     → exploit protocol design flaw (UKS)</div>
       },
       stage4: {
         type: 'lab',
-        heading: 'Lab: Timing Side-Channel & Integer Factorisation — Seminar 11 Mirror',
-        scenario: '🔬 Seminar 11 Lab: Two exercises mirroring the Week 11 seminar Python notebooks. Part A (side-channel): compare a non-constant-time string comparison against constant-time HMAC verification — measure timing variance and see how it leaks information about the secret. Part B (integer factorisation): implement trial division and Pollard\'s rho algorithm in-browser — factor progressively larger numbers and compare how the algorithms scale, mirroring the Seminar-11-integer-factorisation.ipynb exercise.',
-        labId: 'attacks_lab'
+        heading: 'Lab: Meet-in-the-Middle Attack on Double Encryption',
+        scenario: '🔬 Cryptanalysis Lab: Carry out a meet-in-the-middle key-recovery attack on double encryption, step by step. A transparent teaching cipher (16-bit Feistel, N-bit key, N selectable 8–16) stands in for real Double-DES so the full attack runs live in the browser. Build the forward table, watch the backward pass \"meet\" in the middle, verify candidates with a second plaintext–ciphertext pair, and recover the hidden key pair. Then compare operation counts: brute force costs 2^(2N), MITM only ~2^(N+1) time — which is exactly why Double-DES was never standardised.',
+        labId: 'meet_middle_lab'
       },
       stage5: {
         type: 'quiz',
@@ -8049,6 +8049,7 @@ function renderLessonStage() {
       });
     }
     if (content.labId === 'des_lab') { requestAnimationFrame(() => initDesLab()); }
+    if (content.labId === 'meet_middle_lab') { requestAnimationFrame(() => initMeetMidLab()); }
   } else if (content && content.type === 'quiz') {
     // Quiz stage — Phase 4: apply adaptive tier before rendering
     if (content.tiers) {
@@ -10163,6 +10164,140 @@ Rail 2: . . L . . . O . . .</div>
 
         <div style="margin-top:16px;border-top:1px solid var(--border);padding-top:12px">
           <button class="btn btn-secondary btn-sm" onclick="completeLabStage()" style="width:auto">✓ Mark Lab Complete</button>
+        </div>
+      </div>`,
+
+    meet_middle_lab: `
+      <div class="stage-label">&#9879;&#65039; Cryptanalysis Lab</div>
+      <div class="lab-scenario">${content.scenario}</div>
+      <div class="lab-container">
+        <div class="lab-header">
+          <span class="lab-icon">&#128373;&#65039;</span>
+          <div>
+            <div class="lab-title">${content.heading}</div>
+            <div class="lab-subtitle">Meet-in-the-Middle key recovery on double encryption &middot; transparent N-bit teaching cipher &middot; runs entirely in-browser</div>
+          </div>
+        </div>
+
+        <div id="mm-selftest-badge" style="font-size:12px;margin-bottom:8px"></div>
+
+        <!-- shared N slider -->
+        <div class="lab-field">
+          <label class="lab-label">Key size N (bits) &mdash; controls keyspace 2^N for both keys</label>
+          <div style="display:flex;align-items:center;gap:10px">
+            <input id="mm-n-slider" type="range" min="8" max="16" value="12" style="flex:1"
+              oninput="_mmState.N=parseInt(this.value);_mmSyncNDisplay()">
+          </div>
+          <div id="mm-n-display" style="font-size:12px;color:var(--text2);margin-top:4px"></div>
+        </div>
+
+        <!-- tabs -->
+        <div style="display:flex;flex-wrap:wrap;gap:6px;margin:10px 0 8px">
+          <button id="mm-tab-setup-btn"  class="btn btn-primary"   style="flex:1 1 auto;font-size:12px" onclick="switchMeetMidTab('setup')"  aria-pressed="true" >Setup / Challenge</button>
+          <button id="mm-tab-brute-btn"  class="btn btn-secondary" style="flex:1 1 auto;font-size:12px" onclick="switchMeetMidTab('brute')"  aria-pressed="false">Brute Force</button>
+          <button id="mm-tab-attack-btn" class="btn btn-secondary" style="flex:1 1 auto;font-size:12px" onclick="switchMeetMidTab('attack')" aria-pressed="false">Meet-in-the-Middle</button>
+          <button id="mm-tab-cost-btn"   class="btn btn-secondary" style="flex:1 1 auto;font-size:12px" onclick="switchMeetMidTab('cost')"   aria-pressed="false">Cost Comparison</button>
+        </div>
+
+        <!-- shared progress bar -->
+        <div id="mm-progress-wrap" style="display:none;margin-bottom:8px">
+          <div style="background:var(--border);border-radius:4px;height:10px">
+            <div id="mm-progress" style="background:var(--primary);height:100%;width:0%;border-radius:4px;transition:width .1s"></div>
+          </div>
+        </div>
+
+        <!-- TAB 1: Setup / Challenge -->
+        <div id="mm-tab-setup" style="display:block">
+          <div class="concept-box">
+            <div class="concept-box-title">What is a meet-in-the-middle attack?</div>
+            <div class="concept-box-body">Double encryption computes C = E<sub>K2</sub>(E<sub>K1</sub>(P)). A naive attacker must try all (K1, K2) pairs: 2^(2N) operations. The meet-in-the-middle insight: encrypt P forward with every K1 to get intermediate values A, then decrypt C backward with every K2 to get intermediate values B. When A = B, the two passes &ldquo;meet&rdquo; and (K1, K2) is a candidate key pair. Total cost: &#8776; 2&#215;2^N instead of 2^(2N).</div>
+          </div>
+          <div style="display:flex;gap:8px;margin:10px 0">
+            <button class="btn btn-primary" style="flex:1" onclick="meetMidGenerate()">&#9654; Generate new challenge</button>
+          </div>
+          <div id="mm-challenge-display" style="margin-bottom:10px"></div>
+          <div style="font-size:12px;color:var(--text2);margin-bottom:8px">In real life you only ever see (P,C) pairs &mdash; the keys are hidden. Use the tabs to recover them.</div>
+          <button id="mm-reveal-btn" class="btn btn-secondary" style="font-size:12px;width:auto" onclick="meetMidReveal()">Reveal secret keys (cheat)</button>
+          <div id="mm-reveal-div" style="display:none;margin-top:6px;padding:8px;background:var(--bg);border-radius:var(--radius-xs);font-family:var(--mono)"></div>
+        </div>
+
+        <!-- TAB 2: Brute Force -->
+        <div id="mm-tab-brute" style="display:none">
+          <div class="concept-box">
+            <div class="concept-box-title">Brute-force baseline</div>
+            <div class="concept-box-body">Try every possible (K1, K2) pair and test whether doubleEnc(P, K1, K2) = C. With N-bit keys the cost is 2^(2N) operations. For N = 12 that is 2^24 &#8776; 16 million tests &mdash; slow but feasible. For N = 16 that is 2^32 &#8776; 4 billion &mdash; the browser would hang for minutes. This is the cost MITM slashes by a factor of 2^(N&#8722;1).</div>
+          </div>
+          <div style="margin:8px 0;font-size:13px">For N = <strong id="mm-brute-n-display"></strong>: brute force costs <strong id="mm-brute-ops-display"></strong> operations.</div>
+          <div style="display:flex;gap:8px;margin-bottom:8px">
+            <button class="btn btn-primary" style="flex:1" onclick="(function(){document.getElementById('mm-brute-n-display').textContent=_mmState.N;document.getElementById('mm-brute-ops-display').textContent='2^'+(2*_mmState.N)+' ≈ '+Math.pow(2,2*_mmState.N).toExponential(2);meetMidBrute();})()">&#9654; Run brute force</button>
+            <button class="btn btn-secondary" style="flex:0 0 auto" onclick="meetMidCancelBrute()">&#9632; Cancel</button>
+          </div>
+          <div style="background:var(--border);border-radius:4px;height:10px;margin-bottom:8px;display:none" id="mm-brute-progress-wrap">
+            <div id="mm-brute-progress" style="background:#DC2626;height:100%;width:0%;border-radius:4px;transition:width .1s"></div>
+          </div>
+          <div id="mm-brute-status" class="lab-output" aria-live="polite" style="font-size:12px"></div>
+        </div>
+
+        <!-- TAB 3: Meet-in-the-Middle -->
+        <div id="mm-tab-attack" style="display:none">
+          <div class="concept-box">
+            <div class="concept-box-title">The three-step attack</div>
+            <div class="concept-box-body"><strong>Step 1 (Forward):</strong> For each K1, compute A = E(P, K1) and store A &#8594; K1 in a table.<br><strong>Step 2 (Backward):</strong> For each K2, compute B = D(C, K2). If B is in the table, (K1, K2) is a candidate.<br><strong>Step 3 (Verify):</strong> Filter candidates using the second pair (P2, C2) to eliminate false positives.</div>
+          </div>
+
+          <!-- Inline diagram -->
+          <div style="display:flex;align-items:center;justify-content:center;gap:0;margin:12px 0;font-size:12px;flex-wrap:wrap">
+            <div style="text-align:center;padding:6px 10px;background:var(--bg);border-radius:var(--radius-xs);border:1px solid var(--border)">P</div>
+            <div style="padding:0 4px;color:var(--text2)">&#8594;</div>
+            <div style="text-align:center;padding:6px 10px;background:var(--primary);color:#fff;border-radius:var(--radius-xs)">E<sub style="font-size:9px">K1</sub></div>
+            <div style="padding:0 4px;color:var(--text2)">&#8594;</div>
+            <div style="text-align:center;padding:6px 12px;background:var(--accent);color:#000;border-radius:var(--radius-xs);border:2px solid var(--accent);font-weight:700">A</div>
+            <div style="padding:0 6px;font-size:18px;color:#10B981;font-weight:700">&#8855;</div>
+            <div style="text-align:center;padding:6px 12px;background:var(--accent);color:#000;border-radius:var(--radius-xs);border:2px solid var(--accent);font-weight:700">B</div>
+            <div style="padding:0 4px;color:var(--text2)">&#8592;</div>
+            <div style="text-align:center;padding:6px 10px;background:var(--primary);color:#fff;border-radius:var(--radius-xs)">D<sub style="font-size:9px">K2</sub></div>
+            <div style="padding:0 4px;color:var(--text2)">&#8592;</div>
+            <div style="text-align:center;padding:6px 10px;background:var(--bg);border-radius:var(--radius-xs);border:1px solid var(--border)">C</div>
+          </div>
+          <div style="text-align:center;font-size:11px;color:var(--text2);margin-bottom:10px">When A = B in the middle, (K1, K2) is a candidate pair.</div>
+
+          <div style="display:flex;gap:8px;margin-bottom:8px;flex-wrap:wrap">
+            <button class="btn btn-primary" style="flex:1 1 auto" onclick="document.getElementById('mm-progress-wrap').style.display='block';meetMidBuildForward()">Step 1 &#8594; Build forward table</button>
+            <button class="btn btn-secondary" style="flex:0 0 auto" onclick="meetMidCancel()">&#9632; Cancel</button>
+          </div>
+          <div id="mm-fwd-status" class="lab-output" aria-live="polite" style="font-size:12px;margin-bottom:10px">Run Step 1 first.</div>
+
+          <div style="display:flex;gap:8px;margin-bottom:8px;flex-wrap:wrap">
+            <button class="btn btn-primary" style="flex:1 1 auto" onclick="document.getElementById('mm-progress-wrap').style.display='block';meetMidSearchBackward()">Step 2 &#8594; Search backward &amp; meet</button>
+            <button class="btn btn-secondary" style="flex:0 0 auto" onclick="meetMidCancel()">&#9632; Cancel</button>
+          </div>
+          <div id="mm-bwd-status" class="lab-output" aria-live="polite" style="font-size:12px;margin-bottom:10px">Run Step 1 first.</div>
+
+          <button class="btn btn-primary" style="width:100%;margin-bottom:8px" onclick="meetMidVerify()">Step 3 &#8594; Verify with 2nd pair (P2, C2)</button>
+          <div id="mm-verify-status" class="lab-output" aria-live="polite" style="font-size:12px;margin-bottom:12px">Run Steps 1 and 2 first.</div>
+
+          <div class="lab-field">
+            <label class="lab-label">Counters</label>
+            <div id="mm-counters"></div>
+          </div>
+        </div>
+
+        <!-- TAB 4: Cost Comparison -->
+        <div id="mm-tab-cost" style="display:none">
+          <div class="concept-box">
+            <div class="concept-box-title">Why Double-DES was never standardised</div>
+            <div class="concept-box-body">Double encryption doubles the key length (2N bits) but only gives &#8776; N+1 bits of effective time-security against MITM. For real DES (N = 56): Double-DES nominally has 112-bit keys but collapses to &#8776; 57-bit time complexity with 2^56 memory &mdash; barely stronger than single DES. Triple-DES (EDE with two independent keys) achieves &#8776; 112-bit security. NIST deprecated even 3DES after 2023; modern systems use AES-256.</div>
+          </div>
+          <div style="margin-bottom:6px;font-size:12px;color:var(--text2)">Adjust N with the slider above to feel the gap grow.</div>
+          <div id="mm-cost-bars" aria-live="polite" style="margin-top:8px"></div>
+          <div class="concept-box" style="margin-top:12px">
+            <div class="concept-box-title">Memory vs. time trade-off</div>
+            <div class="concept-box-body">MITM buys time speedup (2^(N+1) vs 2^(2N)) at the cost of 2^N table entries. For real DES, 2^56 table entries &#8776; 72 petabytes &mdash; a real-world barrier that makes MITM on Double-DES practical in principle (algorithmically) but still demanding in practice. That is why Triple-DES uses a different key arrangement (EDE) specifically to defeat MITM.</div>
+          </div>
+        </div>
+
+        <div style="margin-top:14px;border-top:1px solid var(--border);padding-top:10px">
+          <button class="btn btn-secondary btn-sm" onclick="completeLabStage()" style="width:auto">&#10003; Mark Lab Complete</button>
         </div>
       </div>`,
 
@@ -12911,6 +13046,386 @@ function runFactorisation() {
     `→ Transition to ML-KEM (FIPS 203) for post-quantum security`;
 }
 
+// ============================================================
+// MEET-IN-THE-MIDDLE LAB — teaching cipher + attack engine
+// ============================================================
+
+// Fixed 8-entry S-box (4-bit, index 0-7 used mod 8)
+var _mmSbox = [6,4,7,2,5,1,3,0,6,4,7,2,5,1,3,0]; // 16 entries (index mod 16)
+var _mmSboxInv = [7,5,3,0,1,4,2,6,7,5,3,0,1,4,2,6];
+
+function _mmSubkeys(keyInt, N) {
+  // Derive 8 round subkeys from N-bit key using simple rotation schedule
+  var mask = (1 << N) - 1;
+  var sks = [];
+  var k = keyInt & mask;
+  for (var r = 0; r < 8; r++) {
+    sks.push(k & 0xFF);
+    // rotate left by (r+1) within N bits
+    var shift = (r + 1) % N;
+    k = ((k << shift) | (k >>> (N - shift))) & mask;
+  }
+  return sks;
+}
+
+function meetEnc(blockInt, keyInt, N) {
+  // 16-bit Feistel, 8 rounds, N-bit key
+  var L = (blockInt >>> 8) & 0xFF;
+  var R = blockInt & 0xFF;
+  var sks = _mmSubkeys(keyInt, N);
+  for (var r = 0; r < 8; r++) {
+    var f = (_mmSbox[((R ^ sks[r]) & 0xF)] | (_mmSbox[(((R ^ sks[r]) >>> 4) & 0xF)] << 4)) & 0xFF;
+    var newR = L ^ f;
+    L = R;
+    R = newR;
+  }
+  return ((L & 0xFF) << 8) | (R & 0xFF);
+}
+
+function meetDec(blockInt, keyInt, N) {
+  // Feistel decryption = same structure with subkeys reversed
+  var L = (blockInt >>> 8) & 0xFF;
+  var R = blockInt & 0xFF;
+  var sks = _mmSubkeys(keyInt, N);
+  for (var r = 7; r >= 0; r--) {
+    var f = (_mmSbox[((L ^ sks[r]) & 0xF)] | (_mmSbox[(((L ^ sks[r]) >>> 4) & 0xF)] << 4)) & 0xFF;
+    var newL = R ^ f;
+    R = L;
+    L = newL;
+  }
+  return ((L & 0xFF) << 8) | (R & 0xFF);
+}
+
+function doubleEnc(P, K1, K2, N) {
+  return meetEnc(meetEnc(P, K1, N), K2, N);
+}
+
+// Global lab state — one object, no extra globals
+var _mmState = {
+  N: 12, K1: 0, K2: 0, P: 0xABCD, C: 0, P2: 0x1234, C2: 0,
+  fwdMap: null, candidates: [], cancelFlag: false, phase: 'idle',
+  bruteCancel: false
+};
+
+function initMeetMidLab() {
+  // Cipher self-test
+  var pass = true;
+  for (var i = 0; i < 20; i++) {
+    var b = Math.floor(Math.random() * 65536);
+    var k = Math.floor(Math.random() * 4096);
+    if (meetDec(meetEnc(b, k, 12), k, 12) !== b) { pass = false; break; }
+  }
+  var badge = document.getElementById('mm-selftest-badge');
+  if (badge) badge.innerHTML = pass
+    ? '<span style="color:#10B981;font-weight:700">&#10003; Cipher self-test: PASS</span>'
+    : '<span style="color:#DC2626;font-weight:700">&#10007; Cipher self-test: FAIL</span>';
+  // Set N slider display
+  _mmState.N = 12;
+  var slider = document.getElementById('mm-n-slider');
+  if (slider) slider.value = 12;
+  _mmSyncNDisplay();
+  meetMidGenerate();
+}
+
+function _mmSyncNDisplay() {
+  var N = _mmState.N;
+  var ks = Math.pow(2, N);
+  var el = document.getElementById('mm-n-display');
+  if (el) el.textContent = 'N = ' + N + '  |  Keyspace: 2^' + N + ' = ' + ks.toLocaleString() + ' keys  |  Double-key space: 2^' + (2*N) + ' = ' + (ks*ks).toLocaleString();
+  meetMidRenderCost();
+}
+
+function meetMidGenerate() {
+  var N = _mmState.N;
+  var mask = (1 << N) - 1;
+  var K1 = Math.floor(Math.random() * (mask + 1));
+  var K2 = Math.floor(Math.random() * (mask + 1));
+  var P  = Math.floor(Math.random() * 65536);
+  var P2 = Math.floor(Math.random() * 65536);
+  var C  = doubleEnc(P,  K1, K2, N);
+  var C2 = doubleEnc(P2, K1, K2, N);
+  _mmState.K1 = K1; _mmState.K2 = K2;
+  _mmState.P  = P;  _mmState.C  = C;
+  _mmState.P2 = P2; _mmState.C2 = C2;
+  _mmState.fwdMap = null; _mmState.candidates = [];
+  _mmState.cancelFlag = false; _mmState.phase = 'idle';
+  // Reset reveal
+  var revDiv = document.getElementById('mm-reveal-div');
+  if (revDiv) revDiv.style.display = 'none';
+  var revBtn = document.getElementById('mm-reveal-btn');
+  if (revBtn) revBtn.textContent = 'Reveal secret keys (cheat)';
+  // Show challenge
+  _mmRenderChallenge();
+  // Reset attack tab output
+  ['mm-fwd-status','mm-bwd-status','mm-verify-status'].forEach(function(id) {
+    var el = document.getElementById(id);
+    if (el) el.innerHTML = 'Run Step 1 first.';
+  });
+  var prog = document.getElementById('mm-progress');
+  if (prog) { prog.style.width = '0%'; }
+  var progWrap = document.getElementById('mm-progress-wrap');
+  if (progWrap) progWrap.style.display = 'none';
+}
+
+function _mmRenderChallenge() {
+  var s = _mmState;
+  var h = function(v) { return ('0000' + v.toString(16).toUpperCase()).slice(-4); };
+  var el = document.getElementById('mm-challenge-display');
+  if (!el) return;
+  el.innerHTML =
+    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">' +
+    '<div class="concept-box" style="margin:0"><div class="concept-box-title">Pair 1 (primary)</div><div class="concept-box-body">' +
+    'P&#160;&#160; = <strong style="font-family:var(--mono)">' + h(s.P)  + '</strong><br>' +
+    'C&#160;&#160; = <strong style="font-family:var(--mono)">' + h(s.C)  + '</strong></div></div>' +
+    '<div class="concept-box" style="margin:0"><div class="concept-box-title">Pair 2 (verifier)</div><div class="concept-box-body">' +
+    'P2 = <strong style="font-family:var(--mono)">' + h(s.P2) + '</strong><br>' +
+    'C2 = <strong style="font-family:var(--mono)">' + h(s.C2) + '</strong></div></div>' +
+    '</div>' +
+    '<div style="margin-top:8px;font-size:12px;color:var(--text2)">N = ' + s.N + ' bits &mdash; both K1 and K2 are in [0, 2^' + s.N + '). You are given (P,C) and (P2,C2). Find K1, K2.</div>';
+}
+
+function meetMidReveal() {
+  var div = document.getElementById('mm-reveal-div');
+  var btn = document.getElementById('mm-reveal-btn');
+  if (!div) return;
+  var h = function(v, n) { return ('0000' + v.toString(16).toUpperCase()).slice(-Math.ceil(n/4)); };
+  if (div.style.display === 'none' || div.style.display === '') {
+    div.style.display = 'block';
+    div.innerHTML = '<span style="color:#DC2626;font-weight:700">K1 = ' + h(_mmState.K1, _mmState.N) + ' (' + _mmState.K1 + ')  |  K2 = ' + h(_mmState.K2, _mmState.N) + ' (' + _mmState.K2 + ')</span>';
+    if (btn) btn.textContent = 'Hide secret keys';
+  } else {
+    div.style.display = 'none';
+    if (btn) btn.textContent = 'Reveal secret keys (cheat)';
+  }
+}
+
+function switchMeetMidTab(tab) {
+  ['setup','brute','attack','cost'].forEach(function(t) {
+    var el  = document.getElementById('mm-tab-' + t);
+    var btn = document.getElementById('mm-tab-' + t + '-btn');
+    if (el)  el.style.display  = (t === tab) ? 'block' : 'none';
+    if (btn) { btn.className = (t === tab) ? 'btn btn-primary' : 'btn btn-secondary'; btn.setAttribute('aria-pressed', t === tab ? 'true' : 'false'); }
+  });
+  if (tab === 'cost') meetMidRenderCost();
+}
+
+// ---------- FORWARD PASS ----------
+var _mmFwdBatch = 0, _mmFwdRafId = null;
+function meetMidBuildForward() {
+  if (_mmState.phase === 'forward') return;
+  _mmState.fwdMap = new Map();
+  _mmState.candidates = [];
+  _mmState.cancelFlag = false;
+  _mmState.phase = 'forward';
+  _mmFwdBatch = 0;
+  var N = _mmState.N, total = 1 << N;
+  var progWrap = document.getElementById('mm-progress-wrap');
+  if (progWrap) progWrap.style.display = 'block';
+  var status = document.getElementById('mm-fwd-status');
+  if (status) status.innerHTML = 'Building forward table...';
+  function doBatch() {
+    if (_mmState.cancelFlag) { _mmState.phase = 'idle'; if (status) status.innerHTML = 'Cancelled.'; return; }
+    var end = Math.min(_mmFwdBatch + 2000, total);
+    for (var k1 = _mmFwdBatch; k1 < end; k1++) {
+      var A = meetEnc(_mmState.P, k1, N);
+      var list = _mmState.fwdMap.get(A);
+      if (!list) { list = []; _mmState.fwdMap.set(A, list); }
+      list.push(k1);
+    }
+    _mmFwdBatch = end;
+    var pct = Math.round((_mmFwdBatch / total) * 100);
+    var prog = document.getElementById('mm-progress');
+    if (prog) prog.style.width = pct + '%';
+    if (_mmFwdBatch < total) {
+      _mmFwdRafId = requestAnimationFrame(doBatch);
+    } else {
+      _mmState.phase = 'fwd-done';
+      var sample = '';
+      var count = 0;
+      _mmState.fwdMap.forEach(function(ks, a) {
+        if (count++ < 6) sample += '<tr><td style="font-family:var(--mono);padding:2px 8px">' + ('0000'+a.toString(16).toUpperCase()).slice(-4) + '</td><td style="font-family:var(--mono);padding:2px 8px">' + ks.join(', ') + '</td></tr>';
+      });
+      if (status) status.innerHTML =
+        '<strong>Forward table built:</strong> ' + _mmState.fwdMap.size + ' entries (&#8804; 2^' + N + ' = ' + total + ')<br>' +
+        '<table style="margin-top:6px;font-size:11px;border-collapse:collapse"><tr><th style="padding:2px 8px;text-align:left">A = E(P, K1)</th><th style="padding:2px 8px;text-align:left">K1 values</th></tr>' + sample + '<tr><td colspan="2" style="padding:2px 8px;color:var(--text2);font-size:10px">... (' + _mmState.fwdMap.size + ' unique intermediate values)</td></tr></table>';
+    }
+  }
+  doBatch();
+}
+
+// ---------- BACKWARD PASS ----------
+var _mmBwdBatch = 0;
+function meetMidSearchBackward() {
+  if (!_mmState.fwdMap || _mmState.fwdMap.size === 0) {
+    var s = document.getElementById('mm-bwd-status');
+    if (s) s.innerHTML = 'Run Step 1 (Build forward table) first.';
+    return;
+  }
+  if (_mmState.phase === 'backward') return;
+  _mmState.cancelFlag = false;
+  _mmState.phase = 'backward';
+  _mmState.candidates = [];
+  _mmBwdBatch = 0;
+  var N = _mmState.N, total = 1 << N;
+  var prog = document.getElementById('mm-progress');
+  if (prog) prog.style.width = '0%';
+  var status = document.getElementById('mm-bwd-status');
+  if (status) status.innerHTML = 'Running backward search...';
+  function doBatch() {
+    if (_mmState.cancelFlag) { _mmState.phase = 'idle'; if (status) status.innerHTML = 'Cancelled.'; return; }
+    var end = Math.min(_mmBwdBatch + 2000, total);
+    for (var k2 = _mmBwdBatch; k2 < end; k2++) {
+      var B = meetDec(_mmState.C, k2, N);
+      var hits = _mmState.fwdMap.get(B);
+      if (hits) {
+        for (var h = 0; h < hits.length; h++) _mmState.candidates.push([hits[h], k2]);
+      }
+    }
+    _mmBwdBatch = end;
+    var pct = Math.round((_mmBwdBatch / total) * 100);
+    if (prog) prog.style.width = pct + '%';
+    if (_mmBwdBatch < total) {
+      requestAnimationFrame(doBatch);
+    } else {
+      _mmState.phase = 'bwd-done';
+      var fmtH = function(v) { return ('0000'+v.toString(16).toUpperCase()).slice(-4); };
+      var rows = '';
+      for (var i = 0; i < Math.min(_mmState.candidates.length, 8); i++) {
+        var pair = _mmState.candidates[i];
+        rows += '<tr><td style="font-family:var(--mono);padding:2px 8px">' + fmtH(pair[0]) + '</td><td style="font-family:var(--mono);padding:2px 8px">' + fmtH(pair[1]) + '</td></tr>';
+      }
+      if (status) status.innerHTML =
+        '<strong>Candidates found: ' + _mmState.candidates.length + '</strong> (before 2nd-pair verification)<br>' +
+        '<table style="margin-top:6px;font-size:11px;border-collapse:collapse"><tr><th style="padding:2px 8px;text-align:left">K1 candidate</th><th style="padding:2px 8px;text-align:left">K2 candidate</th></tr>' + rows +
+        (_mmState.candidates.length > 8 ? '<tr><td colspan="2" style="padding:2px 8px;color:var(--text2);font-size:10px">... and ' + (_mmState.candidates.length - 8) + ' more</td></tr>' : '') +
+        '</table><br>Run Step 3 to filter with the 2nd pair.';
+    }
+  }
+  doBatch();
+}
+
+// ---------- VERIFY ----------
+function meetMidVerify() {
+  var status = document.getElementById('mm-verify-status');
+  if (!_mmState.candidates || _mmState.candidates.length === 0) {
+    if (status) status.innerHTML = 'Run Step 2 first.';
+    return;
+  }
+  var N = _mmState.N;
+  var survivors = [];
+  for (var i = 0; i < _mmState.candidates.length; i++) {
+    var pair = _mmState.candidates[i];
+    if (doubleEnc(_mmState.P2, pair[0], pair[1], N) === _mmState.C2) survivors.push(pair);
+  }
+  var falsePos = _mmState.candidates.length - survivors.length;
+  var fmtH = function(v) { return ('0000'+v.toString(16).toUpperCase()).slice(-4); };
+  var rows = '';
+  for (var j = 0; j < survivors.length; j++) {
+    var p = survivors[j];
+    var match = (p[0] === _mmState.K1 && p[1] === _mmState.K2);
+    rows += '<tr><td style="font-family:var(--mono);padding:2px 8px">' + fmtH(p[0]) + '</td><td style="font-family:var(--mono);padding:2px 8px">' + fmtH(p[1]) + '</td>' +
+      '<td style="padding:2px 8px">' + (match ? '<span style="color:#10B981;font-weight:700">&#10003; = secret</span>' : '<span style="color:var(--text2)">false positive?</span>') + '</td></tr>';
+  }
+  if (status) status.innerHTML =
+    '<strong>Survivors after 2nd-pair filter: ' + survivors.length + '</strong> (false positives removed: ' + falsePos + ')<br>' +
+    '<table style="margin-top:6px;font-size:11px;border-collapse:collapse"><tr><th style="padding:2px 8px;text-align:left">K1</th><th style="padding:2px 8px;text-align:left">K2</th><th style="padding:2px 8px;text-align:left">Match?</th></tr>' + rows + '</table>' +
+    '<div style="margin-top:6px;font-size:11px;color:var(--text2)">Use &ldquo;Reveal secret keys&rdquo; on the Setup tab to confirm.</div>';
+  // Update counters
+  var total = 1 << N;
+  var countersEl = document.getElementById('mm-counters');
+  if (countersEl) countersEl.innerHTML =
+    '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;font-size:12px">' +
+    '<div class="concept-box" style="margin:0"><div class="concept-box-title">Forward ops</div><div class="concept-box-body" style="font-family:var(--mono)">2^' + N + ' = ' + total.toLocaleString() + '</div></div>' +
+    '<div class="concept-box" style="margin:0"><div class="concept-box-title">Backward ops</div><div class="concept-box-body" style="font-family:var(--mono)">2^' + N + ' = ' + total.toLocaleString() + '</div></div>' +
+    '<div class="concept-box" style="margin:0"><div class="concept-box-title">Total &#8776;</div><div class="concept-box-body" style="font-family:var(--mono)">2^' + (N+1) + ' = ' + (2*total).toLocaleString() + '</div></div>' +
+    '<div class="concept-box" style="margin:0"><div class="concept-box-title">Memory entries</div><div class="concept-box-body" style="font-family:var(--mono)">&#8804; 2^' + N + ' = ' + total.toLocaleString() + '</div></div>' +
+    '<div class="concept-box" style="margin:0"><div class="concept-box-title">Candidates</div><div class="concept-box-body" style="font-family:var(--mono)">' + _mmState.candidates.length + '</div></div>' +
+    '<div class="concept-box" style="margin:0"><div class="concept-box-title">False positives removed</div><div class="concept-box-body" style="font-family:var(--mono)">' + falsePos + '</div></div>' +
+    '</div>';
+}
+
+// ---------- BRUTE FORCE ----------
+var _mmBruteRaf = null;
+function meetMidBrute() {
+  var N = _mmState.N;
+  var status = document.getElementById('mm-brute-status');
+  var prog = document.getElementById('mm-brute-progress');
+  if (N > 12) {
+    var bf = Math.pow(2, 2*N);
+    if (status) status.innerHTML =
+      '<div style="color:#DC2626;font-weight:700">N = ' + N + ' &rarr; brute-force would need 2^' + (2*N) + ' &#8776; ' + bf.toExponential(2) + ' operations.</div>' +
+      '<div style="margin-top:6px;color:var(--text2);font-size:12px">That\'s too large to run live. Showing partial sample (first 1000 pairs):</div>' +
+      '<div id="mm-brute-sample" style="font-size:11px;font-family:var(--mono);margin-top:6px"></div>';
+    var sample = document.getElementById('mm-brute-sample');
+    var found = [];
+    outer: for (var k1 = 0; k1 < 32; k1++) {
+      for (var k2 = 0; k2 < 32; k2++) {
+        if (doubleEnc(_mmState.P, k1, k2, N) === _mmState.C) found.push([k1,k2]);
+        if (found.length >= 5) break outer;
+      }
+    }
+    if (sample) sample.textContent = 'First 1024 pairs checked: ' + found.length + ' hit(s) found (any real hit requires full 2^' + (2*N) + ' search).';
+    return;
+  }
+  _mmState.bruteCancel = false;
+  var total = (1 << N) * (1 << N);
+  var k1 = 0, t0 = performance.now();
+  var found = [];
+  if (prog) { prog.style.display = 'block'; prog.style.width = '0%'; }
+  if (status) status.innerHTML = 'Brute-forcing 2^' + (2*N) + ' = ' + total.toLocaleString() + ' pairs...';
+  function doBatch() {
+    if (_mmState.bruteCancel) { if (status) status.innerHTML += ' (cancelled)'; return; }
+    var end = Math.min(k1 + 500, 1 << N);
+    for (var a = k1; a < end; a++) {
+      for (var b = 0; b < (1 << N); b++) {
+        if (doubleEnc(_mmState.P, a, b, N) === _mmState.C) found.push([a,b]);
+      }
+    }
+    k1 = end;
+    if (prog) prog.style.width = Math.round((k1/(1<<N))*100) + '%';
+    if (k1 < (1 << N)) {
+      _mmBruteRaf = requestAnimationFrame(doBatch);
+    } else {
+      var elapsed = (performance.now() - t0).toFixed(0);
+      var fmtH = function(v){return ('0000'+v.toString(16).toUpperCase()).slice(-4);};
+      var rows = found.slice(0,6).map(function(p){return '<tr><td style="font-family:var(--mono);padding:2px 8px">'+fmtH(p[0])+'</td><td style="font-family:var(--mono);padding:2px 8px">'+fmtH(p[1])+'</td></tr>';}).join('');
+      if (status) status.innerHTML =
+        '<strong>Done in ' + elapsed + ' ms</strong> &mdash; ops: 2^' + (2*N) + ' = ' + total.toLocaleString() + '<br>' +
+        'Hits: ' + found.length + '<br>' +
+        '<table style="margin-top:4px;font-size:11px;border-collapse:collapse"><tr><th style="padding:2px 8px">K1</th><th style="padding:2px 8px">K2</th></tr>' + rows + '</table>';
+    }
+  }
+  doBatch();
+}
+
+function meetMidCancelBrute() { _mmState.bruteCancel = true; }
+function meetMidCancel() { _mmState.cancelFlag = true; }
+
+function meetMidRenderCost() {
+  var el = document.getElementById('mm-cost-bars');
+  if (!el) return;
+  var N = _mmState.N;
+  var bf  = Math.pow(2, 2*N);
+  var mitm = Math.pow(2, N+1);
+  var ratio = bf / mitm;
+  var bfBar  = 100;
+  var mitmBar = Math.max(1, Math.round((mitm / bf) * 100));
+  el.innerHTML =
+    '<div style="margin-bottom:10px">' +
+    '<div style="font-size:12px;margin-bottom:3px">Brute force: 2^' + (2*N) + ' &#8776; ' + bf.toExponential(2) + ' operations</div>' +
+    '<div style="background:var(--border);border-radius:4px;height:18px"><div style="background:#DC2626;height:100%;width:' + bfBar + '%;border-radius:4px"></div></div>' +
+    '</div>' +
+    '<div style="margin-bottom:10px">' +
+    '<div style="font-size:12px;margin-bottom:3px">MITM time: &#8776; 2^' + (N+1) + ' &#8776; ' + mitm.toExponential(2) + ' operations</div>' +
+    '<div style="background:var(--border);border-radius:4px;height:18px"><div style="background:var(--primary);height:100%;width:' + mitmBar + '%;border-radius:4px"></div></div>' +
+    '</div>' +
+    '<div style="margin-bottom:10px">' +
+    '<div style="font-size:12px;margin-bottom:3px">MITM memory: &#8804; 2^' + N + ' &#8776; ' + Math.pow(2,N).toExponential(2) + ' table entries</div>' +
+    '<div style="background:var(--border);border-radius:4px;height:18px"><div style="background:var(--accent);height:100%;width:' + Math.round(mitmBar/2) + '%;border-radius:4px"></div></div>' +
+    '</div>' +
+    '<div style="font-size:13px;font-weight:700;margin:10px 0 4px">Speedup: brute &#247; MITM &#8776; ' + ratio.toExponential(2) + '&#215;</div>' +
+    '<div style="font-size:12px;color:var(--text2)">Effective security of double encryption with N-bit keys: only &#8776; N+1 = <strong>' + (N+1) + ' bits</strong> of time-hardness, not 2N = ' + (2*N) + ' bits.</div>';
+}
 
 function setOSSLSymTab(tab) {
   ['otp','2tp','stat'].forEach(t => {
