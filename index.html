@@ -7885,8 +7885,8 @@ function renderModules() {
 // ============================================================
 // LAB DEEP-LINK — QR-code & activity-code routing
 // Maps the short IDs printed on textbook QR codes to module labs.
-// Existing labs: caesar/frequency/vigenere/xor all live in Module 1 (vigenere_lab).
-// railfence, stego are not yet implemented — show "coming soon".
+// tabFn defaults to switchCipherTab (Module 1's vigenere_lab tab switcher);
+// other modules' multi-tab labs pass their own tab-switch function name.
 // ============================================================
 const LAB_DEEP_LINK_MAP = {
   caesar:    { moduleId: 1, tab: 'caesar' },
@@ -7898,13 +7898,19 @@ const LAB_DEEP_LINK_MAP = {
   railfence: { moduleId: 1, tab: 'railfence' },
   stego:     { moduleId: 1, tab: 'stego' },
   break:     { moduleId: 1, tab: 'break' },
+  modes_ecb: { moduleId: 3, tab: 'ecb', tabFn: 'setModesTab' },
+  modes_cbc: { moduleId: 3, tab: 'cbc', tabFn: 'setModesTab' },
+  modes_ctr: { moduleId: 3, tab: 'ctr', tabFn: 'setModesTab' },
+  modes_gcm: { moduleId: 3, tab: 'gcm', tabFn: 'setModesTab' },
 };
 
-// Printed activity codes → lab short IDs (1–8 series, textbook Chapter 1 labs)
+// Printed activity codes → lab short IDs. Flat, continuing counter across
+// chapters/modules (1-8 = Module 1's vigenere_lab tabs, 9+ = later modules).
 const ACTIVITY_CODE_MAP = {
   '1': 'caesar', '2': 'frequency', '3': 'vigenere',
   '4': 'playfair', '5': 'hill', '6': 'railfence',
   '7': 'stego', '8': 'break',
+  '9': 'modes_ecb', '10': 'modes_cbc', '11': 'modes_ctr', '12': 'modes_gcm',
 };
 
 // Open a lab directly by short ID (from QR code or activity code).
@@ -7923,7 +7929,8 @@ function openLabDeepLink(shortId) {
   startLesson();
   if (mapping.tab) {
     requestAnimationFrame(() => {
-      if (typeof switchCipherTab === 'function') switchCipherTab(mapping.tab);
+      const tabFn = window[mapping.tabFn || 'switchCipherTab'];
+      if (typeof tabFn === 'function') tabFn(mapping.tab);
     });
   }
 }
