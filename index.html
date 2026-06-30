@@ -4540,9 +4540,9 @@ Decrypt:    1 1 0 1 1 XOR 0 1 1 0 1 = 1 0 1 1 0  <span class="comment">// origin
       },
       stage4: {
         type: 'lab',
-        heading: 'Lab: AES Modes of Operation — OpenSSL Comparison',
-        scenario: '🔬 Seminar Lab: Replicate the Seminar 3 OpenSSL exercise entirely in-browser. Encrypt the same message under AES-128 in ECB, CBC, and CTR modes. Observe that ECB produces identical ciphertext blocks for identical plaintext blocks (the ECB pattern leak), while CBC and CTR produce visually random output. Then simulate a CTR nonce-reuse attack: encrypt two different messages with the same nonce and XOR the ciphertexts to expose plaintext structure.',
-        labId: 'openssl_modes_lab'
+        heading: 'Lab: DES Explorer — Step Inside a Feistel Cipher',
+        scenario: '🔬 DES Explorer: Step through every stage of the Data Encryption Standard interactively. Trace bits through the Initial Permutation, watch all 16 subkeys being derived, follow a Feistel round step-by-step (Expansion, XOR, S-boxes, Permutation), explore any S-box cell, inspect the Final Permutation, and flip a single bit to see the avalanche effect spread confusion and diffusion across the block. The engine is pure JavaScript — no Web Crypto API, every intermediate value is visible.',
+        labId: 'des_lab'
       },
       stage5: {
         type: 'quiz',
@@ -8048,6 +8048,7 @@ function renderLessonStage() {
         if (document.getElementById('metro-result')) runMetroDecrypt();
       });
     }
+    if (content.labId === 'des_lab') { requestAnimationFrame(() => initDesLab()); }
   } else if (content && content.type === 'quiz') {
     // Quiz stage — Phase 4: apply adaptive tier before rendering
     if (content.tiers) {
@@ -9563,6 +9564,195 @@ Rail 2: . . L . . . O . . .</div>
         </div>
       </div>`,
 
+    des_lab: `
+      <div class="stage-label">&#9879;&#65039; Interactive Lab</div>
+      <div class="lab-scenario">${content.scenario}</div>
+      <div class="lab-container">
+        <div class="lab-header">
+          <span class="lab-icon">&#128274;</span>
+          <div>
+            <div class="lab-title">${content.heading}</div>
+            <div class="lab-subtitle">DES &middot; 64-bit block &middot; 56-bit key &middot; 16 Feistel rounds &middot; transparent in-browser engine, no Web Crypto</div>
+          </div>
+        </div>
+
+        <div class="lab-field" style="display:grid;grid-template-columns:1fr auto;gap:8px;align-items:end">
+          <div>
+            <label class="lab-label">Plaintext &mdash; 16 hex digits <em style="color:var(--text2)">(or 8 ASCII chars)</em></label>
+            <div style="display:flex;gap:6px">
+              <select id="des-pt-mode" class="lab-input" style="width:80px;flex-shrink:0" onchange="desUpdateBinDisplay()">
+                <option value="hex">Hex</option>
+                <option value="ascii">ASCII</option>
+              </select>
+              <input id="des-pt-input" class="lab-input" value="0123456789ABCDEF" maxlength="16" oninput="desUpdateBinDisplay()" placeholder="16 hex digits">
+            </div>
+            <div id="des-pt-bin" style="font-family:var(--mono);font-size:10px;color:var(--text2);margin-top:3px;word-break:break-all"></div>
+          </div>
+          <button class="btn btn-secondary" style="white-space:nowrap;font-size:12px" onclick="desLoadFIPS()">Load FIPS example</button>
+        </div>
+
+        <div class="lab-field">
+          <label class="lab-label">Key &mdash; 16 hex digits <em style="color:var(--text2)">(or 8 ASCII chars)</em></label>
+          <div style="display:flex;gap:6px">
+            <select id="des-key-mode" class="lab-input" style="width:80px;flex-shrink:0" onchange="desUpdateBinDisplay()">
+              <option value="hex">Hex</option>
+              <option value="ascii">ASCII</option>
+            </select>
+            <input id="des-key-input" class="lab-input" value="133457799BBCDFF1" maxlength="16" oninput="desUpdateBinDisplay()" placeholder="16 hex digits">
+          </div>
+          <div id="des-key-bin" style="font-family:var(--mono);font-size:10px;color:var(--text2);margin-top:3px;word-break:break-all"></div>
+        </div>
+
+        <div style="display:flex;flex-wrap:wrap;gap:6px;margin:12px 0 8px">
+          <button id="des-tab-encrypt-btn" class="btn btn-primary" style="flex:1 1 auto;font-size:12px" onclick="switchDesTab('encrypt')" aria-pressed="true">Full Run</button>
+          <button id="des-tab-ip-btn" class="btn btn-secondary" style="flex:1 1 auto;font-size:12px" onclick="switchDesTab('ip')" aria-pressed="false">Initial Perm.</button>
+          <button id="des-tab-keys-btn" class="btn btn-secondary" style="flex:1 1 auto;font-size:12px" onclick="switchDesTab('keys')" aria-pressed="false">Key Schedule</button>
+          <button id="des-tab-round-btn" class="btn btn-secondary" style="flex:1 1 auto;font-size:12px" onclick="switchDesTab('round')" aria-pressed="false">Feistel Round</button>
+          <button id="des-tab-sbox-btn" class="btn btn-secondary" style="flex:1 1 auto;font-size:12px" onclick="switchDesTab('sbox')" aria-pressed="false">S-box</button>
+          <button id="des-tab-final-btn" class="btn btn-secondary" style="flex:1 1 auto;font-size:12px" onclick="switchDesTab('final')" aria-pressed="false">Final Perm.</button>
+          <button id="des-tab-avalanche-btn" class="btn btn-secondary" style="flex:1 1 auto;font-size:12px" onclick="switchDesTab('avalanche')" aria-pressed="false">Avalanche</button>
+        </div>
+
+        <!-- TAB 1: Full Run -->
+        <div id="des-tab-encrypt" style="display:block">
+          <div class="concept-box">
+            <div class="concept-box-title">What happens here?</div>
+            <div class="concept-box-body">DES encrypts your 64-bit block in 16 rounds. Each round mixes the right half through the Feistel function f(R,K) and XORs it with the left half, then swaps. After 16 rounds the halves are recombined and un-permuted. Decryption reuses the same structure with subkeys reversed.</div>
+          </div>
+          <div style="display:flex;gap:8px;margin:10px 0">
+            <button class="btn btn-primary" style="flex:1" onclick="desRunEncrypt()">&#128274; Encrypt</button>
+            <button class="btn btn-secondary" style="flex:1" onclick="desRunDecrypt()">&#128275; Decrypt ciphertext</button>
+          </div>
+          <div id="des-selftest-badge" style="font-size:12px;margin-bottom:8px"></div>
+          <div class="lab-field">
+            <label class="lab-label">Ciphertext (hex)</label>
+            <div class="lab-output" id="des-enc-out" aria-live="polite" style="font-family:var(--mono);font-size:16px;letter-spacing:.08em"></div>
+          </div>
+          <div class="lab-field">
+            <label class="lab-label">Decrypted result</label>
+            <div class="lab-output" id="des-dec-out" aria-live="polite" style="font-size:13px"></div>
+          </div>
+          <div class="lab-field">
+            <label class="lab-label">Round-by-round state (L, R after each round)</label>
+            <div style="overflow-x:auto;max-height:340px;overflow-y:auto">
+              <table id="des-round-table" style="border-collapse:collapse;width:100%;font-size:12px"></table>
+            </div>
+          </div>
+        </div>
+
+        <!-- TAB 2: Initial Permutation -->
+        <div id="des-tab-ip" style="display:none">
+          <div class="concept-box">
+            <div class="concept-box-title">Initial Permutation (IP)</div>
+            <div class="concept-box-body">IP is a fixed bit-shuffle applied to the 64-bit plaintext before any rounds begin. It has no cryptographic strength &mdash; it was included in the original hardware spec for alignment reasons. Click any input bit below to highlight where it lands in the IP output (blue = source, amber = destination).</div>
+          </div>
+          <button class="btn btn-secondary" style="margin-bottom:10px;font-size:12px" onclick="desRunEncrypt();desRenderIP()">&#8635; Refresh with current inputs</button>
+          <div class="lab-field">
+            <label class="lab-label">Input bits (64) &mdash; click a bit to trace it</label>
+            <div id="des-ip-in" aria-live="polite"></div>
+          </div>
+          <div class="lab-field" style="margin-top:10px">
+            <label class="lab-label">IP output bits (64) &mdash; amber = destination of clicked bit</label>
+            <div id="des-ip-out" aria-live="polite"></div>
+          </div>
+        </div>
+
+        <!-- TAB 3: Key Schedule -->
+        <div id="des-tab-keys" style="display:none">
+          <div class="concept-box">
+            <div class="concept-box-title">Key Schedule</div>
+            <div class="concept-box-body">PC-1 drops the 8 parity bits from the 64-bit key, leaving 56 bits split into two 28-bit halves C and D. Before each round both halves are left-rotated by 1 or 2 positions. PC-2 then selects 48 of the 56 bits to form the round subkey K<sub>i</sub>.</div>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;margin:10px 0">
+            <button class="btn btn-secondary" style="font-size:12px" onclick="desStepKey(-1)">&#9664; Prev</button>
+            <input id="des-key-slider" type="range" min="1" max="16" value="1" style="flex:1" oninput="_desCurrentKey=parseInt(this.value);desRenderKeySchedule()">
+            <button class="btn btn-secondary" style="font-size:12px" onclick="desStepKey(1)">Next &#9654;</button>
+          </div>
+          <div id="des-key-round-lbl" style="text-align:center;font-size:12px;color:var(--text2);margin-bottom:10px">Round 1 / 16</div>
+          <div id="des-key-detail" style="font-size:12px"></div>
+        </div>
+
+        <!-- TAB 4: Feistel Round -->
+        <div id="des-tab-round" style="display:none">
+          <div class="concept-box">
+            <div class="concept-box-title">Feistel Round Structure</div>
+            <div class="concept-box-body">Each of the 16 rounds follows: R is expanded 32&#8594;48 bits (E), XORed with subkey K<sub>i</sub> (48 bits), split into eight 6-bit groups fed into the S-boxes (6&#8594;4 bits each = 32 bits), then permuted by P, and finally XORed with L. The halves swap. Click &ldquo;Explore&rdquo; on any S-box to jump to the S-box tab.</div>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;margin:10px 0">
+            <button class="btn btn-secondary" style="font-size:12px" onclick="desStepRound(-1)">&#9664; Prev</button>
+            <input id="des-round-slider" type="range" min="1" max="16" value="1" style="flex:1" oninput="desRenderRound(parseInt(this.value))">
+            <button class="btn btn-secondary" style="font-size:12px" onclick="desStepRound(1)">Next &#9654;</button>
+          </div>
+          <div id="des-round-lbl" style="text-align:center;font-size:12px;color:var(--text2);margin-bottom:10px">Round 1 / 16</div>
+          <div id="des-round-detail" aria-live="polite"></div>
+        </div>
+
+        <!-- TAB 5: S-box Explorer -->
+        <div id="des-tab-sbox" style="display:none">
+          <div class="concept-box">
+            <div class="concept-box-title">S-box Substitution</div>
+            <div class="concept-box-body">Each S-box maps 6 bits to 4 bits non-linearly &mdash; this is DES&rsquo;s only source of <em>confusion</em>. The row is selected by the two outer bits (b1 and b6); the column by the four middle bits (b2&ndash;b5). The 8 S-boxes together produce 32 bits from 48, removing the 16 redundant bits added by E.</div>
+          </div>
+          <div style="display:flex;gap:8px;margin:10px 0">
+            <div class="lab-field" style="flex:0 0 auto;margin:0">
+              <label class="lab-label">S-box</label>
+              <select id="des-sbox-select" class="lab-input" style="width:70px" onchange="desSboxRender()">
+                <option>1</option><option>2</option><option>3</option><option>4</option>
+                <option>5</option><option>6</option><option>7</option><option>8</option>
+              </select>
+            </div>
+            <div class="lab-field" style="flex:1;margin:0">
+              <label class="lab-label">6-bit input (binary, e.g. 101101)</label>
+              <input id="des-sbox-input" class="lab-input" value="000000" maxlength="6" oninput="this.value=this.value.replace(/[^01]/g,'');desSboxRender()" placeholder="6 binary digits">
+            </div>
+          </div>
+          <div id="des-sbox-result" style="font-size:13px;margin-bottom:10px;padding:8px;background:var(--bg);border-radius:var(--radius-xs)" aria-live="polite"></div>
+          <div id="des-sbox-table" style="overflow-x:auto"></div>
+        </div>
+
+        <!-- TAB 6: Final Permutation -->
+        <div id="des-tab-final" style="display:none">
+          <div class="concept-box">
+            <div class="concept-box-title">Final Permutation (IP&#8315;&#185;)</div>
+            <div class="concept-box-body">After round 16 the halves are swapped (R16 &#8741; L16) then passed through IP&#8315;&#185;, the exact inverse of the Initial Permutation, to produce the 64-bit ciphertext. Click any bit in the pre-output to trace it to its destination in the ciphertext.</div>
+          </div>
+          <button class="btn btn-secondary" style="margin-bottom:10px;font-size:12px" onclick="desRunEncrypt();desRenderFinal()">&#8635; Refresh with current inputs</button>
+          <div class="lab-field">
+            <label class="lab-label">Pre-output: R16 &#8741; L16 (64 bits) &mdash; click a bit to trace</label>
+            <div id="des-final-in" aria-live="polite"></div>
+          </div>
+          <div class="lab-field" style="margin-top:10px">
+            <label class="lab-label">Ciphertext after IP&#8315;&#185; (64 bits) &mdash; amber = destination</label>
+            <div id="des-final-out" aria-live="polite"></div>
+          </div>
+        </div>
+
+        <!-- TAB 7: Avalanche -->
+        <div id="des-tab-avalanche" style="display:none">
+          <div class="concept-box">
+            <div class="concept-box-title">Avalanche Effect</div>
+            <div class="concept-box-body">A secure cipher achieves <em>confusion</em> (each ciphertext bit depends on many key bits) and <em>diffusion</em> (each plaintext bit affects many ciphertext bits). Flip one bit and track how many output bits differ after each round. By round 5&ndash;8 roughly half the 64 bits should differ &mdash; the avalanche effect. DES reaches ~50% by the final round.</div>
+          </div>
+          <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:10px 0">
+            <div style="flex:1;min-width:160px">
+              <label class="lab-label">Flip target</label>
+              <select class="lab-input" onchange="_desAvaTarget=this.value;desRenderAvalanche()">
+                <option value="pt">Plaintext bit</option>
+                <option value="key">Key bit</option>
+              </select>
+            </div>
+            <div style="flex:2;min-width:160px">
+              <label class="lab-label">Bit index (0&ndash;63)</label>
+              <input id="des-ava-slider" type="range" min="0" max="63" value="0" style="width:100%" oninput="desAvaSetBit(parseInt(this.value))">
+            </div>
+            <button class="btn btn-secondary" style="font-size:12px;white-space:nowrap" onclick="desRenderAvalanche()">&#8635; Recalculate</button>
+          </div>
+          <div id="des-ava-lbl" style="text-align:center;font-size:12px;color:var(--text2);margin-bottom:8px">Plaintext bit 0 flipped</div>
+          <div id="des-ava-bars" aria-live="polite" style="overflow-x:auto"></div>
+        </div>
+
+      </div>`,
+
     openssl_hash_lab: `
       <div class="stage-label">⚗️ Interactive Lab — Seminar 4 Mirror</div>
       <div class="lab-scenario">${content.scenario}</div>
@@ -10838,6 +11028,392 @@ function switchCipherTab(tab) {
     if (typeof updateMetroFreq === 'function') updateMetroFreq();
     if (typeof runMetroDecrypt === 'function') runMetroDecrypt();
   }
+}
+
+// ============================================================
+// DES EXPLORER LAB — instrumented FIPS 46-3 engine + 7 tabs
+// ============================================================
+
+(function() {
+  var IP_T = [58,50,42,34,26,18,10,2,60,52,44,36,28,20,12,4,62,54,46,38,30,22,14,6,64,56,48,40,32,24,16,8,57,49,41,33,25,17,9,1,59,51,43,35,27,19,11,3,61,53,45,37,29,21,13,5,63,55,47,39,31,23,15,7];
+  var IP_INV_T = [40,8,48,16,56,24,64,32,39,7,47,15,55,23,63,31,38,6,46,14,54,22,62,30,37,5,45,13,53,21,61,29,36,4,44,12,52,20,60,28,35,3,43,11,51,19,59,27,34,2,42,10,50,18,58,26,33,1,41,9,49,17,57,25];
+  var PC1_T = [57,49,41,33,25,17,9,1,58,50,42,34,26,18,10,2,59,51,43,35,27,19,11,3,60,52,44,36,63,55,47,39,31,23,15,7,62,54,46,38,30,22,14,6,61,53,45,37,29,21,13,5,28,20,12,4];
+  var PC2_T = [14,17,11,24,1,5,3,28,15,6,21,10,23,19,12,4,26,8,16,7,27,20,13,2,41,52,31,37,47,55,30,40,51,45,33,48,44,49,39,56,34,53,46,42,50,36,29,32];
+  var E_T = [32,1,2,3,4,5,4,5,6,7,8,9,8,9,10,11,12,13,12,13,14,15,16,17,16,17,18,19,20,21,20,21,22,23,24,25,24,25,26,27,28,29,28,29,30,31,32,1];
+  var P_T = [16,7,20,21,29,12,28,17,1,15,23,26,5,18,31,10,2,8,24,14,32,27,3,9,19,13,30,6,22,11,4,25];
+  var SHIFTS_T = [1,1,2,2,2,2,2,2,1,2,2,2,2,2,2,1];
+  var SBOXES_T = [
+    [[14,4,13,1,2,15,11,8,3,10,6,12,5,9,0,7],[0,15,7,4,14,2,13,1,10,6,12,11,9,5,3,8],[4,1,14,8,13,6,2,11,15,12,9,7,3,10,5,0],[15,12,8,2,4,9,1,7,5,11,3,14,10,0,6,13]],
+    [[15,1,8,14,6,11,3,4,9,7,2,13,12,0,5,10],[3,13,4,7,15,2,8,14,12,0,1,10,6,9,11,5],[0,14,7,11,10,4,13,1,5,8,12,6,9,3,2,15],[13,8,10,1,3,15,4,2,11,6,7,12,0,5,14,9]],
+    [[10,0,9,14,6,3,15,5,1,13,12,7,11,4,2,8],[13,7,0,9,3,4,6,10,2,8,5,14,12,11,15,1],[13,6,4,9,8,15,3,0,11,1,2,12,5,10,14,7],[1,10,13,0,6,9,8,7,4,15,14,3,11,5,2,12]],
+    [[7,13,14,3,0,6,9,10,1,2,8,5,11,12,4,15],[13,8,11,5,6,15,0,3,4,7,2,12,1,10,14,9],[10,6,9,0,12,11,7,13,15,1,3,14,5,2,8,4],[3,15,0,6,10,1,13,8,9,4,5,11,12,7,2,14]],
+    [[2,12,4,1,7,10,11,6,8,5,3,15,13,0,14,9],[14,11,2,12,4,7,13,1,5,0,15,10,3,9,8,6],[4,2,1,11,10,13,7,8,15,9,12,5,6,3,0,14],[11,8,12,7,1,14,2,13,6,15,0,9,10,4,5,3]],
+    [[12,1,10,15,9,2,6,8,0,13,3,4,14,7,5,11],[10,15,4,2,7,12,9,5,6,1,13,14,0,11,3,8],[9,14,15,5,2,8,12,3,7,0,4,10,1,13,11,6],[4,3,2,12,9,5,15,10,11,14,1,7,6,0,8,13]],
+    [[4,11,2,14,15,0,8,13,3,12,9,7,5,10,6,1],[13,0,11,7,4,9,1,10,14,3,5,12,2,15,8,6],[1,4,11,13,12,3,7,14,10,15,6,8,0,5,9,2],[6,11,13,8,1,4,10,7,9,5,0,15,14,2,3,12]],
+    [[13,2,8,4,6,15,11,1,10,9,3,14,5,0,12,7],[1,15,13,8,10,3,7,4,12,5,6,11,0,14,9,2],[7,11,4,1,9,12,14,2,0,6,10,13,15,3,5,8],[2,1,14,7,4,10,8,13,15,12,9,0,3,5,6,11]]
+  ];
+  function _hexToBits(hex) {
+    var bits = [];
+    for (var i = 0; i < hex.length; i++) {
+      var v = parseInt(hex[i], 16);
+      for (var b = 3; b >= 0; b--) bits.push((v >> b) & 1);
+    }
+    return bits;
+  }
+  function _bitsToHex(bits) {
+    var hex = '';
+    for (var i = 0; i < bits.length; i += 4) {
+      var v = (bits[i]<<3)|(bits[i+1]<<2)|(bits[i+2]<<1)|bits[i+3];
+      hex += v.toString(16).toUpperCase();
+    }
+    return hex;
+  }
+  function _permute(bits, table) { return table.map(function(p){ return bits[p-1]; }); }
+  function _leftRotate(bits, n) { return bits.slice(n).concat(bits.slice(0, n)); }
+  function _xorBits(a, b) { return a.map(function(v,i){ return v ^ b[i]; }); }
+  function _sboxLookup(s, six) {
+    var row = (six[0]<<1)|six[5];
+    var col = (six[1]<<3)|(six[2]<<2)|(six[3]<<1)|six[4];
+    var val = SBOXES_T[s][row][col];
+    return [(val>>3)&1,(val>>2)&1,(val>>1)&1,val&1];
+  }
+  function _desCipher(blockHex, keyHex, mode, capture) {
+    var block = _hexToBits(blockHex);
+    var key64 = _hexToBits(keyHex);
+    var key56 = _permute(key64, PC1_T);
+    var C = key56.slice(0,28), D = key56.slice(28);
+    var subkeys = [], keyTrace = [];
+    for (var r = 0; r < 16; r++) {
+      var Cprev = C.slice(), Dprev = D.slice();
+      C = _leftRotate(C, SHIFTS_T[r]);
+      D = _leftRotate(D, SHIFTS_T[r]);
+      var K = _permute(C.concat(D), PC2_T);
+      subkeys.push(K);
+      if (capture) keyTrace.push({ C: Cprev.slice(), D: Dprev.slice(), rotatedC: C.slice(), rotatedD: D.slice(), K: K.slice() });
+    }
+    if (mode === 'decrypt') subkeys = subkeys.slice().reverse();
+    var ipOut = _permute(block, IP_T);
+    var L = ipOut.slice(0,32), R = ipOut.slice(32);
+    var rounds = [];
+    for (var i = 0; i < 16; i++) {
+      var Lprev = L.slice(), Rprev = R.slice();
+      var Eout = _permute(R, E_T);
+      var xorEK = _xorBits(Eout, subkeys[i]);
+      var sIn = [], sRC = [], sOut = [], fBits = [];
+      for (var s = 0; s < 8; s++) {
+        var six = xorEK.slice(s*6, s*6+6);
+        var row2 = (six[0]<<1)|six[5];
+        var col2 = (six[1]<<3)|(six[2]<<2)|(six[3]<<1)|six[4];
+        var four = _sboxLookup(s, six);
+        sIn.push(six.slice()); sRC.push({row:row2, col:col2}); sOut.push(four.slice()); fBits = fBits.concat(four);
+      }
+      var pOut = _permute(fBits, P_T);
+      L = _xorBits(Lprev, pOut);
+      var tmp = L; L = R; R = tmp;
+      if (capture) rounds.push({ Lprev:Lprev, Rprev:Rprev, E:Eout, xorEK:xorEK, sboxIn:sIn, sboxRowCol:sRC, sboxOut:sOut, pOut:pOut, Lcur:L.slice(), Rcur:R.slice() });
+    }
+    var preoutput = R.concat(L);
+    var cipherBits = _permute(preoutput, IP_INV_T);
+    var trace = null;
+    if (capture) trace = { ipOut:ipOut.slice(), subkeys:keyTrace, rounds:rounds, preoutput:preoutput.slice(), cipherBits:cipherBits.slice() };
+    return { outHex: _bitsToHex(cipherBits), trace: trace };
+  }
+  window._DES = { desCipher:_desCipher, hexToBits:_hexToBits, bitsToHex:_bitsToHex, xorBits:_xorBits, sboxLookup:_sboxLookup, SBOXES:SBOXES_T, IP_T:IP_T, IP_INV_T:IP_INV_T, E_T:E_T };
+})();
+
+var _desTrace = null;
+var _desCurrentRound = 1;
+var _desCurrentKey = 1;
+var _desCurrentSbox = 1;
+var _desAvaBit = 0;
+var _desAvaTarget = 'pt';
+
+function desHexValid(h) { return /^[0-9A-Fa-f]{16}$/.test(h.trim()); }
+function desAsciiToHex(s) {
+  var out = '';
+  var padded = (s + '\0\0\0\0\0\0\0\0').slice(0,8);
+  for (var i = 0; i < 8; i++) out += ('0' + padded.charCodeAt(i).toString(16)).slice(-2);
+  return out.toUpperCase();
+}
+function desReadInputs() {
+  var ptMode = document.getElementById('des-pt-mode');
+  var keyMode = document.getElementById('des-key-mode');
+  var ptVal = (document.getElementById('des-pt-input') || {value:'0123456789ABCDEF'}).value.trim();
+  var keyVal = (document.getElementById('des-key-input') || {value:'133457799BBCDFF1'}).value.trim();
+  var ptHex = (ptMode && ptMode.value === 'ascii') ? desAsciiToHex(ptVal) : ptVal.toUpperCase();
+  var keyHex = (keyMode && keyMode.value === 'ascii') ? desAsciiToHex(keyVal) : keyVal.toUpperCase();
+  if (!desHexValid(ptHex)) ptHex = '0123456789ABCDEF';
+  if (!desHexValid(keyHex)) keyHex = '133457799BBCDFF1';
+  return { ptHex: ptHex, keyHex: keyHex };
+}
+function desSelfTest() {
+  var r = _DES.desCipher('0123456789ABCDEF','133457799BBCDFF1','encrypt',false);
+  return r.outHex === '85E813540F0AB405';
+}
+function initDesLab() {
+  desLoadFIPS();
+  desRunEncrypt();
+  var pass = desSelfTest();
+  var badge = document.getElementById('des-selftest-badge');
+  if (badge) badge.innerHTML = pass
+    ? '<span style="color:#10B981;font-weight:700">&#10003; Engine self-test: PASS</span>'
+    : '<span style="color:#DC2626;font-weight:700">&#10007; Engine self-test: FAIL</span>';
+}
+function desLoadFIPS() {
+  var pt = document.getElementById('des-pt-input');
+  var k = document.getElementById('des-key-input');
+  var pm = document.getElementById('des-pt-mode');
+  var km = document.getElementById('des-key-mode');
+  if (pt) pt.value = '0123456789ABCDEF';
+  if (k) k.value = '133457799BBCDFF1';
+  if (pm) pm.value = 'hex';
+  if (km) km.value = 'hex';
+  desUpdateBinDisplay();
+}
+function desUpdateBinDisplay() {
+  var inp = desReadInputs();
+  var ptBin = document.getElementById('des-pt-bin');
+  var kBin = document.getElementById('des-key-bin');
+  if (ptBin) ptBin.textContent = _DES.hexToBits(inp.ptHex).join('').replace(/(.{8})/g,'$1 ').trim();
+  if (kBin) kBin.textContent = _DES.hexToBits(inp.keyHex).join('').replace(/(.{8})/g,'$1 ').trim();
+}
+function desRunEncrypt() {
+  var inp = desReadInputs();
+  var res = _DES.desCipher(inp.ptHex, inp.keyHex, 'encrypt', true);
+  _desTrace = res.trace;
+  _desCurrentRound = 1;
+  var outEl = document.getElementById('des-enc-out');
+  if (outEl) outEl.textContent = res.outHex;
+  var roundTbl = document.getElementById('des-round-table');
+  if (roundTbl && _desTrace) {
+    var rows = '<tr><th style="padding:3px 8px;text-align:left">Round</th><th style="padding:3px 8px;text-align:left">L (hex)</th><th style="padding:3px 8px;text-align:left">R (hex)</th></tr>';
+    for (var i = 0; i < 16; i++) {
+      var rnd = _desTrace.rounds[i];
+      rows += '<tr><td style="padding:3px 8px">' + (i+1) + '</td><td style="padding:3px 8px;font-family:var(--mono);font-size:11px">' + _DES.bitsToHex(rnd.Lcur) + '</td><td style="padding:3px 8px;font-family:var(--mono);font-size:11px">' + _DES.bitsToHex(rnd.Rcur) + '</td></tr>';
+    }
+    roundTbl.innerHTML = rows;
+  }
+  desUpdateBinDisplay();
+}
+function desRunDecrypt() {
+  var inp = desReadInputs();
+  var ctEl = document.getElementById('des-enc-out');
+  var ctHex = ctEl ? ctEl.textContent.trim() : '';
+  var el = document.getElementById('des-dec-out');
+  if (!desHexValid(ctHex)) { if(el) el.textContent = 'Encrypt first.'; return; }
+  var res = _DES.desCipher(ctHex, inp.keyHex, 'decrypt', false);
+  if (el) el.innerHTML = '<span style="font-family:var(--mono)">' + res.outHex + '</span> ' + (res.outHex.toUpperCase() === inp.ptHex.toUpperCase() ? '<span style="color:#10B981">&#10003; Round-trip OK</span>' : '<span style="color:#DC2626">&#10007; Mismatch</span>');
+}
+function switchDesTab(tab) {
+  ['encrypt','ip','keys','round','sbox','final','avalanche'].forEach(function(t) {
+    var el = document.getElementById('des-tab-' + t);
+    var btn = document.getElementById('des-tab-' + t + '-btn');
+    if (el) el.style.display = (t === tab) ? 'block' : 'none';
+    if (btn) { btn.className = (t === tab) ? 'btn btn-primary' : 'btn btn-secondary'; btn.setAttribute('aria-pressed', t === tab ? 'true' : 'false'); }
+  });
+  if (tab === 'ip') desRenderIP();
+  else if (tab === 'keys') desRenderKeySchedule();
+  else if (tab === 'round') desRenderRound(_desCurrentRound);
+  else if (tab === 'sbox') desSboxRender();
+  else if (tab === 'final') desRenderFinal();
+  else if (tab === 'avalanche') desRenderAvalanche();
+}
+function _desBitsGrid(bits, idPrefix, clickFn) {
+  var html = '<div style="display:grid;grid-template-columns:repeat(8,1fr);gap:2px;font-family:var(--mono);font-size:10px">';
+  for (var i = 0; i < 64; i++) {
+    html += '<div id="' + idPrefix + i + '"' + (clickFn ? ' onclick="' + clickFn + '(' + i + ')" style="cursor:pointer' : ' style="') + ';border:1px solid var(--border);border-radius:2px;text-align:center;padding:3px 0;background:var(--surface);color:var(--text)">' + bits[i] + '</div>';
+  }
+  return html + '</div>';
+}
+function desRenderIP() {
+  if (!_desTrace) { desRunEncrypt(); return; }
+  var inp = desReadInputs();
+  var inBits = _DES.hexToBits(inp.ptHex);
+  var c1 = document.getElementById('des-ip-in');
+  var c2 = document.getElementById('des-ip-out');
+  if (c1) c1.innerHTML = _desBitsGrid(inBits, 'des-ipin-', 'desTraceIPBit');
+  if (c2) c2.innerHTML = _desBitsGrid(_desTrace.ipOut, 'des-ipout-', null);
+}
+function desTraceIPBit(idx) {
+  var ipTable = _DES.IP_T;
+  for (var i = 0; i < 64; i++) {
+    var a = document.getElementById('des-ipin-' + i), b = document.getElementById('des-ipout-' + i);
+    if (a) { a.style.background = 'var(--surface)'; a.style.color = 'var(--text)'; }
+    if (b) { b.style.background = 'var(--surface)'; b.style.color = 'var(--text)'; }
+  }
+  var src = document.getElementById('des-ipin-' + idx);
+  if (src) { src.style.background = 'var(--primary)'; src.style.color = '#fff'; }
+  for (var k = 0; k < 64; k++) {
+    if (ipTable[k] - 1 === idx) {
+      var dst = document.getElementById('des-ipout-' + k);
+      if (dst) { dst.style.background = '#F59E0B'; dst.style.color = '#000'; }
+    }
+  }
+}
+function desRenderKeySchedule() {
+  if (!_desTrace) { desRunEncrypt(); return; }
+  var r = _desCurrentKey - 1;
+  var kt = _desTrace.subkeys[r];
+  var el = document.getElementById('des-key-detail');
+  if (!el || !kt) return;
+  el.innerHTML =
+    '<div style="margin-bottom:8px;font-weight:700">Round ' + _desCurrentKey + ' &mdash; Shift: ' + [1,1,2,2,2,2,2,2,1,2,2,2,2,2,2,1][r] + ' bit(s)</div>' +
+    '<div style="font-size:11px;color:var(--text2)">C' + (r) + ' (28 bits before rotation):</div>' +
+    '<div style="font-family:var(--mono);font-size:11px;word-break:break-all;margin-bottom:6px">' + kt.C.join('') + '</div>' +
+    '<div style="font-size:11px;color:var(--text2)">D' + (r) + ' (28 bits before rotation):</div>' +
+    '<div style="font-family:var(--mono);font-size:11px;word-break:break-all;margin-bottom:6px">' + kt.D.join('') + '</div>' +
+    '<div style="font-size:11px;color:var(--text2)">&#8594; C' + _desCurrentKey + ' (after rotation):</div>' +
+    '<div style="font-family:var(--mono);font-size:11px;word-break:break-all;margin-bottom:6px;color:var(--primary)">' + kt.rotatedC.join('') + '</div>' +
+    '<div style="font-size:11px;color:var(--text2)">&#8594; D' + _desCurrentKey + ' (after rotation):</div>' +
+    '<div style="font-family:var(--mono);font-size:11px;word-break:break-all;margin-bottom:6px;color:var(--primary)">' + kt.rotatedD.join('') + '</div>' +
+    '<div style="font-size:11px;color:var(--text2)">K' + _desCurrentKey + ' via PC-2 (48 bits):</div>' +
+    '<div style="font-family:var(--mono);font-size:11px;word-break:break-all;color:var(--primary);margin-bottom:4px">' + kt.K.join('') + '</div>' +
+    '<div style="font-size:11px">Hex: <strong style="font-family:var(--mono)">' + _DES.bitsToHex(kt.K) + '</strong></div>';
+  var slider = document.getElementById('des-key-slider');
+  if (slider) slider.value = _desCurrentKey;
+  var lbl = document.getElementById('des-key-round-lbl');
+  if (lbl) lbl.textContent = 'Round ' + _desCurrentKey + ' / 16';
+}
+function desStepKey(dir) {
+  _desCurrentKey = Math.max(1, Math.min(16, _desCurrentKey + dir));
+  desRenderKeySchedule();
+}
+function desRenderRound(n) {
+  if (!_desTrace || !_desTrace.rounds) return;
+  _desCurrentRound = n;
+  var rnd = _desTrace.rounds[n-1];
+  if (!rnd) return;
+  var el = document.getElementById('des-round-detail');
+  if (!el) return;
+  var sboxHtml = '';
+  for (var s = 0; s < 8; s++) {
+    var inStr = rnd.sboxIn[s].join('');
+    sboxHtml += '<div style="background:var(--bg);border-radius:var(--radius-xs);padding:6px;font-size:10px;font-family:var(--mono);text-align:center">' +
+      '<div style="font-weight:700;margin-bottom:2px">S' + (s+1) + '</div>' +
+      '<div>In: ' + inStr + '</div>' +
+      '<div>R' + rnd.sboxRowCol[s].row + ' C' + rnd.sboxRowCol[s].col + '</div>' +
+      '<div style="color:var(--primary);font-weight:700">&#8594; ' + rnd.sboxOut[s].join('') + '</div>' +
+      '<button onclick="desJumpToSbox(' + (s+1) + ',\'' + inStr + '\')" style="margin-top:4px;font-size:9px;padding:2px 5px" class="btn btn-secondary">Explore</button>' +
+      '</div>';
+  }
+  el.innerHTML =
+    '<div style="display:grid;gap:6px">' +
+    '<div class="concept-box" style="margin:0"><div class="concept-box-title">L' + (n-1) + ' (left half, 32 bits)</div><div class="concept-box-body" style="font-family:var(--mono);font-size:11px;word-break:break-all">' + rnd.Lprev.join('') + ' <em style="color:var(--text2)">(' + _DES.bitsToHex(rnd.Lprev) + ')</em></div></div>' +
+    '<div class="concept-box" style="margin:0"><div class="concept-box-title">R' + (n-1) + ' (right half, 32 bits)</div><div class="concept-box-body" style="font-family:var(--mono);font-size:11px;word-break:break-all">' + rnd.Rprev.join('') + ' <em style="color:var(--text2)">(' + _DES.bitsToHex(rnd.Rprev) + ')</em></div></div>' +
+    '<div class="concept-box" style="margin:0"><div class="concept-box-title">E(R' + (n-1) + ') — Expansion 32&#8594;48 bits</div><div class="concept-box-body" style="font-family:var(--mono);font-size:11px;word-break:break-all">' + rnd.E.join('') + '</div></div>' +
+    '<div class="concept-box" style="margin:0"><div class="concept-box-title">&#8853; K' + n + ' — subkey XOR</div><div class="concept-box-body" style="font-family:var(--mono);font-size:11px;word-break:break-all">' + rnd.xorEK.join('') + '</div></div>' +
+    '<div class="concept-box" style="margin:0"><div class="concept-box-title">S-box substitution (8 &#215; 6&#8594;4 bits = 32 bits out)</div><div class="concept-box-body"><div style="display:grid;grid-template-columns:repeat(4,1fr);gap:4px">' + sboxHtml + '</div></div></div>' +
+    '<div class="concept-box" style="margin:0"><div class="concept-box-title">P permutation (32 bits)</div><div class="concept-box-body" style="font-family:var(--mono);font-size:11px;word-break:break-all">' + rnd.pOut.join('') + ' <em style="color:var(--text2)">(' + _DES.bitsToHex(rnd.pOut) + ')</em></div></div>' +
+    '<div class="concept-box" style="margin:0"><div class="concept-box-title">Swap: L' + n + ' = R' + (n-1) + ' &nbsp;|&nbsp; R' + n + ' = P(f) &#8853; L' + (n-1) + '</div><div class="concept-box-body" style="font-family:var(--mono);font-size:11px;word-break:break-all">L' + n + ': ' + rnd.Lcur.join('') + ' (' + _DES.bitsToHex(rnd.Lcur) + ')<br>R' + n + ': ' + rnd.Rcur.join('') + ' (' + _DES.bitsToHex(rnd.Rcur) + ')</div></div>' +
+    '</div>';
+  var slider = document.getElementById('des-round-slider');
+  if (slider) slider.value = n;
+  var lbl = document.getElementById('des-round-lbl');
+  if (lbl) lbl.textContent = 'Round ' + n + ' / 16';
+}
+function desStepRound(dir) {
+  _desCurrentRound = Math.max(1, Math.min(16, _desCurrentRound + dir));
+  desRenderRound(_desCurrentRound);
+}
+function desJumpToSbox(s, inStr) {
+  _desCurrentSbox = s;
+  var sel = document.getElementById('des-sbox-select');
+  var inp = document.getElementById('des-sbox-input');
+  if (sel) sel.value = s;
+  if (inp) inp.value = inStr || '000000';
+  switchDesTab('sbox');
+}
+function desSboxRender() {
+  var sEl = document.getElementById('des-sbox-select');
+  var inEl = document.getElementById('des-sbox-input');
+  var s = sEl ? (parseInt(sEl.value,10) - 1) : (_desCurrentSbox - 1);
+  var sixStr = inEl ? inEl.value.replace(/[^01]/g,'').slice(0,6) : '000000';
+  while (sixStr.length < 6) sixStr += '0';
+  var six = sixStr.split('').map(Number);
+  var row = (six[0]<<1)|six[5];
+  var col = (six[1]<<3)|(six[2]<<2)|(six[3]<<1)|six[4];
+  var outVal = _DES.SBOXES[s][row][col];
+  var outBits = [(outVal>>3)&1,(outVal>>2)&1,(outVal>>1)&1,outVal&1];
+  var detEl = document.getElementById('des-sbox-result');
+  if (detEl) detEl.innerHTML =
+    '<div>Input bits (b1..b6): <strong style="font-family:var(--mono)">' + sixStr + '</strong></div>' +
+    '<div>Row (b1,b6): <strong>' + six[0] + '' + six[5] + '</strong> = <strong>' + row + '</strong></div>' +
+    '<div>Column (b2-b5): <strong>' + six[1]+''+six[2]+''+six[3]+''+six[4] + '</strong> = <strong>' + col + '</strong></div>' +
+    '<div style="margin-top:6px;color:var(--primary);font-size:15px;font-weight:700">Output: ' + outBits.join('') + ' (decimal ' + outVal + ')</div>';
+  var tblEl = document.getElementById('des-sbox-table');
+  if (!tblEl) return;
+  var html = '<div style="overflow-x:auto"><table style="border-collapse:collapse;font-family:var(--mono);font-size:11px"><tr><th style="padding:3px 7px;border:1px solid var(--border)">R\\C</th>';
+  for (var c = 0; c < 16; c++) html += '<th style="padding:3px 7px;border:1px solid var(--border)">' + c + '</th>';
+  html += '</tr>';
+  for (var ri = 0; ri < 4; ri++) {
+    html += '<tr><td style="padding:3px 7px;border:1px solid var(--border);font-weight:700">' + ri + '</td>';
+    for (var ci = 0; ci < 16; ci++) {
+      var active = (ri === row && ci === col);
+      html += '<td style="padding:3px 7px;border:1px solid var(--border);' + (active ? 'background:var(--primary);color:#fff;font-weight:700' : '') + '">' + _DES.SBOXES[s][ri][ci] + '</td>';
+    }
+    html += '</tr>';
+  }
+  html += '</table></div>';
+  tblEl.innerHTML = html;
+}
+function desRenderFinal() {
+  if (!_desTrace) { desRunEncrypt(); return; }
+  var c1 = document.getElementById('des-final-in');
+  var c2 = document.getElementById('des-final-out');
+  if (c1) c1.innerHTML = _desBitsGrid(_desTrace.preoutput, 'des-fin-', 'desTraceFinalBit');
+  if (c2) c2.innerHTML = _desBitsGrid(_desTrace.cipherBits, 'des-fout-', null);
+}
+function desTraceFinalBit(idx) {
+  var ipinv = _DES.IP_INV_T;
+  for (var i = 0; i < 64; i++) {
+    var a = document.getElementById('des-fin-' + i), b = document.getElementById('des-fout-' + i);
+    if (a) { a.style.background = 'var(--surface)'; a.style.color = 'var(--text)'; }
+    if (b) { b.style.background = 'var(--surface)'; b.style.color = 'var(--text)'; }
+  }
+  var src = document.getElementById('des-fin-' + idx);
+  if (src) { src.style.background = 'var(--primary)'; src.style.color = '#fff'; }
+  for (var k = 0; k < 64; k++) {
+    if (ipinv[k] - 1 === idx) {
+      var dst = document.getElementById('des-fout-' + k);
+      if (dst) { dst.style.background = '#F59E0B'; dst.style.color = '#000'; }
+    }
+  }
+}
+function desRenderAvalanche() {
+  var inp = desReadInputs();
+  var ptBits = _DES.hexToBits(inp.ptHex);
+  var keyBits = _DES.hexToBits(inp.keyHex);
+  var flipIdx = Math.max(0, Math.min(63, _desAvaBit));
+  var modPtBits = ptBits.slice();
+  var modKeyBits = keyBits.slice();
+  if (_desAvaTarget === 'key') modKeyBits[flipIdx] ^= 1; else modPtBits[flipIdx] ^= 1;
+  var origRes = _DES.desCipher(inp.ptHex, inp.keyHex, 'encrypt', true);
+  var modRes = _DES.desCipher(_DES.bitsToHex(modPtBits), _DES.bitsToHex(modKeyBits), 'encrypt', true);
+  var barsEl = document.getElementById('des-ava-bars');
+  if (!barsEl || !origRes.trace || !modRes.trace) return;
+  var html = '<table style="width:100%;border-collapse:collapse;font-size:11px">';
+  html += '<tr><th style="text-align:left;padding:3px 6px">Round</th><th style="text-align:left;padding:3px 6px;min-width:160px">Bits changed (Hamming distance)</th><th style="padding:3px 6px">/ 64</th></tr>';
+  for (var i = 0; i < 16; i++) {
+    var oBits = origRes.trace.rounds[i].Rcur.concat(origRes.trace.rounds[i].Lcur);
+    var mBits = modRes.trace.rounds[i].Rcur.concat(modRes.trace.rounds[i].Lcur);
+    var diff = 0;
+    for (var b = 0; b < 64; b++) if (oBits[b] !== mBits[b]) diff++;
+    var pct = Math.round((diff / 64) * 100);
+    html += '<tr><td style="padding:3px 6px;font-family:var(--mono)">' + (i+1) + '</td>' +
+      '<td style="padding:3px 6px"><div style="background:var(--border);border-radius:3px;height:14px"><div style="background:var(--primary);height:100%;width:' + pct + '%;border-radius:3px"></div></div></td>' +
+      '<td style="padding:3px 6px;font-family:var(--mono);color:var(--text2)">' + diff + '</td></tr>';
+  }
+  html += '</table>';
+  barsEl.innerHTML = html;
+  var lbl = document.getElementById('des-ava-lbl');
+  if (lbl) lbl.textContent = (_desAvaTarget === 'key' ? 'Key' : 'Plaintext') + ' bit ' + flipIdx + ' flipped';
+}
+function desAvaSetBit(idx, target) {
+  _desAvaBit = Math.max(0, Math.min(63, idx));
+  if (target) _desAvaTarget = target;
+  var slider = document.getElementById('des-ava-slider');
+  if (slider) slider.value = _desAvaBit;
+  desRenderAvalanche();
 }
 
 function runVigenereEncrypt() {
