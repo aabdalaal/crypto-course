@@ -4540,9 +4540,9 @@ Decrypt:    1 1 0 1 1 XOR 0 1 1 0 1 = 1 0 1 1 0  <span class="comment">// origin
       },
       stage4: {
         type: 'lab',
-        heading: 'Lab: DES Explorer — Step Inside a Feistel Cipher',
-        scenario: '🔬 DES Explorer: Step through every stage of the Data Encryption Standard interactively. Trace bits through the Initial Permutation, watch all 16 subkeys being derived, follow a Feistel round step-by-step (Expansion, XOR, S-boxes, Permutation), explore any S-box cell, inspect the Final Permutation, and flip a single bit to see the avalanche effect spread confusion and diffusion across the block. The engine is pure JavaScript — no Web Crypto API, every intermediate value is visible.',
-        labId: 'des_lab'
+        heading: 'Lab: Block Cipher Explorer — DES &amp; AES-128 Internals',
+        scenario: '🔬 Block Cipher Explorer: Step inside both DES and AES-128 using pure-JavaScript engines — no Web Crypto, every intermediate value is visible. In the DES section trace bits through IP, all 16 subkeys, Feistel rounds, S-boxes, and the avalanche effect. In the AES-128 section watch all 10 rounds unfold: SubBytes via the full 16×16 S-box grid, ShiftRows, MixColumns with GF(2⁸) arithmetic, AddRoundKey with all 11 round keys, and single-bit avalanche. Both engines are verified against FIPS 46-3 and FIPS 197 test vectors.',
+        labId: 'block_cipher_lab'
       },
       stage5: {
         type: 'quiz',
@@ -8050,6 +8050,7 @@ function renderLessonStage() {
     }
     if (content.labId === 'des_lab') { requestAnimationFrame(() => initDesLab()); }
     if (content.labId === 'meet_middle_lab') { requestAnimationFrame(() => initMeetMidLab()); }
+    if (content.labId === 'block_cipher_lab') { requestAnimationFrame(() => initBlockCipherLab()); }
   } else if (content && content.type === 'quiz') {
     // Quiz stage — Phase 4: apply adaptive tier before rendering
     if (content.tiers) {
@@ -8959,6 +8960,294 @@ function renderLab(content, mod) {
           <button class="btn btn-secondary" id="lab-aes-decrypt-btn" disabled onclick="runAESDecrypt()">🔓 Decrypt with Saved Key</button>
           <div class="lab-output" id="lab-output-aes-dec" style="margin-top:8px"></div>
         </div>
+      </div>`,
+
+    block_cipher_lab: `
+      <div class="stage-label">&#9879;&#65039; Interactive Lab</div>
+      <div class="lab-scenario">${content.scenario}</div>
+      <div class="lab-container">
+        <div class="lab-header">
+          <span class="lab-icon">&#128302;</span>
+          <div>
+            <div class="lab-title">${content.heading}</div>
+            <div class="lab-subtitle">DES (FIPS 46-3) &amp; AES-128 (FIPS 197) &middot; pure-JS engines &middot; no Web Crypto API</div>
+          </div>
+        </div>
+
+        <div style="display:flex;gap:8px;margin:14px 0 10px">
+          <button id="bcl-tab-des-btn" class="btn btn-primary" style="flex:1;font-size:13px" onclick="switchBlockCipherTab('des')">&#128274; DES Internals</button>
+          <button id="bcl-tab-aes-btn" class="btn btn-secondary" style="flex:1;font-size:13px" onclick="switchBlockCipherTab('aes')">&#128274; AES-128 Internals</button>
+        </div>
+
+        <!-- DES SECTION: same element IDs as des_lab so all existing DES JS works unchanged -->
+        <div id="bcl-des" style="display:block">
+          <p style="text-align:center;font-size:12px;color:var(--text2);margin:0 0 12px">DES &middot; 64-bit block &middot; 56-bit key &middot; 16 Feistel rounds &middot; FIPS 46-3</p>
+
+          <div class="lab-field" style="display:grid;grid-template-columns:1fr auto;gap:8px;align-items:end">
+            <div>
+              <label class="lab-label">Plaintext &mdash; 16 hex digits <em style="color:var(--text2)">(or 8 ASCII chars)</em></label>
+              <div style="display:flex;gap:6px">
+                <select id="des-pt-mode" class="lab-input" style="width:80px;flex-shrink:0" onchange="desUpdateBinDisplay()">
+                  <option value="hex">Hex</option>
+                  <option value="ascii">ASCII</option>
+                </select>
+                <input id="des-pt-input" class="lab-input" value="0123456789ABCDEF" maxlength="16" oninput="desUpdateBinDisplay()" placeholder="16 hex digits">
+              </div>
+              <div id="des-pt-bin" style="font-family:var(--mono);font-size:10px;color:var(--text2);margin-top:3px;word-break:break-all"></div>
+            </div>
+            <button class="btn btn-secondary" style="white-space:nowrap;font-size:12px" onclick="desLoadFIPS()">Load FIPS example</button>
+          </div>
+
+          <div class="lab-field">
+            <label class="lab-label">Key &mdash; 16 hex digits <em style="color:var(--text2)">(or 8 ASCII chars)</em></label>
+            <div style="display:flex;gap:6px">
+              <select id="des-key-mode" class="lab-input" style="width:80px;flex-shrink:0" onchange="desUpdateBinDisplay()">
+                <option value="hex">Hex</option>
+                <option value="ascii">ASCII</option>
+              </select>
+              <input id="des-key-input" class="lab-input" value="133457799BBCDFF1" maxlength="16" oninput="desUpdateBinDisplay()" placeholder="16 hex digits">
+            </div>
+            <div id="des-key-bin" style="font-family:var(--mono);font-size:10px;color:var(--text2);margin-top:3px;word-break:break-all"></div>
+          </div>
+
+          <div style="display:flex;flex-wrap:wrap;gap:6px;margin:12px 0 8px">
+            <button id="des-tab-encrypt-btn" class="btn btn-primary" style="flex:1 1 auto;font-size:12px" onclick="switchDesTab('encrypt')" aria-pressed="true">Full Run</button>
+            <button id="des-tab-ip-btn" class="btn btn-secondary" style="flex:1 1 auto;font-size:12px" onclick="switchDesTab('ip')" aria-pressed="false">Initial Perm.</button>
+            <button id="des-tab-keys-btn" class="btn btn-secondary" style="flex:1 1 auto;font-size:12px" onclick="switchDesTab('keys')" aria-pressed="false">Key Schedule</button>
+            <button id="des-tab-round-btn" class="btn btn-secondary" style="flex:1 1 auto;font-size:12px" onclick="switchDesTab('round')" aria-pressed="false">Feistel Round</button>
+            <button id="des-tab-sbox-btn" class="btn btn-secondary" style="flex:1 1 auto;font-size:12px" onclick="switchDesTab('sbox')" aria-pressed="false">S-box</button>
+            <button id="des-tab-final-btn" class="btn btn-secondary" style="flex:1 1 auto;font-size:12px" onclick="switchDesTab('final')" aria-pressed="false">Final Perm.</button>
+            <button id="des-tab-avalanche-btn" class="btn btn-secondary" style="flex:1 1 auto;font-size:12px" onclick="switchDesTab('avalanche')" aria-pressed="false">Avalanche</button>
+          </div>
+
+          <div id="des-tab-encrypt" style="display:block">
+            <div class="concept-box">
+              <div class="concept-box-title">What happens here?</div>
+              <div class="concept-box-body">DES encrypts your 64-bit block in 16 rounds. Each round mixes the right half through the Feistel function f(R,K) and XORs it with the left half, then swaps. After 16 rounds the halves are recombined and un-permuted. Decryption reuses the same structure with subkeys reversed.</div>
+            </div>
+            <div style="display:flex;gap:8px;margin:10px 0">
+              <button class="btn btn-primary" style="flex:1" onclick="desRunEncrypt()">&#128274; Encrypt</button>
+              <button class="btn btn-secondary" style="flex:1" onclick="desRunDecrypt()">&#128275; Decrypt ciphertext</button>
+            </div>
+            <div id="des-selftest-badge" style="font-size:12px;margin-bottom:8px"></div>
+            <div class="lab-field">
+              <label class="lab-label">Ciphertext (hex)</label>
+              <div class="lab-output" id="des-enc-out" aria-live="polite" style="font-family:var(--mono);font-size:16px;letter-spacing:.08em"></div>
+            </div>
+            <div class="lab-field">
+              <label class="lab-label">Decrypted result</label>
+              <div class="lab-output" id="des-dec-out" aria-live="polite" style="font-size:13px"></div>
+            </div>
+            <div class="lab-field">
+              <label class="lab-label">Round-by-round state (L, R after each round)</label>
+              <div style="overflow-x:auto;max-height:340px;overflow-y:auto">
+                <table id="des-round-table" style="border-collapse:collapse;width:100%;font-size:12px"></table>
+              </div>
+            </div>
+          </div>
+
+          <div id="des-tab-ip" style="display:none">
+            <div class="concept-box">
+              <div class="concept-box-title">Initial Permutation (IP)</div>
+              <div class="concept-box-body">IP is a fixed bit-shuffle applied to the 64-bit plaintext before any rounds begin. It has no cryptographic strength &mdash; it was included in the original hardware spec for alignment reasons. Click any input bit below to highlight where it lands in the IP output (blue = source, amber = destination).</div>
+            </div>
+            <button class="btn btn-secondary" style="margin-bottom:10px;font-size:12px" onclick="desRunEncrypt();desRenderIP()">&#8635; Refresh with current inputs</button>
+            <div class="lab-field">
+              <label class="lab-label">Input bits (64) &mdash; click a bit to trace it</label>
+              <div id="des-ip-in" aria-live="polite"></div>
+            </div>
+            <div class="lab-field" style="margin-top:10px">
+              <label class="lab-label">IP output bits (64) &mdash; amber = destination of clicked bit</label>
+              <div id="des-ip-out" aria-live="polite"></div>
+            </div>
+          </div>
+
+          <div id="des-tab-keys" style="display:none">
+            <div class="concept-box">
+              <div class="concept-box-title">Key Schedule</div>
+              <div class="concept-box-body">PC-1 drops the 8 parity bits from the 64-bit key, leaving 56 bits split into two 28-bit halves C and D. Before each round both halves are left-rotated by 1 or 2 positions. PC-2 then selects 48 of the 56 bits to form the round subkey K<sub>i</sub>.</div>
+            </div>
+            <div style="display:flex;align-items:center;gap:8px;margin:10px 0">
+              <button class="btn btn-secondary" style="font-size:12px" onclick="desStepKey(-1)">&#9664; Prev</button>
+              <input id="des-key-slider" type="range" min="1" max="16" value="1" style="flex:1" oninput="_desCurrentKey=parseInt(this.value);desRenderKeySchedule()">
+              <button class="btn btn-secondary" style="font-size:12px" onclick="desStepKey(1)">Next &#9654;</button>
+            </div>
+            <div id="des-key-round-lbl" style="text-align:center;font-size:12px;color:var(--text2);margin-bottom:10px">Round 1 / 16</div>
+            <div id="des-key-detail" style="font-size:12px"></div>
+          </div>
+
+          <div id="des-tab-round" style="display:none">
+            <div class="concept-box">
+              <div class="concept-box-title">Feistel Round Structure</div>
+              <div class="concept-box-body">Each of the 16 rounds follows: R is expanded 32&#8594;48 bits (E), XORed with subkey K<sub>i</sub> (48 bits), split into eight 6-bit groups fed into the S-boxes (6&#8594;4 bits each = 32 bits), then permuted by P, and finally XORed with L. The halves swap.</div>
+            </div>
+            <div style="display:flex;align-items:center;gap:8px;margin:10px 0">
+              <button class="btn btn-secondary" style="font-size:12px" onclick="desStepRound(-1)">&#9664; Prev</button>
+              <input id="des-round-slider" type="range" min="1" max="16" value="1" style="flex:1" oninput="desRenderRound(parseInt(this.value))">
+              <button class="btn btn-secondary" style="font-size:12px" onclick="desStepRound(1)">Next &#9654;</button>
+            </div>
+            <div id="des-round-lbl" style="text-align:center;font-size:12px;color:var(--text2);margin-bottom:10px">Round 1 / 16</div>
+            <div id="des-round-detail" aria-live="polite"></div>
+          </div>
+
+          <div id="des-tab-sbox" style="display:none">
+            <div class="concept-box">
+              <div class="concept-box-title">S-box Substitution</div>
+              <div class="concept-box-body">Each S-box maps 6 bits to 4 bits non-linearly &mdash; this is DES&rsquo;s only source of <em>confusion</em>. The row is selected by the two outer bits (b1 and b6); the column by the four middle bits (b2&ndash;b5). The 8 S-boxes together produce 32 bits from 48, removing the 16 redundant bits added by E.</div>
+            </div>
+            <div style="display:flex;gap:8px;margin:10px 0">
+              <div class="lab-field" style="flex:0 0 auto;margin:0">
+                <label class="lab-label">S-box</label>
+                <select id="des-sbox-select" class="lab-input" style="width:70px" onchange="desSboxRender()">
+                  <option>1</option><option>2</option><option>3</option><option>4</option>
+                  <option>5</option><option>6</option><option>7</option><option>8</option>
+                </select>
+              </div>
+              <div class="lab-field" style="flex:1;margin:0">
+                <label class="lab-label">6-bit input (binary, e.g. 101101)</label>
+                <input id="des-sbox-input" class="lab-input" value="000000" maxlength="6" oninput="this.value=this.value.replace(/[^01]/g,'');desSboxRender()" placeholder="6 binary digits">
+              </div>
+            </div>
+            <div id="des-sbox-result" style="font-size:13px;margin-bottom:10px;padding:8px;background:var(--bg);border-radius:var(--radius-xs)" aria-live="polite"></div>
+            <div id="des-sbox-table" style="overflow-x:auto"></div>
+          </div>
+
+          <div id="des-tab-final" style="display:none">
+            <div class="concept-box">
+              <div class="concept-box-title">Final Permutation (IP&#8315;&#185;)</div>
+              <div class="concept-box-body">After round 16 the halves are swapped (R16 &#8741; L16) then passed through IP&#8315;&#185;, the exact inverse of the Initial Permutation, to produce the 64-bit ciphertext. Click any bit in the pre-output to trace it to its destination in the ciphertext.</div>
+            </div>
+            <button class="btn btn-secondary" style="margin-bottom:10px;font-size:12px" onclick="desRunEncrypt();desRenderFinal()">&#8635; Refresh with current inputs</button>
+            <div class="lab-field">
+              <label class="lab-label">Pre-output: R16 &#8741; L16 (64 bits) &mdash; click a bit to trace</label>
+              <div id="des-final-in" aria-live="polite"></div>
+            </div>
+            <div class="lab-field" style="margin-top:10px">
+              <label class="lab-label">Ciphertext after IP&#8315;&#185; (64 bits) &mdash; amber = destination</label>
+              <div id="des-final-out" aria-live="polite"></div>
+            </div>
+          </div>
+
+          <div id="des-tab-avalanche" style="display:none">
+            <div class="concept-box">
+              <div class="concept-box-title">Avalanche Effect</div>
+              <div class="concept-box-body">A secure cipher achieves <em>confusion</em> and <em>diffusion</em>. Flip one bit and track how many output bits differ after each round. By round 5&ndash;8 roughly half the 64 bits should differ. DES reaches ~50% by the final round.</div>
+            </div>
+            <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:10px 0">
+              <div style="flex:1;min-width:160px">
+                <label class="lab-label">Flip target</label>
+                <select class="lab-input" onchange="_desAvaTarget=this.value;desRenderAvalanche()">
+                  <option value="pt">Plaintext bit</option>
+                  <option value="key">Key bit</option>
+                </select>
+              </div>
+              <div style="flex:2;min-width:160px">
+                <label class="lab-label">Bit index (0&ndash;63)</label>
+                <input id="des-ava-slider" type="range" min="0" max="63" value="0" style="width:100%" oninput="desAvaSetBit(parseInt(this.value))">
+              </div>
+              <button class="btn btn-secondary" style="font-size:12px;white-space:nowrap" onclick="desRenderAvalanche()">&#8635; Recalculate</button>
+            </div>
+            <div id="des-ava-lbl" style="text-align:center;font-size:12px;color:var(--text2);margin-bottom:8px">Plaintext bit 0 flipped</div>
+            <div id="des-ava-bars" aria-live="polite" style="overflow-x:auto"></div>
+          </div>
+
+        </div><!-- end bcl-des -->
+
+        <!-- AES-128 SECTION: aesx-* IDs; powered by window._AES128 engine -->
+        <div id="bcl-aes" style="display:none">
+          <p style="text-align:center;font-size:12px;color:var(--text2);margin:0 0 12px">AES-128 &middot; 128-bit block &middot; 128-bit key &middot; 10 rounds &middot; FIPS 197</p>
+
+          <div class="lab-field" style="display:grid;grid-template-columns:1fr auto;gap:8px;align-items:end">
+            <div>
+              <label class="lab-label">Plaintext &mdash; 32 hex digits (128 bits)</label>
+              <input id="aesx-pt-input" class="lab-input" value="00112233445566778899AABBCCDDEEFF" maxlength="32" placeholder="32 hex digits">
+            </div>
+            <button class="btn btn-secondary" style="white-space:nowrap;font-size:12px" onclick="aesxLoadFIPS()">Load FIPS example</button>
+          </div>
+
+          <div class="lab-field">
+            <label class="lab-label">Key &mdash; 32 hex digits (128 bits)</label>
+            <input id="aesx-key-input" class="lab-input" value="000102030405060708090A0B0C0D0E0F" maxlength="32" placeholder="32 hex digits">
+          </div>
+
+          <div style="display:flex;flex-wrap:wrap;gap:6px;margin:12px 0 8px">
+            <button id="aesx-tab-encrypt-btn" class="btn btn-primary" style="flex:1 1 auto;font-size:12px" onclick="switchAesxTab('encrypt')" aria-pressed="true">Full Run</button>
+            <button id="aesx-tab-keys-btn" class="btn btn-secondary" style="flex:1 1 auto;font-size:12px" onclick="switchAesxTab('keys')" aria-pressed="false">Key Schedule</button>
+            <button id="aesx-tab-round-btn" class="btn btn-secondary" style="flex:1 1 auto;font-size:12px" onclick="switchAesxTab('round')" aria-pressed="false">Round Inspector</button>
+            <button id="aesx-tab-sbox-btn" class="btn btn-secondary" style="flex:1 1 auto;font-size:12px" onclick="switchAesxTab('sbox')" aria-pressed="false">S-box</button>
+            <button id="aesx-tab-avalanche-btn" class="btn btn-secondary" style="flex:1 1 auto;font-size:12px" onclick="switchAesxTab('avalanche')" aria-pressed="false">Avalanche</button>
+          </div>
+
+          <div id="aesx-tab-encrypt" style="display:block">
+            <div class="concept-box">
+              <div class="concept-box-title">What happens here?</div>
+              <div class="concept-box-body">AES-128 encrypts a 128-bit block in 10 rounds. The state is a 4&times;4 byte matrix (column-major). Each round applies: SubBytes (S-box lookup), ShiftRows (cyclic row rotation), MixColumns (GF(2&#8308;) column mixing &mdash; skipped in round 10), AddRoundKey. The key schedule derives 11 round keys. Run Encrypt first, then explore the other tabs.</div>
+            </div>
+            <button class="btn btn-primary" style="width:100%;margin:10px 0" onclick="aesxRunEncrypt()">&#128274; Encrypt</button>
+            <div id="aesx-selftest-badge" style="font-size:12px;margin-bottom:8px"></div>
+            <div class="lab-field">
+              <label class="lab-label">Ciphertext (hex)</label>
+              <div class="lab-output" id="aesx-enc-out" aria-live="polite" style="font-family:var(--mono);font-size:16px;letter-spacing:.08em">Run Encrypt to see output</div>
+            </div>
+          </div>
+
+          <div id="aesx-tab-keys" style="display:none">
+            <div class="concept-box">
+              <div class="concept-box-title">AES-128 Key Schedule</div>
+              <div class="concept-box-body">AES-128 derives 11 round keys (44 words of 32 bits each = 352 bytes) from the 128-bit input key. Word i: if i mod 4 = 0, apply RotWord + SubWord + XOR Rcon; otherwise XOR with word i&minus;4 and word i&minus;1. Use the slider to inspect each of the 11 round keys as a 4&times;4 state matrix.</div>
+            </div>
+            <div style="display:flex;align-items:center;gap:8px;margin:10px 0">
+              <button class="btn btn-secondary" style="font-size:12px" onclick="aesxStepKey(Math.max(0,parseInt(document.getElementById('aesx-key-slider').value)-1))">&#9664; Prev</button>
+              <input id="aesx-key-slider" type="range" min="0" max="10" value="0" style="flex:1" oninput="aesxStepKey(parseInt(this.value))">
+              <button class="btn btn-secondary" style="font-size:12px" onclick="aesxStepKey(Math.min(10,parseInt(document.getElementById('aesx-key-slider').value)+1))">Next &#9654;</button>
+            </div>
+            <div id="aesx-key-round-lbl" style="text-align:center;font-size:12px;color:var(--text2);margin-bottom:10px">Round Key 0</div>
+            <div id="aesx-keys-panel" style="font-size:12px"><p style="color:var(--text2)">Run Encrypt first, then browse round keys.</p></div>
+          </div>
+
+          <div id="aesx-tab-round" style="display:none">
+            <div class="concept-box">
+              <div class="concept-box-title">Round Inspector</div>
+              <div class="concept-box-body">Select a round to see the 4&times;4 state matrix after each operation: SubBytes &#8594; ShiftRows &#8594; MixColumns (rounds 1&ndash;9 only) &#8594; AddRoundKey. Values shown as hex, column-major order matching FIPS 197 Appendix B.</div>
+            </div>
+            <div style="display:flex;align-items:center;gap:8px;margin:10px 0">
+              <button class="btn btn-secondary" style="font-size:12px" onclick="aesxStepRound(Math.max(1,parseInt(document.getElementById('aesx-round-slider').value)-1))">&#9664; Prev</button>
+              <input id="aesx-round-slider" type="range" min="1" max="10" value="1" style="flex:1" oninput="aesxStepRound(parseInt(this.value))">
+              <button class="btn btn-secondary" style="font-size:12px" onclick="aesxStepRound(Math.min(10,parseInt(document.getElementById('aesx-round-slider').value)+1))">Next &#9654;</button>
+            </div>
+            <div id="aesx-round-lbl" style="text-align:center;font-size:12px;color:var(--text2);margin-bottom:10px">Round 1 of 10</div>
+            <div id="aesx-round-panel" aria-live="polite"><p style="color:var(--text2)">Run Encrypt first.</p></div>
+          </div>
+
+          <div id="aesx-tab-sbox" style="display:none">
+            <div class="concept-box">
+              <div class="concept-box-title">AES S-box (SubBytes)</div>
+              <div class="concept-box-body">The AES S-box substitutes each byte non-linearly: compute the multiplicative inverse in GF(2&#8308;) then apply an affine bit transformation. This provides <em>confusion</em>. Click any cell in the 16&times;16 table to see the substitution for that input byte.</div>
+            </div>
+            <div class="lab-field">
+              <label class="lab-label">Input byte (2 hex chars)</label>
+              <input id="aesx-sbox-input" class="lab-input" value="00" maxlength="2" style="width:80px" oninput="this.value=this.value.replace(/[^0-9a-fA-F]/g,'');aesxRenderSbox()" placeholder="hex">
+            </div>
+            <div id="aesx-sbox-result" style="font-size:14px;font-family:var(--mono);margin-bottom:10px;padding:10px;background:var(--bg);border-radius:var(--radius-xs)" aria-live="polite">Click a cell or type a hex byte above</div>
+            <div id="aesx-sbox-table" style="overflow-x:auto"></div>
+          </div>
+
+          <div id="aesx-tab-avalanche" style="display:none">
+            <div class="concept-box">
+              <div class="concept-box-title">AES Avalanche Effect</div>
+              <div class="concept-box-body">Flip one plaintext bit and compare the two ciphertexts. AES achieves near-perfect diffusion &mdash; after just 2 rounds, ~50% of output bits differ. The chart shows the bit-difference per output byte between the two encryptions.</div>
+            </div>
+            <div style="margin:10px 0">
+              <label class="lab-label">Flip plaintext bit index (0&ndash;127)</label>
+              <input id="aesx-ava-slider" type="range" min="0" max="127" value="0" style="width:100%" oninput="aesxAvaSetBit(parseInt(this.value))">
+            </div>
+            <div id="aesx-ava-lbl" style="text-align:center;font-size:12px;color:var(--text2);margin-bottom:8px">Flip bit 0</div>
+            <button class="btn btn-secondary" style="margin-bottom:10px;font-size:12px" onclick="aesxRenderAvalanche()">&#8635; Recalculate</button>
+            <div id="aesx-ava-bars" aria-live="polite"></div>
+          </div>
+
+        </div><!-- end bcl-aes -->
+
       </div>`,
 
     rsa_lab: `
@@ -12447,6 +12736,267 @@ async function runAESDecrypt() {
     out.textContent = '✓ Decrypted: ' + dec.decode(plain);
     out.classList.remove('error');
   } catch(e) { out.textContent = 'Decryption failed: '+e.message; out.classList.add('error'); }
+}
+
+// AES-128 vanilla-JS engine — FIPS 197, no Web Crypto API
+(function() {
+  var _S = [
+    0x63,0x7c,0x77,0x7b,0xf2,0x6b,0x6f,0xc5,0x30,0x01,0x67,0x2b,0xfe,0xd7,0xab,0x76,
+    0xca,0x82,0xc9,0x7d,0xfa,0x59,0x47,0xf0,0xad,0xd4,0xa2,0xaf,0x9c,0xa4,0x72,0xc0,
+    0xb7,0xfd,0x93,0x26,0x36,0x3f,0xf7,0xcc,0x34,0xa5,0xe5,0xf1,0x71,0xd8,0x31,0x15,
+    0x04,0xc7,0x23,0xc3,0x18,0x96,0x05,0x9a,0x07,0x12,0x80,0xe2,0xeb,0x27,0xb2,0x75,
+    0x09,0x83,0x2c,0x1a,0x1b,0x6e,0x5a,0xa0,0x52,0x3b,0xd6,0xb3,0x29,0xe3,0x2f,0x84,
+    0x53,0xd1,0x00,0xed,0x20,0xfc,0xb1,0x5b,0x6a,0xcb,0xbe,0x39,0x4a,0x4c,0x58,0xcf,
+    0xd0,0xef,0xaa,0xfb,0x43,0x4d,0x33,0x85,0x45,0xf9,0x02,0x7f,0x50,0x3c,0x9f,0xa8,
+    0x51,0xa3,0x40,0x8f,0x92,0x9d,0x38,0xf5,0xbc,0xb6,0xda,0x21,0x10,0xff,0xf3,0xd2,
+    0xcd,0x0c,0x13,0xec,0x5f,0x97,0x44,0x17,0xc4,0xa7,0x7e,0x3d,0x64,0x5d,0x19,0x73,
+    0x60,0x81,0x4f,0xdc,0x22,0x2a,0x90,0x88,0x46,0xee,0xb8,0x14,0xde,0x5e,0x0b,0xdb,
+    0xe0,0x32,0x3a,0x0a,0x49,0x06,0x24,0x5c,0xc2,0xd3,0xac,0x62,0x91,0x95,0xe4,0x79,
+    0xe7,0xc8,0x37,0x6d,0x8d,0xd5,0x4e,0xa9,0x6c,0x56,0xf4,0xea,0x65,0x7a,0xae,0x08,
+    0xba,0x78,0x25,0x2e,0x1c,0xa6,0xb4,0xc6,0xe8,0xdd,0x74,0x1f,0x4b,0xbd,0x8b,0x8a,
+    0x70,0x3e,0xb5,0x66,0x48,0x03,0xf6,0x0e,0x61,0x35,0x57,0xb9,0x86,0xc1,0x1d,0x9e,
+    0xe1,0xf8,0x98,0x11,0x69,0xd9,0x8e,0x94,0x9b,0x1e,0x87,0xe9,0xce,0x55,0x28,0xdf,
+    0x8c,0xa1,0x89,0x0d,0xbf,0xe6,0x42,0x68,0x41,0x99,0x2d,0x0f,0xb0,0x54,0xbb,0x16
+  ];
+  var _RC = [0x01,0x02,0x04,0x08,0x10,0x20,0x40,0x80,0x1b,0x36];
+  function _gf(a,b){var p=0,h;for(var i=0;i<8;i++){if(b&1)p^=a;h=a&0x80;a=(a<<1)&0xff;if(h)a^=0x1b;b>>=1;}return p;}
+  function _kexp(k){
+    var w=[];for(var i=0;i<4;i++)w.push([k[4*i],k[4*i+1],k[4*i+2],k[4*i+3]]);
+    for(var i=4;i<44;i++){var t=w[i-1].slice();if(i%4===0){t=[t[1],t[2],t[3],t[0]];t=t.map(function(b){return _S[b];});t[0]^=_RC[i/4-1];}w.push([w[i-4][0]^t[0],w[i-4][1]^t[1],w[i-4][2]^t[2],w[i-4][3]^t[3]]);}
+    var rks=[];for(var r=0;r<=10;r++){var rk=[];for(var c=0;c<4;c++)for(var b=0;b<4;b++)rk.push(w[4*r+c][b]);rks.push(rk);}
+    return rks;
+  }
+  function _ark(s,rk){return s.map(function(b,i){return b^rk[i];});}
+  function _sub(s){return s.map(function(b){return _S[b];});}
+  function _shr(s){
+    var r=s.slice();
+    for(var row=1;row<4;row++){var rb=[s[row],s[row+4],s[row+8],s[row+12]];rb=rb.slice(row).concat(rb.slice(0,row));r[row]=rb[0];r[row+4]=rb[1];r[row+8]=rb[2];r[row+12]=rb[3];}
+    return r;
+  }
+  function _mix(s){
+    var r=s.slice();
+    for(var c=0;c<4;c++){var s0=s[4*c],s1=s[4*c+1],s2=s[4*c+2],s3=s[4*c+3];r[4*c]=_gf(2,s0)^_gf(3,s1)^s2^s3;r[4*c+1]=s0^_gf(2,s1)^_gf(3,s2)^s3;r[4*c+2]=s0^s1^_gf(2,s2)^_gf(3,s3);r[4*c+3]=_gf(3,s0)^s1^s2^_gf(2,s3);}
+    return r;
+  }
+  function _aes(pt,key,cap){
+    var rks=_kexp(key),st=pt.slice(),tr=[];
+    if(cap)tr.push({step:'initial',state:st.slice()});
+    st=_ark(st,rks[0]);if(cap)tr.push({step:'addRK0',state:st.slice(),rk:rks[0].slice()});
+    for(var r=1;r<=10;r++){
+      st=_sub(st);if(cap)tr.push({step:'subB'+r,state:st.slice()});
+      st=_shr(st);if(cap)tr.push({step:'shiftR'+r,state:st.slice()});
+      if(r<10){st=_mix(st);if(cap)tr.push({step:'mixC'+r,state:st.slice()});}
+      st=_ark(st,rks[r]);if(cap)tr.push({step:'addRK'+r,state:st.slice(),rk:rks[r].slice()});
+    }
+    return{outHex:st.map(function(b){return b.toString(16).padStart(2,'0');}).join('').toUpperCase(),state:st,trace:tr,roundKeys:rks};
+  }
+  function _h2b(h){var b=[];for(var i=0;i<h.length;i+=2)b.push(parseInt(h.substr(i,2),16));return b;}
+  window._AES128={cipher:_aes,keyExpansion:_kexp,hex2b:_h2b,SBOX:_S,gfMul:_gf};
+})();
+
+// AES-128 lab UI globals
+var _aesxTrace = null, _aesxSboxIdx = 0, _aesxAvaBit = 0;
+
+function aesxHexValid(h) { return /^[0-9a-fA-F]{32}$/.test(h.trim()); }
+
+function aesxReadInputs() {
+  return {
+    pt: document.getElementById('aesx-pt-input').value.replace(/\s+/g,'').toLowerCase(),
+    key: document.getElementById('aesx-key-input').value.replace(/\s+/g,'').toLowerCase()
+  };
+}
+
+function aesxSelfTest() {
+  var badge = document.getElementById('aesx-selftest-badge');
+  if (!badge) return;
+  try {
+    var res = _AES128.cipher(_AES128.hex2b('00112233445566778899aabbccddeeff'), _AES128.hex2b('000102030405060708090a0b0c0d0e0f'), false);
+    var pass = res.outHex === '69C4E0D86A7B0430D8CDB78070B4C55A';
+    badge.textContent = pass ? '✓ FIPS-197 PASS' : '✗ FAIL: ' + res.outHex;
+    badge.style.cssText = 'display:inline-block;padding:4px 10px;border-radius:20px;font-size:11px;font-weight:700;background:' + (pass ? '#d1fae5;color:#065f46' : '#fee2e2;color:#991b1b');
+  } catch(e) { badge.textContent = '✗ ERROR: ' + e.message; }
+}
+
+function initAesxLab() {
+  aesxSelfTest();
+  document.getElementById('aesx-pt-input').value = '00112233445566778899AABBCCDDEEFF';
+  document.getElementById('aesx-key-input').value = '000102030405060708090A0B0C0D0E0F';
+}
+
+function aesxLoadFIPS() {
+  document.getElementById('aesx-pt-input').value = '00112233445566778899AABBCCDDEEFF';
+  document.getElementById('aesx-key-input').value = '000102030405060708090A0B0C0D0E0F';
+}
+
+function aesxRunEncrypt() {
+  var inp = aesxReadInputs();
+  if (!aesxHexValid(inp.pt) || !aesxHexValid(inp.key)) {
+    document.getElementById('aesx-enc-out').textContent = 'Enter 32 hex chars for both PT and Key.'; return;
+  }
+  _aesxTrace = _AES128.cipher(_AES128.hex2b(inp.pt), _AES128.hex2b(inp.key), true);
+  document.getElementById('aesx-enc-out').textContent = _aesxTrace.outHex;
+}
+
+function switchAesxTab(tab) {
+  ['encrypt','keys','round','sbox','avalanche'].forEach(function(t) {
+    var p = document.getElementById('aesx-tab-'+t), b = document.getElementById('aesx-tab-'+t+'-btn');
+    if (p) p.style.display = t === tab ? 'block' : 'none';
+    if (b) { b.className = t === tab ? 'btn btn-primary' : 'btn btn-secondary'; b.setAttribute('aria-pressed', t === tab ? 'true' : 'false'); }
+  });
+  if (tab === 'keys') aesxRenderKeySchedule();
+  if (tab === 'round') aesxRenderRound();
+  if (tab === 'sbox') aesxRenderSbox();
+  if (tab === 'avalanche') aesxRenderAvalanche();
+}
+
+function _aesxGrid(bytes) {
+  var h = '<table style="border-collapse:collapse;margin:6px auto">';
+  for (var row = 0; row < 4; row++) {
+    h += '<tr>';
+    for (var col = 0; col < 4; col++) {
+      var v = bytes[row + 4*col];
+      h += '<td style="padding:5px 9px;font-family:monospace;font-size:13px;background:#0f172a;color:#7dd3fc;border:1px solid #334155;border-radius:3px">'
+         + (v !== undefined ? v.toString(16).padStart(2,'0') : '--') + '</td>';
+    }
+    h += '</tr>';
+  }
+  return h + '</table>';
+}
+
+function aesxRenderKeySchedule() {
+  var panel = document.getElementById('aesx-keys-panel');
+  if (!_aesxTrace) { if (panel) panel.innerHTML = '<p style="color:var(--text2)">Run Encrypt first.</p>'; return; }
+  var rks = _aesxTrace.roundKeys;
+  var n = parseInt(document.getElementById('aesx-key-slider').value, 10);
+  document.getElementById('aesx-key-round-lbl').textContent = 'Round Key ' + n;
+  var h = '<div style="margin-bottom:8px">' + _aesxGrid(rks[n]) + '</div>';
+  h += '<div style="font-family:monospace;font-size:11px;overflow-x:auto">';
+  for (var r = 0; r <= 10; r++) {
+    var hex = rks[r].map(function(b){return b.toString(16).padStart(2,'0');}).join('');
+    h += '<div style="' + (r === n ? 'color:#f59e0b;font-weight:bold' : 'color:#64748b') + ';padding:1px 0">RK' + r + ': ' + hex + '</div>';
+  }
+  h += '</div>';
+  panel.innerHTML = h;
+}
+
+function aesxStepKey(n) {
+  n = Math.max(0, Math.min(10, n));
+  document.getElementById('aesx-key-slider').value = n;
+  document.getElementById('aesx-key-round-lbl').textContent = 'Round Key ' + n;
+  aesxRenderKeySchedule();
+}
+
+function aesxRenderRound() {
+  var panel = document.getElementById('aesx-round-panel');
+  if (!_aesxTrace) { if (panel) panel.innerHTML = '<p style="color:var(--text2)">Run Encrypt first.</p>'; return; }
+  var round = parseInt(document.getElementById('aesx-round-slider').value, 10);
+  document.getElementById('aesx-round-lbl').textContent = 'Round ' + round + ' of 10';
+  var tr = _aesxTrace.trace;
+  var steps = [
+    {key:'subB'+round,   label:'1. SubBytes'},
+    {key:'shiftR'+round, label:'2. ShiftRows'},
+    {key:'mixC'+round,   label:'3. MixColumns' + (round === 10 ? ' (skipped in final round)' : '')},
+    {key:'addRK'+round,  label:'4. AddRoundKey['+round+']'}
+  ];
+  var h = '';
+  steps.forEach(function(s) {
+    var entry = tr.find(function(t){return t.step === s.key;});
+    if (!entry && round === 10 && s.key.indexOf('mixC') === 0) return;
+    h += '<div style="margin-bottom:12px"><div style="font-size:12px;font-weight:700;color:#f59e0b;margin-bottom:2px">' + s.label + '</div>';
+    h += entry ? _aesxGrid(entry.state) : '<div style="color:#94a3b8;font-size:12px">Run Encrypt first</div>';
+    h += '</div>';
+  });
+  panel.innerHTML = h;
+}
+
+function aesxStepRound(n) {
+  n = Math.max(1, Math.min(10, n));
+  document.getElementById('aesx-round-slider').value = n;
+  document.getElementById('aesx-round-lbl').textContent = 'Round ' + n + ' of 10';
+  aesxRenderRound();
+}
+
+function aesxRenderSbox() {
+  var inp = document.getElementById('aesx-sbox-input');
+  _aesxSboxIdx = Math.min(255, parseInt(inp ? inp.value || '0' : '0', 16) || 0);
+  var sbox = _AES128.SBOX, out = sbox[_aesxSboxIdx];
+  var res = document.getElementById('aesx-sbox-result');
+  if (res) res.textContent = 'SBOX[0x' + _aesxSboxIdx.toString(16).padStart(2,'0').toUpperCase() + '] → 0x' + out.toString(16).padStart(2,'0').toUpperCase();
+  var h = '<table style="border-collapse:collapse;margin:8px auto;font-size:9px">';
+  h += '<tr><th style="padding:2px 4px;color:#475569"></th>';
+  for (var c = 0; c < 16; c++) h += '<th style="padding:2px 4px;color:#64748b">_' + c.toString(16).toUpperCase() + '</th>';
+  h += '</tr>';
+  for (var row = 0; row < 16; row++) {
+    h += '<tr><th style="padding:2px 4px;color:#64748b">' + row.toString(16).toUpperCase() + '_</th>';
+    for (var col = 0; col < 16; col++) {
+      var idx = row*16+col, sel = idx === _aesxSboxIdx;
+      h += '<td onclick="aesxSboxClick(' + idx + ')" style="cursor:pointer;padding:2px 5px;font-family:monospace;text-align:center;'
+         + (sel ? 'background:#f59e0b;color:#000;font-weight:bold;' : 'background:#0f172a;color:#7dd3fc;')
+         + 'border:1px solid #1e293b">' + sbox[idx].toString(16).padStart(2,'0').toUpperCase() + '</td>';
+    }
+    h += '</tr>';
+  }
+  h += '</table>';
+  var tbl = document.getElementById('aesx-sbox-table');
+  if (tbl) tbl.innerHTML = h;
+}
+
+function aesxSboxClick(i) {
+  _aesxSboxIdx = i;
+  var inp = document.getElementById('aesx-sbox-input');
+  if (inp) inp.value = i.toString(16).padStart(2,'0').toUpperCase();
+  aesxRenderSbox();
+}
+
+function aesxRenderAvalanche() {
+  var bit = _aesxAvaBit;
+  var lbl = document.getElementById('aesx-ava-lbl');
+  if (lbl) lbl.textContent = 'Flip bit ' + bit + ' (byte ' + Math.floor(bit/8) + ', bit ' + (7-(bit%8)) + ' from LSB)';
+  var inp = aesxReadInputs();
+  var bars = document.getElementById('aesx-ava-bars');
+  if (!bars) return;
+  if (!aesxHexValid(inp.pt) || !aesxHexValid(inp.key)) { bars.innerHTML = '<p style="color:#f87171">Load valid PT/Key in Full Run tab and run Encrypt first.</p>'; return; }
+  var pt1 = _AES128.hex2b(inp.pt), key = _AES128.hex2b(inp.key);
+  var pt2 = pt1.slice(); pt2[Math.floor(bit/8)] ^= 1 << (7-(bit%8));
+  var r1 = _AES128.cipher(pt1, key, false), r2 = _AES128.cipher(pt2, key, false);
+  var total = 0, h = '<div style="font-family:monospace;font-size:11px">';
+  for (var i = 0; i < 16; i++) {
+    var d = r1.state[i] ^ r2.state[i], cnt = 0;
+    for (var x = d; x; x &= x-1) cnt++;
+    total += cnt;
+    var pct = Math.round(cnt/8*100);
+    h += '<div style="display:flex;align-items:center;gap:5px;margin:2px 0">'
+       + '<span style="width:38px;color:#94a3b8;font-size:10px">B' + i + ':</span>'
+       + '<span style="width:20px;color:' + (d?'#f87171':'#4ade80') + '">' + r1.state[i].toString(16).padStart(2,'0').toUpperCase() + '</span>'
+       + '<span style="color:#64748b;font-size:9px">vs</span>'
+       + '<span style="width:20px;color:' + (d?'#f87171':'#4ade80') + '">' + r2.state[i].toString(16).padStart(2,'0').toUpperCase() + '</span>'
+       + '<div style="flex:1;height:7px;background:#1e293b;border-radius:4px"><div style="width:' + pct + '%;height:100%;background:#ef4444;border-radius:4px"></div></div>'
+       + '<span style="width:28px;color:#94a3b8;font-size:10px">' + cnt + '/8</span></div>';
+  }
+  h += '</div><p style="color:#f59e0b;margin-top:8px;font-size:13px">Total: ' + total + '/128 bits differ (' + Math.round(total/128*100) + '%)</p>';
+  bars.innerHTML = h;
+}
+
+function aesxAvaSetBit(n) {
+  _aesxAvaBit = n;
+  var lbl = document.getElementById('aesx-ava-lbl');
+  if (lbl) lbl.textContent = 'Flip bit ' + n + ' (byte ' + Math.floor(n/8) + ', bit ' + (7-(n%8)) + ' from LSB)';
+  aesxRenderAvalanche();
+}
+
+function switchBlockCipherTab(cipher) {
+  var des = document.getElementById('bcl-des'), aes = document.getElementById('bcl-aes');
+  var dBtn = document.getElementById('bcl-tab-des-btn'), aBtn = document.getElementById('bcl-tab-aes-btn');
+  if (des) des.style.display = cipher === 'des' ? 'block' : 'none';
+  if (aes) aes.style.display = cipher === 'aes' ? 'block' : 'none';
+  if (dBtn) dBtn.className = cipher === 'des' ? 'btn btn-primary' : 'btn btn-secondary';
+  if (aBtn) aBtn.className = cipher === 'aes' ? 'btn btn-primary' : 'btn btn-secondary';
+}
+
+function initBlockCipherLab() {
+  switchBlockCipherTab('des');
+  initDesLab();
+  initAesxLab();
 }
 
 async function runRSALab() {
