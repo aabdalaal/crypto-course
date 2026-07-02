@@ -7889,28 +7889,99 @@ function renderModules() {
 // other modules' multi-tab labs pass their own tab-switch function name.
 // ============================================================
 const LAB_DEEP_LINK_MAP = {
-  caesar:    { moduleId: 1, tab: 'caesar' },
-  frequency: { moduleId: 1, tab: 'freq' },
-  vigenere:  { moduleId: 1, tab: 'vigenere' },
-  xor:       { moduleId: 1, tab: null },    // Part B of vigenere_lab (OTP/XOR section)
-  playfair:  { moduleId: 1, tab: 'playfair' },
-  hill:      { moduleId: 1, tab: 'hill' },
-  railfence: { moduleId: 1, tab: 'railfence' },
-  stego:     { moduleId: 1, tab: 'stego' },
-  break:     { moduleId: 1, tab: 'break' },
-  modes_ecb: { moduleId: 3, tab: 'ecb', tabFn: 'setModesTab' },
-  modes_cbc: { moduleId: 3, tab: 'cbc', tabFn: 'setModesTab' },
-  modes_ctr: { moduleId: 3, tab: 'ctr', tabFn: 'setModesTab' },
-  modes_gcm: { moduleId: 3, tab: 'gcm', tabFn: 'setModesTab' },
+  // Module 0 — hash_lab (SHA-256 integrity)
+  hash_m0:        { moduleId: 0,  tab: null },
+  // Module 1 — vigenere_lab (classical ciphers)
+  caesar:         { moduleId: 1, tab: 'caesar' },
+  frequency:      { moduleId: 1, tab: 'freq' },
+  vigenere:       { moduleId: 1, tab: 'vigenere' },
+  xor:            { moduleId: 1, tab: null },
+  playfair:       { moduleId: 1, tab: 'playfair' },
+  hill:           { moduleId: 1, tab: 'hill' },
+  railfence:      { moduleId: 1, tab: 'railfence' },
+  stego:          { moduleId: 1, tab: 'stego' },
+  break:          { moduleId: 1, tab: 'break' },
+  // Module 2 — openssl_sym_lab (symmetric encryption)
+  sym_otp:        { moduleId: 2, tab: 'otp',  tabFn: 'setOSSLSymTab' },
+  sym_2tp:        { moduleId: 2, tab: '2tp',  tabFn: 'setOSSLSymTab' },
+  sym_stat:       { moduleId: 2, tab: 'stat', tabFn: 'setOSSLSymTab' },
+  // Module 3 — block_cipher_lab top-level sections
+  block_des:      { moduleId: 3, tab: 'des',   tabFn: 'switchBlockCipherTab' },
+  block_aes128:   { moduleId: 3, tab: 'aes',   tabFn: 'switchBlockCipherTab' },
+  // AES Modes inside block_cipher_lab — two-step: show modes section, then sub-tab
+  modes_ecb:      { moduleId: 3, tab: 'modes', tabFn: 'switchBlockCipherTab', afterFn: 'setModesTab', afterTab: 'ecb' },
+  modes_cbc:      { moduleId: 3, tab: 'modes', tabFn: 'switchBlockCipherTab', afterFn: 'setModesTab', afterTab: 'cbc' },
+  modes_ctr:      { moduleId: 3, tab: 'modes', tabFn: 'switchBlockCipherTab', afterFn: 'setModesTab', afterTab: 'ctr' },
+  modes_gcm:      { moduleId: 3, tab: 'modes', tabFn: 'switchBlockCipherTab', afterFn: 'setModesTab', afterTab: 'gcm' },
+  // Module 4 — openssl_hash_lab (SHA, HMAC, length extension)
+  hash_avalanche: { moduleId: 4, tab: 'avalanche', tabFn: 'setHashTab' },
+  hash_compare:   { moduleId: 4, tab: 'compare',   tabFn: 'setHashTab' },
+  hash_hmac:      { moduleId: 4, tab: 'hmac',       tabFn: 'setHashTab' },
+  hash_chain:     { moduleId: 4, tab: 'chain',      tabFn: 'setHashTab' },
+  // Module 5 — openssl_rsa_lab (RSA keygen, encrypt, compare, sign)
+  rsa_keygen:     { moduleId: 5, tab: 'keygen',  tabFn: 'setRSATab' },
+  rsa_enc:        { moduleId: 5, tab: 'enc',     tabFn: 'setRSATab' },
+  rsa_compare:    { moduleId: 5, tab: 'compare', tabFn: 'setRSATab' },
+  rsa_sig:        { moduleId: 5, tab: 'sig',     tabFn: 'setRSATab' },
+  // Module 6 — hash_lab (mid-module review, same lab as M0)
+  hash_m6:        { moduleId: 6, tab: null },
+  // Module 7 — openssl_rsa_lab (same lab, PKC II context)
+  rsa2_keygen:    { moduleId: 7, tab: 'keygen',  tabFn: 'setRSATab' },
+  rsa2_enc:       { moduleId: 7, tab: 'enc',     tabFn: 'setRSATab' },
+  rsa2_compare:   { moduleId: 7, tab: 'compare', tabFn: 'setRSATab' },
+  rsa2_sig:       { moduleId: 7, tab: 'sig',     tabFn: 'setRSATab' },
+  // Module 8 — cert_lab (X.509, CSR, PKI chain)
+  cert_inspect:   { moduleId: 8, tab: 'inspect', tabFn: 'setCertTab' },
+  cert_csr:       { moduleId: 8, tab: 'csr',     tabFn: 'setCertTab' },
+  cert_chain:     { moduleId: 8, tab: 'chain',   tabFn: 'setCertTab' },
+  // Module 9 — sign_lab (digital signatures)
+  sign_m9:        { moduleId: 9,  tab: null },
+  // Module 10 — sign_lab (ZK & auth proofs)
+  sign_m10:       { moduleId: 10, tab: null },
+  // Module 11 — ecdh_lab (key establishment)
+  ecdh:           { moduleId: 11, tab: null },
+  // Module 12 — meet_middle_lab (key recovery attack)
+  mm_setup:       { moduleId: 12, tab: 'setup',  tabFn: 'switchMeetMidTab' },
+  mm_brute:       { moduleId: 12, tab: 'brute',  tabFn: 'switchMeetMidTab' },
+  mm_attack:      { moduleId: 12, tab: 'attack', tabFn: 'switchMeetMidTab' },
+  mm_cost:        { moduleId: 12, tab: 'cost',   tabFn: 'switchMeetMidTab' },
+  // Module 13 — sign_lab (PQC & advanced signatures)
+  sign_m13:       { moduleId: 13, tab: null },
 };
 
-// Printed activity codes → lab short IDs. Flat, continuing counter across
-// chapters/modules (1-8 = Module 1's vigenere_lab tabs, 9+ = later modules).
+// Printed activity codes → lab short IDs. Flat, continuing counter across all modules.
 const ACTIVITY_CODE_MAP = {
+  // Module 0 — SHA-256 Hash Lab
+  '15': 'hash_m0',
+  // Module 1 — Classical Ciphers
   '1': 'caesar', '2': 'frequency', '3': 'vigenere',
   '4': 'playfair', '5': 'hill', '6': 'railfence',
   '7': 'stego', '8': 'break',
-  '9': 'modes_ecb', '10': 'modes_cbc', '11': 'modes_ctr', '12': 'modes_gcm',
+  // Module 2 — Symmetric Encryption
+  '16': 'sym_otp', '17': 'sym_2tp', '18': 'sym_stat',
+  // Module 3 — Block Cipher Explorer
+  '9': 'block_des', '10': 'block_aes128',
+  '11': 'modes_ecb', '12': 'modes_cbc', '13': 'modes_ctr', '14': 'modes_gcm',
+  // Module 4 — Hash Functions
+  '19': 'hash_avalanche', '20': 'hash_compare', '21': 'hash_hmac', '22': 'hash_chain',
+  // Module 5 — Public Key Cryptography I
+  '23': 'rsa_keygen', '24': 'rsa_enc', '25': 'rsa_compare', '26': 'rsa_sig',
+  // Module 6 — Mid-Module Review (Hash Lab)
+  '27': 'hash_m6',
+  // Module 7 — Public Key Cryptography II
+  '28': 'rsa2_keygen', '29': 'rsa2_enc', '30': 'rsa2_compare', '31': 'rsa2_sig',
+  // Module 8 — Key Management
+  '32': 'cert_inspect', '33': 'cert_csr', '34': 'cert_chain',
+  // Module 9 — Authentication Protocols
+  '35': 'sign_m9',
+  // Module 10 — Zero-Knowledge & Auth Proofs
+  '36': 'sign_m10',
+  // Module 11 — Key Establishment & TLS
+  '37': 'ecdh',
+  // Module 12 — Meet-in-the-Middle Attack
+  '38': 'mm_setup', '39': 'mm_brute', '40': 'mm_attack', '41': 'mm_cost',
+  // Module 13 — Developments (PQC)
+  '42': 'sign_m13',
 };
 
 // Open a lab directly by short ID (from QR code or activity code).
@@ -7931,6 +8002,10 @@ function openLabDeepLink(shortId) {
     requestAnimationFrame(() => {
       const tabFn = window[mapping.tabFn || 'switchCipherTab'];
       if (typeof tabFn === 'function') tabFn(mapping.tab);
+      if (mapping.afterFn && mapping.afterTab) {
+        const afterFn = window[mapping.afterFn];
+        if (typeof afterFn === 'function') afterFn(mapping.afterTab);
+      }
     });
   }
 }
