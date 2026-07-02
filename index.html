@@ -8974,9 +8974,10 @@ function renderLab(content, mod) {
           </div>
         </div>
 
-        <div style="display:flex;gap:8px;margin:14px 0 10px">
-          <button id="bcl-tab-des-btn" class="btn btn-primary" style="flex:1;font-size:13px" onclick="switchBlockCipherTab('des')">&#128274; DES Internals</button>
-          <button id="bcl-tab-aes-btn" class="btn btn-secondary" style="flex:1;font-size:13px" onclick="switchBlockCipherTab('aes')">&#128274; AES-128 Internals</button>
+        <div style="display:flex;flex-wrap:wrap;gap:6px;margin:14px 0 10px">
+          <button id="bcl-tab-des-btn" class="btn btn-primary" style="flex:1 1 auto;font-size:12px" onclick="switchBlockCipherTab('des')">&#128274; DES Internals</button>
+          <button id="bcl-tab-aes-btn" class="btn btn-secondary" style="flex:1 1 auto;font-size:12px" onclick="switchBlockCipherTab('aes')">&#128274; AES-128 Internals</button>
+          <button id="bcl-tab-modes-btn" class="btn btn-secondary" style="flex:1 1 auto;font-size:12px" onclick="switchBlockCipherTab('modes')">&#128279; AES Modes</button>
         </div>
 
         <!-- DES SECTION: same element IDs as des_lab so all existing DES JS works unchanged -->
@@ -9247,6 +9248,125 @@ function renderLab(content, mod) {
           </div>
 
         </div><!-- end bcl-aes -->
+
+        <!-- AES MODES SECTION: reuses modes-* IDs; all mode functions (runECBLab etc.) already exist -->
+        <div id="bcl-modes" style="display:none">
+          <p style="text-align:center;font-size:12px;color:var(--text2);margin:0 0 12px">AES ECB &middot; CBC &middot; CTR &middot; GCM &middot; nonce-reuse attack &middot; Web Crypto API</p>
+
+          <div style="display:flex;gap:6px;margin-bottom:16px;background:var(--bg);border-radius:var(--radius-xs);padding:4px">
+            <button id="modes-tab-ecb" onclick="setModesTab('ecb')"
+              style="flex:1;padding:7px;border:none;border-radius:6px;font-weight:700;font-size:11px;cursor:pointer;font-family:var(--font);background:var(--primary);color:white">
+              &#9312; ECB
+            </button>
+            <button id="modes-tab-cbc" onclick="setModesTab('cbc')"
+              style="flex:1;padding:7px;border:none;border-radius:6px;font-weight:700;font-size:11px;cursor:pointer;font-family:var(--font);background:transparent;color:var(--muted)">
+              &#9313; CBC
+            </button>
+            <button id="modes-tab-ctr" onclick="setModesTab('ctr')"
+              style="flex:1;padding:7px;border:none;border-radius:6px;font-weight:700;font-size:11px;cursor:pointer;font-family:var(--font);background:transparent;color:var(--muted)">
+              &#9314; CTR
+            </button>
+            <button id="modes-tab-gcm" onclick="setModesTab('gcm')"
+              style="flex:1;padding:7px;border:none;border-radius:6px;font-weight:700;font-size:11px;cursor:pointer;font-family:var(--font);background:transparent;color:var(--muted)">
+              &#9315; GCM
+            </button>
+          </div>
+
+          <div id="modes-panel-ecb">
+            <div style="font-size:12px;color:var(--text2);background:var(--danger-l);border-radius:var(--radius-xs);padding:10px;margin-bottom:12px;line-height:1.5;border-left:3px solid var(--danger)">
+              <strong>ECB mode:</strong> Each 16-byte block encrypted independently with the same key. Repeating plaintext blocks produce identical ciphertext blocks &mdash; the &ldquo;ECB penguin&rdquo; pattern leak. In OpenSSL: <code>openssl enc -aes-128-ecb -K &lt;key&gt; -nosalt</code>.
+            </div>
+            <div class="lab-field">
+              <label class="lab-label">Message (try repeating blocks &mdash; e.g. &ldquo;AAAAAAAAAAAAAAAA&rdquo; twice)</label>
+              <textarea class="lab-input" id="ecb-plain" rows="2">AAAAAAAAAAAAAAAA AAAAAAAAAAAAAAAA DIFFERENT BLOCK!!</textarea>
+            </div>
+            <button class="btn btn-primary" onclick="runECBLab()">&#128274; Encrypt with AES-ECB</button>
+            <div style="margin-top:12px">
+              <label class="lab-label">Ciphertext blocks (hex, 32 chars = 16 bytes each)</label>
+              <div class="lab-output" id="ecb-output" style="font-family:var(--mono);font-size:11px;word-break:break-all;line-height:2">Encrypt to see block structure...</div>
+            </div>
+            <div class="lab-output" id="ecb-analysis" style="margin-top:8px;font-size:12px;background:var(--danger-l);color:var(--danger);display:none"></div>
+          </div>
+
+          <div id="modes-panel-cbc" style="display:none">
+            <div style="font-size:12px;color:var(--text2);background:var(--primary-l);border-radius:var(--radius-xs);padding:10px;margin-bottom:12px;line-height:1.5">
+              <strong>CBC mode:</strong> XORs each plaintext block with the previous ciphertext block before encrypting. A fresh random IV means the same message encrypts differently each time. In OpenSSL: <code>openssl enc -aes-128-cbc -K &lt;key&gt; -iv &lt;iv&gt;</code>.
+            </div>
+            <div class="lab-field">
+              <label class="lab-label">Message (same as ECB to compare)</label>
+              <textarea class="lab-input" id="cbc-plain" rows="2">AAAAAAAAAAAAAAAA AAAAAAAAAAAAAAAA DIFFERENT BLOCK!!</textarea>
+            </div>
+            <div style="display:flex;gap:8px">
+              <button class="btn btn-primary" style="flex:1" onclick="runCBCLab(false)">&#128274; Encrypt (random IV)</button>
+              <button class="btn btn-secondary" style="flex:1" onclick="runCBCLab(true)">&#128274; Encrypt again (new IV)</button>
+            </div>
+            <div style="margin-top:12px">
+              <label class="lab-label">IV used (hex)</label>
+              <div class="lab-output" id="cbc-iv" style="font-family:var(--mono);font-size:11px">Encrypt to see IV...</div>
+            </div>
+            <div style="margin-top:8px">
+              <label class="lab-label">Ciphertext (hex)</label>
+              <div class="lab-output" id="cbc-output" style="font-family:var(--mono);font-size:11px;word-break:break-all">Encrypt to see ciphertext...</div>
+            </div>
+            <div class="lab-output" id="cbc-analysis" style="margin-top:8px;font-size:12px;display:none"></div>
+          </div>
+
+          <div id="modes-panel-ctr" style="display:none">
+            <div style="font-size:12px;color:var(--text2);background:var(--danger-l);border-radius:var(--radius-xs);padding:10px;margin-bottom:12px;line-height:1.5;border-left:3px solid var(--danger)">
+              <strong>CTR nonce reuse:</strong> CTR generates a keystream from nonce + counter. Same nonce for two messages &Rightarrow; identical keystreams. Then C<sub>1</sub> &oplus; C<sub>2</sub> = M<sub>1</sub> &oplus; M<sub>2</sub> &mdash; the keystream cancels. The Lorenz SZ42 was broken this way in WWII.
+            </div>
+            <div class="lab-field">
+              <label class="lab-label">Message 1</label>
+              <input class="lab-input" id="ctr-m1" value="Classified: attack the north flank at 0600">
+            </div>
+            <div class="lab-field">
+              <label class="lab-label">Message 2 (encrypted with same nonce &mdash; catastrophic!)</label>
+              <input class="lab-input" id="ctr-m2" value="Secret: the retreat password is delta echo">
+            </div>
+            <button class="btn btn-primary" onclick="runCTRNonceReuse()">&#9889; Simulate CTR Nonce Reuse</button>
+            <div style="margin-top:12px">
+              <label class="lab-label">C<sub>1</sub> &oplus; C<sub>2</sub> = M<sub>1</sub> &oplus; M<sub>2</sub> (keystream cancelled)</label>
+              <div class="lab-output" id="ctr-xor" style="font-family:var(--mono);font-size:11px;word-break:break-all">Run to see XOR result...</div>
+            </div>
+            <div style="margin-top:8px">
+              <label class="lab-label">Plaintext recovered (XOR with known M<sub>1</sub> chars recovers M<sub>2</sub>)</label>
+              <div class="lab-output" id="ctr-recovered" style="font-size:12px">Run to see recovered plaintext...</div>
+            </div>
+          </div>
+
+          <div id="modes-panel-gcm" style="display:none">
+            <div style="font-size:12px;color:var(--text2);background:var(--secondary-l);border-radius:var(--radius-xs);padding:10px;margin-bottom:12px;line-height:1.5;border-left:3px solid var(--secondary)">
+              <strong>GCM (modern standard):</strong> AES-GCM = CTR encryption + GHASH authentication tag. Provides confidentiality AND integrity. TLS 1.3 uses AES-256-GCM exclusively. Any modification to ciphertext or associated data causes tag verification to fail.
+            </div>
+            <div class="lab-field">
+              <label class="lab-label">Message to encrypt</label>
+              <textarea class="lab-input" id="gcm-plain" rows="2">Secure transmission via AES-256-GCM authenticated encryption</textarea>
+            </div>
+            <div class="lab-field">
+              <label class="lab-label">Associated Data (authenticated but not encrypted &mdash; e.g. packet header)</label>
+              <input class="lab-input" id="gcm-aad" value="packet-id:42 src:alice dst:bob">
+            </div>
+            <button class="btn btn-primary" onclick="runGCMLab()">&#9654; Encrypt with AES-256-GCM</button>
+            <div style="margin-top:12px">
+              <label class="lab-label">Authentication Tag (16 bytes, hex)</label>
+              <div class="lab-output" id="gcm-tag" style="font-family:var(--mono);font-size:11px">Encrypt first...</div>
+            </div>
+            <div style="margin-top:8px">
+              <label class="lab-label">Ciphertext (Base64)</label>
+              <div class="lab-output" id="gcm-cipher" style="font-family:var(--mono);font-size:11px;word-break:break-all">Encrypt first...</div>
+            </div>
+            <div style="margin-top:8px;display:flex;gap:8px">
+              <button class="btn btn-secondary" style="flex:1" id="gcm-dec-btn" disabled onclick="runGCMDecrypt(false)">&#10003; Decrypt (valid)</button>
+              <button class="btn btn-secondary" style="flex:1;background:var(--danger-l);color:var(--danger)" id="gcm-tamper-btn" disabled onclick="runGCMDecrypt(true)">&#10007; Tamper &amp; Decrypt</button>
+            </div>
+            <div class="lab-output" id="gcm-dec-output" style="margin-top:8px;font-size:12px"></div>
+          </div>
+
+        </div><!-- end bcl-modes -->
+
+        <div style="margin-top:16px;border-top:1px solid var(--border);padding-top:12px">
+          <button class="btn btn-secondary btn-sm" onclick="completeLabStage()" style="width:auto">&#10003; Mark Lab Complete</button>
+        </div>
 
       </div>`,
 
@@ -12985,18 +13105,19 @@ function aesxAvaSetBit(n) {
 }
 
 function switchBlockCipherTab(cipher) {
-  var des = document.getElementById('bcl-des'), aes = document.getElementById('bcl-aes');
-  var dBtn = document.getElementById('bcl-tab-des-btn'), aBtn = document.getElementById('bcl-tab-aes-btn');
-  if (des) des.style.display = cipher === 'des' ? 'block' : 'none';
-  if (aes) aes.style.display = cipher === 'aes' ? 'block' : 'none';
-  if (dBtn) dBtn.className = cipher === 'des' ? 'btn btn-primary' : 'btn btn-secondary';
-  if (aBtn) aBtn.className = cipher === 'aes' ? 'btn btn-primary' : 'btn btn-secondary';
+  var sects = { des: 'bcl-des', aes: 'bcl-aes', modes: 'bcl-modes' };
+  var btns  = { des: 'bcl-tab-des-btn', aes: 'bcl-tab-aes-btn', modes: 'bcl-tab-modes-btn' };
+  Object.keys(sects).forEach(function(k) {
+    var el = document.getElementById(sects[k]); if (el) el.style.display = k === cipher ? 'block' : 'none';
+    var b  = document.getElementById(btns[k]);  if (b)  b.className = k === cipher ? 'btn btn-primary' : 'btn btn-secondary';
+  });
 }
 
 function initBlockCipherLab() {
   switchBlockCipherTab('des');
   initDesLab();
   initAesxLab();
+  completeLabStage();
 }
 
 async function runRSALab() {
