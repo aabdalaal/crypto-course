@@ -11152,44 +11152,41 @@ Rail 2: . . L . . . O . . .</div>
       <div class="lab-container">
         <div class="lab-header">
           <span class="lab-icon">📐</span>
-          <div><div class="lab-title">${content.heading}</div><div class="lab-subtitle">Toy-curve glass box · point arithmetic mod p · runs entirely in-browser</div></div>
+          <div><div class="lab-title">${content.heading}</div><div class="lab-subtitle">${t('ecc_subtitle')}</div></div>
         </div>
         <div id="ecc-selftest-badge" style="font-size:12px;margin-bottom:8px"></div>
         <div class="code-block" dir="ltr" style="margin:6px 0 12px;text-align:center;font-size:13px">y<sup>2</sup> &equiv; x<sup>3</sup> + ax + b (mod p)</div>
 
         <details style="margin:8px 0 14px;border:1px solid var(--border);border-radius:var(--radius-xs);background:var(--bg);overflow:hidden">
-          <summary style="cursor:pointer;padding:10px 14px;font-size:12px;font-weight:800;color:var(--text2);text-transform:uppercase;letter-spacing:.05em;list-style:none">📝 What this lab shows · ما الذي يعرضه هذا المختبر</summary>
-          <div style="padding:10px 14px 6px;font-size:13px;line-height:1.6;color:var(--text)" dir="ltr">
-            This is a <strong>toy curve glass box</strong>: every ECC operation you will use in production (P-256, Curve25519) works exactly this way, just with a 256-bit prime instead of p = 5, 17 or 23. Tab 1 shows the curve shape over real numbers for intuition. Tab 2 finds the actual points mod p &mdash; including the exact singular curve from Lecture 6's own worked example (Preset A), which is not a group and is locked to point-finding only. Tabs 3&ndash;6 use Presets B&ndash;D, where the points genuinely form a group: Tab 3 is point addition by hand, Tab 4 is scalar multiplication (kP) via double-and-add, Tab 5 is the Elliptic Curve Discrete Logarithm Problem (ECDLP) showing why kP is hard to invert, and Tab 6 is a toy Diffie&ndash;Hellman exchange showing why Eve &mdash; who hears every word &mdash; still cannot compute the shared secret.
-          </div>
-          <div style="padding:0 14px 12px;font-size:14px;line-height:1.75;color:var(--text)" dir="rtl">
-            هذا "صندوق زجاجي" لمنحنى صغير: كل عملية من عمليات التشفير بالمنحنى الإهليلجي التي تُستخدم فعليًا (مثل P-256 أو Curve25519) تعمل بنفس الطريقة تمامًا، فقط باستخدام عدد أولي بحجم ٢٥٦ بت بدلاً من p = ٥ أو ١٧ أو ٢٣. يعرض التبويب الأول شكل المنحنى على الأعداد الحقيقية للتوضيح. يجد التبويب الثاني النقاط الفعلية بترميز modulo p — بما في ذلك نفس المنحنى الشاذ من مثال المحاضرة ٦ (الإعداد أ)، وهو ليس مجموعة رياضية ولذلك يُقفل على إيجاد النقاط فقط. تستخدم التبويبات ٣–٦ الإعدادات ب–د حيث تُشكّل النقاط مجموعة حقيقية: التبويب ٣ هو جمع النقاط يدويًا، والتبويب ٤ هو الضرب القياسي (kP) عبر خوارزمية المضاعفة والجمع، والتبويب ٥ هو مسألة اللوغاريتم المتقطع على المنحنى الإهليلجي (ECDLP) التي تُثبت صعوبة عكس kP، والتبويب ٦ هو تبادل مفاتيح Diffie–Hellman تجريبي يوضح لماذا لا تستطيع إيف — التي تسمع كل كلمة — حساب السر المشترك.
+          <summary style="cursor:pointer;padding:10px 14px;font-size:12px;font-weight:800;color:var(--text2);text-transform:uppercase;letter-spacing:.05em;list-style:none">${t('ecc_note_summary')}</summary>
+          <div style="padding:10px 14px 12px;font-size:13px;line-height:1.6;color:var(--text)" dir="${state.language === 'ar' ? 'rtl' : 'ltr'}">
+            ${t('ecc_note_body')}
           </div>
         </details>
 
         <div style="display:flex;gap:4px;margin-bottom:10px;background:var(--bg);border-radius:var(--radius-xs);padding:4px;flex-wrap:wrap">
-          <button id="ecc-tab-shape" onclick="setEccTab('shape')" style="flex:1;min-width:70px;min-height:44px;padding:8px 4px;border:none;border-radius:6px;font-weight:700;font-size:11px;cursor:pointer;font-family:var(--font);background:var(--primary);color:white">1·Shape</button>
-          <button id="ecc-tab-points" onclick="setEccTab('points')" style="flex:1;min-width:70px;min-height:44px;padding:8px 4px;border:none;border-radius:6px;font-weight:700;font-size:11px;cursor:pointer;font-family:var(--font);background:transparent;color:var(--muted)">2·Points mod p</button>
-          <button id="ecc-tab-add" onclick="setEccTab('add')" style="flex:1;min-width:70px;min-height:44px;padding:8px 4px;border:none;border-radius:6px;font-weight:700;font-size:11px;cursor:pointer;font-family:var(--font);background:transparent;color:var(--muted)">3·Add</button>
-          <button id="ecc-tab-scalar" onclick="setEccTab('scalar')" style="flex:1;min-width:70px;min-height:44px;padding:8px 4px;border:none;border-radius:6px;font-weight:700;font-size:11px;cursor:pointer;font-family:var(--font);background:transparent;color:var(--muted)">4·kP</button>
-          <button id="ecc-tab-dlp" onclick="setEccTab('dlp')" style="flex:1;min-width:70px;min-height:44px;padding:8px 4px;border:none;border-radius:6px;font-weight:700;font-size:11px;cursor:pointer;font-family:var(--font);background:transparent;color:var(--muted)">5·ECDLP</button>
-          <button id="ecc-tab-dh" onclick="setEccTab('dh')" style="flex:1;min-width:70px;min-height:44px;padding:8px 4px;border:none;border-radius:6px;font-weight:700;font-size:11px;cursor:pointer;font-family:var(--font);background:transparent;color:var(--muted)">6·ECDH</button>
+          <button id="ecc-tab-shape" onclick="setEccTab('shape')" style="flex:1;min-width:70px;min-height:44px;padding:8px 4px;border:none;border-radius:6px;font-weight:700;font-size:11px;cursor:pointer;font-family:var(--font);background:var(--primary);color:white">${t('ecc_tab_shape')}</button>
+          <button id="ecc-tab-points" onclick="setEccTab('points')" style="flex:1;min-width:70px;min-height:44px;padding:8px 4px;border:none;border-radius:6px;font-weight:700;font-size:11px;cursor:pointer;font-family:var(--font);background:transparent;color:var(--muted)">${t('ecc_tab_points')}</button>
+          <button id="ecc-tab-add" onclick="setEccTab('add')" style="flex:1;min-width:70px;min-height:44px;padding:8px 4px;border:none;border-radius:6px;font-weight:700;font-size:11px;cursor:pointer;font-family:var(--font);background:transparent;color:var(--muted)">${t('ecc_tab_add')}</button>
+          <button id="ecc-tab-scalar" onclick="setEccTab('scalar')" style="flex:1;min-width:70px;min-height:44px;padding:8px 4px;border:none;border-radius:6px;font-weight:700;font-size:11px;cursor:pointer;font-family:var(--font);background:transparent;color:var(--muted)">${t('ecc_tab_scalar')}</button>
+          <button id="ecc-tab-dlp" onclick="setEccTab('dlp')" style="flex:1;min-width:70px;min-height:44px;padding:8px 4px;border:none;border-radius:6px;font-weight:700;font-size:11px;cursor:pointer;font-family:var(--font);background:transparent;color:var(--muted)">${t('ecc_tab_dlp')}</button>
+          <button id="ecc-tab-dh" onclick="setEccTab('dh')" style="flex:1;min-width:70px;min-height:44px;padding:8px 4px;border:none;border-radius:6px;font-weight:700;font-size:11px;cursor:pointer;font-family:var(--font);background:transparent;color:var(--muted)">${t('ecc_tab_dh')}</button>
         </div>
 
         <div id="ecc-preset-bar" style="display:none;margin-bottom:14px">
-          <div style="font-size:11px;font-weight:700;color:var(--text2);margin-bottom:6px;text-transform:uppercase;letter-spacing:.05em">Curve preset · إعداد المنحنى</div>
+          <div style="font-size:11px;font-weight:700;color:var(--text2);margin-bottom:6px;text-transform:uppercase;letter-spacing:.05em">${t('ecc_preset_label')}</div>
           <div style="display:flex;flex-direction:column;gap:6px">
             <button id="ecc-preset-A" onclick="eccApplyPreset('A')" style="text-align:left;min-height:44px;padding:8px 12px;border-radius:var(--radius-xs);border:1px solid var(--border);background:var(--surface2);cursor:pointer;font-family:var(--font);font-size:12px">
-              <strong>A</strong> · محاضرة ٦ (Lecture 6) — a=2, b=3, p=5 <span style="color:var(--danger)">⚠ شاذ (singular)</span>
+              <strong>A</strong> · ${t('ecc_preset_a_name')} — <span dir="ltr">a=2, b=3, p=5</span> <span style="color:var(--danger)">⚠ ${t('ecc_singular')}</span>
             </button>
             <button id="ecc-preset-B" onclick="eccApplyPreset('B')" style="text-align:left;min-height:44px;padding:8px 12px;border-radius:var(--radius-xs);border:1px solid var(--border);background:var(--surface2);cursor:pointer;font-family:var(--font);font-size:12px">
-              <strong>B</strong> · منحنى المجموعة الصغير (Small group) — a=1, b=1, p=5
+              <strong>B</strong> · ${t('ecc_preset_b_name')} — <span dir="ltr">a=1, b=1, p=5</span>
             </button>
             <button id="ecc-preset-C" onclick="eccApplyPreset('C')" style="text-align:left;min-height:44px;padding:8px 12px;border-radius:var(--radius-xs);border:1px solid var(--border);background:var(--surface2);cursor:pointer;font-family:var(--font);font-size:12px">
-              <strong>C</strong> · Paar–Pelzl — a=2, b=2, p=17
+              <strong>C</strong> · ${t('ecc_preset_c_name')} — <span dir="ltr">a=2, b=2, p=17</span>
             </button>
             <button id="ecc-preset-D" onclick="eccApplyPreset('D')" style="text-align:left;min-height:44px;padding:8px 12px;border-radius:var(--radius-xs);border:1px solid var(--border);background:var(--surface2);cursor:pointer;font-family:var(--font);font-size:12px">
-              <strong>D</strong> · ملعب أكبر (Larger playground) — a=1, b=1, p=23
+              <strong>D</strong> · ${t('ecc_preset_d_name')} — <span dir="ltr">a=1, b=1, p=23</span>
             </button>
           </div>
         </div>
@@ -11206,23 +11203,23 @@ Rail 2: . . L . . . O . . .</div>
           <canvas id="ecc-canvas-shape" width="360" height="260" style="width:100%;height:260px;background:var(--bg);border-radius:var(--radius-xs)"></canvas>
           <div id="ecc-shape-disc" style="margin-top:8px;font-size:12px;font-family:var(--mono)"></div>
           <div style="margin-top:8px;font-size:12px;color:var(--text2);line-height:1.6">
-            القاطع والمماس (chord and tangent): P + Q = انعكاس نقطة التقاطع الثالثة (reflection of the third intersection)
+            ${t('ecc_chord_tangent_caption')}
           </div>
         </div>
 
         <div id="ecc-panel-points" style="display:none">
           <div id="ecc-points-table" style="overflow-x:auto;margin-bottom:12px"></div>
           <canvas id="ecc-canvas-points" width="360" height="300" style="width:100%;height:300px;background:var(--bg);border-radius:var(--radius-xs)"></canvas>
-          <div style="margin-top:8px;font-size:12px;color:var(--text2)">تناظر (symmetry): (x, y) &harr; (x, p&minus;y)</div>
+          <div style="margin-top:8px;font-size:12px;color:var(--text2)">${t('ecc_symmetry_label')}: (x, y) &harr; (x, p&minus;y)</div>
           <div id="ecc-points-count" style="margin-top:8px;font-size:13px;font-weight:700"></div>
           <div id="ecc-points-singular-note" style="display:none;margin-top:10px;background:#FEF2F2;border:1px solid var(--danger);border-radius:var(--radius-xs);padding:10px;font-size:12px;color:#991B1B">
-            ⚠ منحنى شاذ (Singular curve): Δ &equiv; 0 (mod 5) — صالح لإيجاد النقاط فقط، وليس لعمليات المجموعة (valid for finding points only, not for group operations). النقطة الشاذة (the singular node) هي (4, 0), مُبرزة بالأحمر أدناه (highlighted in red below).
+            ⚠ ${t('ecc_singular_note')}
           </div>
         </div>
 
         <div id="ecc-panel-add" style="display:none">
           <div id="ecc-add-locked" style="display:none;background:var(--bg);border:1px dashed var(--border);border-radius:var(--radius-xs);padding:16px;font-size:13px;color:var(--text2);text-align:center">
-            🔒 مقفل على الإعداد أ (Locked on Preset A) — اختر الإعداد ب أو ج أو د لتجربة جمع النقاط (choose Preset B, C or D to try point addition).
+            🔒 ${t('ecc_locked_add')}
           </div>
           <div id="ecc-add-body">
             <canvas id="ecc-canvas-add" width="360" height="300" style="width:100%;height:300px;background:var(--bg);border-radius:var(--radius-xs)" onclick="eccCanvasTap(event,'add')"></canvas>
@@ -11236,19 +11233,19 @@ Rail 2: . . L . . . O . . .</div>
                 <select id="ecc-add-q" class="lab-input" onchange="eccOnAddSelectChange()"></select>
               </div>
             </div>
-            <button class="btn btn-primary ecc-run-btn" style="margin-top:10px" onclick="runEccAdd()">▶ Compute P + Q</button>
+            <button class="btn btn-primary ecc-run-btn" style="margin-top:10px" onclick="runEccAdd()">${t('ecc_compute_btn')}</button>
             <div class="lab-output" id="ecc-add-steps" style="margin-top:10px;font-size:12px"></div>
-            <div style="margin-top:8px;font-size:12px;color:var(--text2)">في الحقل المنتهي لا يظهر "الخط" كخط مستقيم (in a finite field the "line" wraps — the geometry lives in the algebra).</div>
+            <div style="margin-top:8px;font-size:12px;color:var(--text2)">${t('ecc_finite_field_caption')}</div>
           </div>
         </div>
 
         <div id="ecc-panel-scalar" style="display:none">
           <div id="ecc-scalar-locked" style="display:none;background:var(--bg);border:1px dashed var(--border);border-radius:var(--radius-xs);padding:16px;font-size:13px;color:var(--text2);text-align:center">
-            🔒 مقفل على الإعداد أ (Locked on Preset A) — اختر إعدادًا آخر لتجربة الضرب القياسي (choose another preset to try scalar multiplication).
+            🔒 ${t('ecc_locked_scalar')}
           </div>
           <div id="ecc-scalar-body">
             <div class="lab-field">
-              <label class="lab-label">Generator P</label>
+              <label class="lab-label">${t('ecc_generator_label')}</label>
               <select id="ecc-scalar-gen" class="lab-input" onchange="eccOnScalarGenChange()"></select>
             </div>
             <div class="lab-field">
@@ -11256,9 +11253,9 @@ Rail 2: . . L . . . O . . .</div>
               <input type="number" id="ecc-scalar-k" class="lab-input" min="1" value="2" oninput="eccRenderScalarCost()">
             </div>
             <div style="display:flex;gap:8px;flex-wrap:wrap">
-              <button class="btn btn-primary ecc-run-btn" style="width:auto;min-height:44px" onclick="eccAnimateScalar()">▶ Animate</button>
-              <button class="btn btn-secondary" style="width:auto;min-height:44px" onclick="eccCancelScalarAnim()">Cancel</button>
-              <button class="btn btn-secondary ecc-run-btn" style="width:auto;min-height:44px" onclick="eccRunToOrder()">↻ Run to order</button>
+              <button class="btn btn-primary ecc-run-btn" style="width:auto;min-height:44px" onclick="eccAnimateScalar()">${t('ecc_animate_btn')}</button>
+              <button class="btn btn-secondary" style="width:auto;min-height:44px" onclick="eccCancelScalarAnim()">${t('ecc_cancel_btn')}</button>
+              <button class="btn btn-secondary ecc-run-btn" style="width:auto;min-height:44px" onclick="eccRunToOrder()">${t('ecc_run_to_order_btn')}</button>
             </div>
             <canvas id="ecc-canvas-scalar" width="360" height="300" style="width:100%;height:300px;background:var(--bg);border-radius:var(--radius-xs);margin-top:10px"></canvas>
             <div class="lab-output" id="ecc-scalar-list" style="margin-top:8px;font-size:12px;font-family:var(--mono);word-break:break-all"></div>
@@ -11269,32 +11266,32 @@ Rail 2: . . L . . . O . . .</div>
 
         <div id="ecc-panel-dlp" style="display:none">
           <div id="ecc-dlp-locked" style="display:none;background:var(--bg);border:1px dashed var(--border);border-radius:var(--radius-xs);padding:16px;font-size:13px;color:var(--text2);text-align:center">
-            🔒 مقفل على الإعداد أ (Locked on Preset A) — اختر إعدادًا آخر لتجربة تحدي ECDLP (choose another preset to try the ECDLP challenge).
+            🔒 ${t('ecc_locked_dlp')}
           </div>
           <div id="ecc-dlp-body">
-            <div class="concept-box" style="font-size:12px;margin-bottom:10px">مسألة اللوغاريتم المتقطع على المنحنى الإهليلجي (Elliptic Curve Discrete Logarithm Problem): given P and Q &isin; &lang;P&rang;, find k such that Q = kP.</div>
-            <button class="btn btn-primary ecc-run-btn" onclick="eccNewDlpChallenge()">🎲 New challenge</button>
+            <div class="concept-box" style="font-size:12px;margin-bottom:10px">${t('ecc_dlp_definition')}</div>
+            <button class="btn btn-primary ecc-run-btn" onclick="eccNewDlpChallenge()">${t('ecc_new_challenge_btn')}</button>
             <div class="lab-output" id="ecc-dlp-pq" style="margin-top:8px;font-size:12px;font-family:var(--mono)"></div>
             <canvas id="ecc-canvas-dlp" width="360" height="280" style="width:100%;height:280px;background:var(--bg);border-radius:var(--radius-xs);margin-top:8px"></canvas>
             <div class="lab-field" style="margin-top:10px">
-              <label class="lab-label">Your guess for k</label>
+              <label class="lab-label">${t('ecc_guess_label')}</label>
               <div style="display:flex;gap:8px">
                 <input type="number" id="ecc-dlp-guess" class="lab-input" min="1">
-                <button class="btn btn-primary ecc-run-btn" style="width:auto;min-height:44px" onclick="eccCheckDlpGuess()">Check</button>
+                <button class="btn btn-primary ecc-run-btn" style="width:auto;min-height:44px" onclick="eccCheckDlpGuess()">${t('ecc_check_btn')}</button>
               </div>
             </div>
             <div id="ecc-dlp-result" style="margin-top:8px;font-size:13px"></div>
             <div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap">
-              <button class="btn btn-secondary ecc-run-btn" style="width:auto;min-height:44px" onclick="eccBruteForceDlp()">▶ Brute force</button>
-              <button class="btn btn-secondary" style="width:auto;min-height:44px" onclick="eccCancelDlp()">Cancel</button>
+              <button class="btn btn-secondary ecc-run-btn" style="width:auto;min-height:44px" onclick="eccBruteForceDlp()">${t('ecc_brute_force_btn')}</button>
+              <button class="btn btn-secondary" style="width:auto;min-height:44px" onclick="eccCancelDlp()">${t('ecc_cancel_btn')}</button>
             </div>
             <div id="ecc-dlp-counter" style="margin-top:6px;font-size:12px;font-family:var(--mono)"></div>
             <div style="margin-top:14px;overflow-x:auto">
               <table style="width:100%;border-collapse:collapse;font-size:11px" dir="ltr">
-                <tr style="background:var(--bg)"><th style="padding:6px;text-align:left">Curve</th><th style="padding:6px;text-align:left">Cost</th></tr>
-                <tr><td style="padding:6px;border-top:1px solid var(--border)">This curve (<span id="ecc-dlp-extrap-n"></span>)</td><td style="padding:6px;border-top:1px solid var(--border)"><span id="ecc-dlp-extrap-steps"></span> steps</td></tr>
-                <tr><td style="padding:6px;border-top:1px solid var(--border)">P-256</td><td style="padding:6px;border-top:1px solid var(--border)">group &asymp; 2<sup>256</sup>, Pollard's rho &asymp; 2<sup>128</sup> group operations</td></tr>
-                <tr><td style="padding:6px;border-top:1px solid var(--border)">At 10<sup>9</sup> ops/s</td><td style="padding:6px;border-top:1px solid var(--border)">&asymp; 10<sup>22</sup> years (عمر الكون (age of the universe) &asymp; 1.4 &times; 10<sup>10</sup> سنة)</td></tr>
+                <tr style="background:var(--bg)"><th style="padding:6px;text-align:left">${t('ecc_dlp_table_curve')}</th><th style="padding:6px;text-align:left">${t('ecc_dlp_table_cost')}</th></tr>
+                <tr><td style="padding:6px;border-top:1px solid var(--border)">${t('ecc_dlp_this_curve')} (<span id="ecc-dlp-extrap-n"></span>)</td><td style="padding:6px;border-top:1px solid var(--border)"><span id="ecc-dlp-extrap-steps"></span> ${t('ecc_dlp_steps_unit')}</td></tr>
+                <tr><td style="padding:6px;border-top:1px solid var(--border)">P-256</td><td style="padding:6px;border-top:1px solid var(--border)">${t('ecc_dlp_row_p256')}</td></tr>
+                <tr><td style="padding:6px;border-top:1px solid var(--border)">${t('ecc_dlp_row_ops')}</td><td style="padding:6px;border-top:1px solid var(--border)">${t('ecc_dlp_row_years')}</td></tr>
               </table>
             </div>
           </div>
@@ -11302,40 +11299,40 @@ Rail 2: . . L . . . O . . .</div>
 
         <div id="ecc-panel-dh" style="display:none">
           <div id="ecc-dh-locked" style="display:none;background:var(--bg);border:1px dashed var(--border);border-radius:var(--radius-xs);padding:16px;font-size:13px;color:var(--text2);text-align:center">
-            🔒 مقفل على الإعداد أ (Locked on Preset A) — اختر إعدادًا آخر لتجربة تبادل ECDH (choose another preset to try the ECDH exchange).
+            🔒 ${t('ecc_locked_dh')}
           </div>
           <div id="ecc-dh-body">
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
               <div style="border:1px solid #2563EB;border-radius:var(--radius-xs);padding:10px;background:rgba(37,99,235,0.06)">
-                <div style="font-weight:800;color:#2563EB;font-size:13px;margin-bottom:6px">👩 Alice</div>
-                <label class="lab-label">Private a</label>
+                <div style="font-weight:800;color:#2563EB;font-size:13px;margin-bottom:6px">${t('ecc_alice_label')}</div>
+                <label class="lab-label">${t('ecc_private_a_label')}</label>
                 <div style="display:flex;gap:6px">
                   <input type="number" id="ecc-dh-a" class="lab-input" min="1">
                   <button class="btn btn-secondary btn-sm" style="width:auto;min-height:44px" onclick="eccRollPrivate('a')">🎲</button>
                 </div>
               </div>
               <div style="border:1px solid #10B981;border-radius:var(--radius-xs);padding:10px;background:rgba(16,185,129,0.06)">
-                <div style="font-weight:800;color:#10B981;font-size:13px;margin-bottom:6px">👨 Bob</div>
-                <label class="lab-label">Private b</label>
+                <div style="font-weight:800;color:#10B981;font-size:13px;margin-bottom:6px">${t('ecc_bob_label')}</div>
+                <label class="lab-label">${t('ecc_private_b_label')}</label>
                 <div style="display:flex;gap:6px">
                   <input type="number" id="ecc-dh-b" class="lab-input" min="1">
                   <button class="btn btn-secondary btn-sm" style="width:auto;min-height:44px" onclick="eccRollPrivate('b')">🎲</button>
                 </div>
               </div>
             </div>
-            <button class="btn btn-primary ecc-run-btn" style="margin-top:10px" onclick="runEccDh()">▶ Exchange</button>
+            <button class="btn btn-primary ecc-run-btn" style="margin-top:10px" onclick="runEccDh()">${t('ecc_exchange_btn')}</button>
             <div class="lab-output" id="ecc-dh-output" style="margin-top:8px;font-size:12px;font-family:var(--mono);word-break:break-all"></div>
             <div style="border:1px solid #7C3AED;border-radius:var(--radius-xs);padding:10px;background:rgba(124,58,237,0.06);margin-top:12px">
-              <div style="font-weight:800;color:#7C3AED;font-size:13px;margin-bottom:6px">👁️ Eve</div>
-              <div style="font-size:12px;color:var(--text2)">إيف ترى (Eve sees): P, A, B — ولا ترى a أو b (but not a or b).</div>
-              <button class="btn btn-secondary btn-sm ecc-run-btn" style="width:auto;min-height:44px;margin-top:8px" onclick="eccEveAttack()">👁 Eve tries</button>
+              <div style="font-weight:800;color:#7C3AED;font-size:13px;margin-bottom:6px">${t('ecc_eve_label')}</div>
+              <div style="font-size:12px;color:var(--text2)">${t('ecc_eve_sees')}</div>
+              <button class="btn btn-secondary btn-sm ecc-run-btn" style="width:auto;min-height:44px;margin-top:8px" onclick="eccEveAttack()">${t('ecc_eve_tries_btn')}</button>
               <div id="ecc-dh-eve-result" style="margin-top:8px;font-size:12px"></div>
             </div>
             <div class="concept-box" style="margin-top:14px;font-size:12px">
-              <div style="font-weight:800;margin-bottom:6px">الجسر إلى الواقع (bridge to reality)</div>
+              <div style="font-weight:800;margin-bottom:6px">${t('ecc_bridge_title')}</div>
               <div style="overflow-x:auto">
                 <table style="width:100%;border-collapse:collapse;font-size:11px" dir="ltr">
-                  <tr style="background:var(--bg)"><th style="padding:6px;text-align:left">Security bits</th><th style="padding:6px;text-align:left">RSA</th><th style="padding:6px;text-align:left">ECC</th></tr>
+                  <tr style="background:var(--bg)"><th style="padding:6px;text-align:left">${t('ecc_nist_table_sec')}</th><th style="padding:6px;text-align:left">RSA</th><th style="padding:6px;text-align:left">ECC</th></tr>
                   <tr><td style="padding:6px;border-top:1px solid var(--border)">80</td><td style="padding:6px;border-top:1px solid var(--border)">1024</td><td style="padding:6px;border-top:1px solid var(--border)">160</td></tr>
                   <tr><td style="padding:6px;border-top:1px solid var(--border)"><strong>112</strong></td><td style="padding:6px;border-top:1px solid var(--border)"><strong>2048</strong></td><td style="padding:6px;border-top:1px solid var(--border)"><strong>224</strong></td></tr>
                   <tr><td style="padding:6px;border-top:1px solid var(--border)"><strong>128</strong></td><td style="padding:6px;border-top:1px solid var(--border)"><strong>3072</strong></td><td style="padding:6px;border-top:1px solid var(--border)"><strong>256</strong></td></tr>
@@ -11343,10 +11340,10 @@ Rail 2: . . L . . . O . . .</div>
                   <tr><td style="padding:6px;border-top:1px solid var(--border)">256</td><td style="padding:6px;border-top:1px solid var(--border)">15360</td><td style="padding:6px;border-top:1px solid var(--border)">512</td></tr>
                 </table>
               </div>
-              <div style="margin-top:8px;font-size:11px;color:var(--text2)">Table follows NIST SP 800-57. Lecture 6's shorthand ("RSA-2048 for 128-bit") and Module 6's teaching (RSA-2048 &asymp; 112-bit, per NFS estimates) both round the same curve — this table uses the NIST reference points.</div>
-              <div style="margin-top:8px;font-size:12px">Google Chrome defaults to ECDHE on TLS. WhatsApp key agreement uses Curve25519.</div>
+              <div style="margin-top:8px;font-size:11px;color:var(--text2)">${t('ecc_nist_footnote')}</div>
+              <div style="margin-top:8px;font-size:12px">${t('ecc_realworld_callout')}</div>
               <div style="margin-top:10px">
-                <button class="btn btn-secondary btn-sm" style="width:auto;min-height:44px" onclick="openLabDeepLink('ecdh')">→ جرّب النسخة الحقيقية (try the real thing): Web Crypto P-256 ECDH lab, Module 11</button>
+                <button class="btn btn-secondary btn-sm" style="width:auto;min-height:44px" onclick="openLabDeepLink('ecdh')">${t('ecc_try_real_btn')}</button>
               </div>
             </div>
           </div>
@@ -14636,9 +14633,9 @@ function initEccLab() {
   var badge = document.getElementById('ecc-selftest-badge');
   if (badge) {
     if (test.pass) {
-      badge.innerHTML = '<span style="color:#10B981;font-weight:700">&#10003; Self-test passed — 3 curves, ' + test.count + ' assertions verified</span>';
+      badge.innerHTML = '<span style="color:#10B981;font-weight:700">&#10003; ' + t('ecc_selftest_pass_prefix') + ' 3 ' + t('ecc_selftest_curves_unit') + ', ' + test.count + ' ' + t('ecc_selftest_assertions_unit') + '</span>';
     } else {
-      badge.innerHTML = '<span style="color:#DC2626;font-weight:700">&#10007; Self-test FAILED: ' + test.failures.join('; ') + '</span>';
+      badge.innerHTML = '<span style="color:#DC2626;font-weight:700">&#10007; ' + t('ecc_selftest_fail_prefix') + ' ' + test.failures.join('; ') + '</span>';
       _eccDisableRunButtons();
     }
   }
@@ -14921,8 +14918,8 @@ function eccDrawShapeTab() {
   var disc = 4 * a * a * a + 27 * b * b;
   var discDisplay = -16 * disc;
   var label = disc !== 0
-    ? '<span style="color:#10B981;font-weight:700">&#10003; أملس (smooth)</span>'
-    : '<span style="color:#DC2626;font-weight:700">&#9888; شاذ (singular)</span>';
+    ? '<span style="color:#10B981;font-weight:700">&#10003; ' + t('ecc_smooth') + '</span>'
+    : '<span style="color:#DC2626;font-weight:700">&#9888; ' + t('ecc_singular') + '</span>';
   document.getElementById('ecc-shape-disc').innerHTML = 'Δ = &minus;16(4a&sup3; + 27b&sup2;) = ' + discDisplay + ' &middot; ' + label;
 }
 
@@ -14937,10 +14934,10 @@ function eccRenderPointsTab() {
   var a = _eccState.a, b = _eccState.b, p = _eccState.p;
   var rows = eccEnumerateTable(a, b, p);
   var html = '<table style="width:100%;border-collapse:collapse;font-size:11px" dir="ltr">';
-  html += '<tr style="background:var(--bg)"><th style="padding:6px;text-align:left">x</th><th style="padding:6px;text-align:left">x&sup3;+ax+b (mod p)</th><th style="padding:6px;text-align:left">هل هو باقٍ تربيعي؟ (QR?)</th><th style="padding:6px;text-align:left">y</th></tr>';
+  html += '<tr style="background:var(--bg)"><th style="padding:6px;text-align:left">x</th><th style="padding:6px;text-align:left">x&sup3;+ax+b (mod p)</th><th style="padding:6px;text-align:left">' + t('ecc_qr_header') + '</th><th style="padding:6px;text-align:left">y</th></tr>';
   for (var i = 0; i < rows.length; i++) {
     var row = rows[i];
-    var isQR = row.ys.length > 0 ? 'نعم (yes)' : 'لا (no)';
+    var isQR = row.ys.length > 0 ? t('ecc_yes') : t('ecc_no');
     var yList = row.ys.length > 0 ? row.ys.join(', ') : '&mdash;';
     html += '<tr><td style="padding:6px;border-top:1px solid var(--border)">' + row.x + '</td><td style="padding:6px;border-top:1px solid var(--border)">' + row.rhs + '</td><td style="padding:6px;border-top:1px solid var(--border)">' + isQR + '</td><td style="padding:6px;border-top:1px solid var(--border)">' + yList + '</td></tr>';
   }
@@ -14952,7 +14949,7 @@ function eccRenderPointsTab() {
   if (_eccState.preset === 'A') highlight.push({ pt: { x: 4, y: 0 }, style: 'default', color: '#DC2626' });
   eccDrawScatter(canvas, _eccState.points, { p: p, highlight: highlight });
 
-  document.getElementById('ecc-points-count').innerHTML = '#E(F<sub>p</sub>) = ' + _eccState.points.length + ' + 1 نقطة اللانهاية (point at infinity O)';
+  document.getElementById('ecc-points-count').innerHTML = '#E(F<sub>p</sub>) = ' + _eccState.points.length + ' + 1 ' + t('ecc_point_infinity');
 
   var noteEl = document.getElementById('ecc-points-singular-note');
   if (noteEl) noteEl.style.display = _eccState.preset === 'A' ? '' : 'none';
@@ -14998,14 +14995,14 @@ function runEccAdd() {
   if (_eccState.selfTestFailed || _eccState.preset === 'A') return;
   var P = _eccState.selP, Q = _eccState.selQ;
   var steps = eccAddSteps(P, Q, _eccState.a, _eccState.p);
-  var caseLabel = steps.case === 'DOUBLING' ? 'مضاعفة (doubling)'
+  var caseLabel = steps.case === 'DOUBLING' ? t('ecc_case_doubling')
     : steps.case === 'INVERSE_PAIR' ? 'P + (&minus;P) = O'
-    : (steps.case === 'P_IS_O' || steps.case === 'Q_IS_O') ? 'جمع مع نقطة اللانهاية (adding the point at infinity)'
-    : 'نقطتان مختلفتان (distinct points)';
+    : (steps.case === 'P_IS_O' || steps.case === 'Q_IS_O') ? t('ecc_case_infinity')
+    : t('ecc_case_distinct');
   var html = '<div><strong>1) ' + caseLabel + '</strong></div>';
   if (steps.s !== null) {
     html += '<div style="margin-top:6px" dir="ltr">s &equiv; (y<sub>2</sub> &minus; y<sub>1</sub>)&middot;(x<sub>2</sub> &minus; x<sub>1</sub>)<sup>&minus;1</sup> &equiv; ' + steps.sNumer + ' &middot; ' + steps.sDenom + '<sup>&minus;1</sup> &equiv; ' + steps.sNumer + ' &middot; ' + steps.sDenomInv + ' &equiv; ' + steps.s + ' (mod ' + _eccState.p + ')</div>';
-    html += '<div style="margin-top:4px;font-size:11px;color:var(--text2)">المعكوس الضربي (modular inverse) via extended Euclid</div>';
+    html += '<div style="margin-top:4px;font-size:11px;color:var(--text2)">' + t('ecc_modinv_note') + '</div>';
     html += '<div style="margin-top:8px" dir="ltr">x<sub>3</sub> = s<sup>2</sup> &minus; x<sub>1</sub> &minus; x<sub>2</sub> &equiv; ' + steps.x3 + ' (mod ' + _eccState.p + ')</div>';
     html += '<div dir="ltr">y<sub>3</sub> = s(x<sub>1</sub> &minus; x<sub>3</sub>) &minus; y<sub>1</sub> &equiv; ' + steps.y3 + ' (mod ' + _eccState.p + ')</div>';
   }
@@ -15067,8 +15064,8 @@ function eccRenderScalarCost() {
   if (!k || k < 1) k = 1;
   var counted = eccScalarMulCounted(k, _eccState.gen, _eccState.a, _eccState.p);
   var naive = Math.max(0, k - 1);
-  var html = '<div>الجمع المتكرر (naive repeated addition): ' + naive + ' ops</div>';
-  html += '<div style="margin-top:4px">المضاعفة والجمع (double-and-add): ' + counted.doublings + ' doublings + ' + counted.additions + ' additions</div>';
+  var html = '<div>' + t('ecc_naive_add') + ': ' + naive + ' ' + t('ecc_ops_unit') + '</div>';
+  html += '<div style="margin-top:4px">' + t('ecc_double_add') + ': ' + counted.doublings + ' ' + t('ecc_doublings_unit') + ' + ' + counted.additions + ' ' + t('ecc_additions_unit') + '</div>';
   html += '<div style="margin-top:4px;font-family:var(--mono)" dir="ltr">k = ' + k + ' = 0b' + k.toString(2) + '</div>';
   document.getElementById('ecc-scalar-cost').innerHTML = html;
 }
@@ -15121,7 +15118,7 @@ function eccRunToOrder() {
   }
   eccDrawScatter(canvas, _eccState.points, { p: p, highlight: highlight });
   document.getElementById('ecc-scalar-list').innerHTML = listParts.join(' &rarr; ');
-  document.getElementById('ecc-scalar-order-out').textContent = 'رتبة النقطة (order of P) = ' + order;
+  document.getElementById('ecc-scalar-order-out').textContent = t('ecc_order_label') + ' = ' + order;
   _eccState.flags.scalar = true;
 }
 
@@ -15168,11 +15165,11 @@ function eccCheckDlpGuess() {
   var guess = parseInt(guessEl.value, 10);
   var resultEl = document.getElementById('ecc-dlp-result');
   if (guess === _eccState.dlp.secret) {
-    resultEl.innerHTML = '<span style="color:#10B981;font-weight:700">&#10003; Correct — k = ' + guess + '</span>';
+    resultEl.innerHTML = '<span style="color:#10B981;font-weight:700">&#10003; ' + t('ecc_correct_label') + ' — k = ' + guess + '</span>';
     _eccState.flags.dlp = true;
     eccMaybeComplete();
   } else {
-    resultEl.innerHTML = '<span style="color:#DC2626">&#10007; Not quite — جرّب القوة الغاشمة (try brute force)</span>';
+    resultEl.innerHTML = '<span style="color:#DC2626">&#10007; ' + t('ecc_not_quite') + '</span>';
   }
 }
 
@@ -15189,7 +15186,7 @@ function eccBruteForceDlp() {
     if (_eccPointEq(candidate, target)) {
       clearInterval(timer);
       _eccState.dlp.timer = null;
-      document.getElementById('ecc-dlp-result').innerHTML = '<span style="color:#10B981;font-weight:700">k found in ' + k + ' steps</span>';
+      document.getElementById('ecc-dlp-result').innerHTML = '<span style="color:#10B981;font-weight:700">' + t('ecc_k_found') + ' ' + k + ' ' + t('ecc_dlp_steps_unit') + '</span>';
       _eccState.flags.dlp = true;
       eccMaybeComplete();
       return;
@@ -15241,7 +15238,7 @@ function runEccDh() {
   var html = 'A = aP = ' + eccPointLabel(A) + '<br>B = bP = ' + eccPointLabel(B) + '<br>';
   html += match
     ? '<span style="color:#10B981;font-weight:700">&#10003; S<sub>Alice</sub> = S<sub>Bob</sub> = ' + eccPointLabel(sAlice) + '</span>'
-    : '<span style="color:#DC2626">Mismatch — check inputs</span>';
+    : '<span style="color:#DC2626">' + t('ecc_dh_mismatch') + '</span>';
   document.getElementById('ecc-dh-output').innerHTML = html;
   _eccState.dh.A = A; _eccState.dh.B = B;
   if (match) { _eccState.flags.dh = true; eccMaybeComplete(); }
@@ -15260,7 +15257,7 @@ function eccEveAttack() {
     if (_eccPointEq(candidate, target)) {
       clearInterval(timer);
       _eccState.eveTimer = null;
-      resultEl.innerHTML = 'إيف وجدت (Eve found) a = ' + k + ' في ' + k + ' خطوة (steps). على منحنى حقيقي (on a real curve) هذا البحث يتطلب 2<sup>128</sup> عملية — ولهذا يكون p بحجم ٢٥٦ بت عمليًا (this is exactly why p is 256 bits in practice).';
+      resultEl.innerHTML = t('ecc_eve_found_prefix') + ' ' + k + ' ' + t('ecc_eve_found_steps') + ' ' + k + ' ' + t('ecc_dlp_steps_unit') + '. ' + t('ecc_eve_real_curve_note');
       return;
     }
     k++;
@@ -17890,6 +17887,54 @@ const i18n = {
     lab_coming_soon: 'This lab is coming soon', lab_not_found: 'Lab not found',
     activity_code_label: 'Go to Activity', activity_code_placeholder: 'Enter code (e.g. 1)',
     activity_code_go: 'Go', activity_code_invalid: 'Unknown activity code',
+    // ECC lab (Module 7 — Elliptic Curve Explorer)
+    ecc_subtitle: 'Toy-curve glass box · point arithmetic mod p · runs entirely in-browser',
+    ecc_note_summary: '📝 What this lab shows',
+    ecc_note_body: 'This is a toy curve glass box: every ECC operation you will use in production (P-256, Curve25519) works exactly this way, just with a 256-bit prime instead of p = 5, 17 or 23. Tab 1 shows the curve shape over real numbers for intuition. Tab 2 finds the actual points mod p — including the exact singular curve from Lecture 6\'s own worked example (Preset A), which is not a group and is locked to point-finding only. Tabs 3-6 use Presets B-D, where the points genuinely form a group: Tab 3 is point addition by hand, Tab 4 is scalar multiplication (kP) via double-and-add, Tab 5 is the Elliptic Curve Discrete Logarithm Problem (ECDLP) showing why kP is hard to invert, and Tab 6 is a toy Diffie-Hellman exchange showing why Eve — who hears every word — still cannot compute the shared secret.',
+    ecc_tab_shape: '1·Shape', ecc_tab_points: '2·Points mod p', ecc_tab_add: '3·Add',
+    ecc_tab_scalar: '4·kP', ecc_tab_dlp: '5·ECDLP', ecc_tab_dh: '6·ECDH',
+    ecc_preset_label: 'Curve preset',
+    ecc_preset_a_name: 'Lecture 6', ecc_preset_b_name: 'Small group',
+    ecc_preset_c_name: 'Paar-Pelzl', ecc_preset_d_name: 'Larger playground',
+    ecc_singular: 'singular', ecc_smooth: 'smooth',
+    ecc_chord_tangent_caption: 'Chord and tangent: P + Q = reflection of the third intersection',
+    ecc_symmetry_label: 'Symmetry',
+    ecc_point_infinity: 'point at infinity (O)',
+    ecc_singular_note: 'Singular curve: Δ ≡ 0 (mod 5) — valid for finding points only, not for group operations. The singular node (4, 0) is highlighted in red below.',
+    ecc_locked_add: 'Locked on Preset A — choose Preset B, C or D to try point addition.',
+    ecc_locked_scalar: 'Locked on Preset A — choose another preset to try scalar multiplication.',
+    ecc_locked_dlp: 'Locked on Preset A — choose another preset to try the ECDLP challenge.',
+    ecc_locked_dh: 'Locked on Preset A — choose another preset to try the ECDH exchange.',
+    ecc_compute_btn: '▶ Compute P + Q',
+    ecc_finite_field_caption: 'In a finite field the "line" wraps — the geometry lives in the algebra.',
+    ecc_generator_label: 'Generator P',
+    ecc_animate_btn: '▶ Animate', ecc_cancel_btn: 'Cancel', ecc_run_to_order_btn: '↻ Run to order',
+    ecc_dlp_definition: 'Elliptic Curve Discrete Logarithm Problem (ECDLP): given P and Q in the group generated by P, find k such that Q = kP.',
+    ecc_new_challenge_btn: '🎲 New challenge',
+    ecc_guess_label: 'Your guess for k', ecc_check_btn: 'Check', ecc_brute_force_btn: '▶ Brute force',
+    ecc_dlp_table_curve: 'Curve', ecc_dlp_table_cost: 'Cost', ecc_dlp_this_curve: 'This curve', ecc_dlp_steps_unit: 'steps',
+    ecc_dlp_row_p256: 'group size ≈ 2<sup>256</sup>, Pollard\'s rho ≈ 2<sup>128</sup> group operations',
+    ecc_dlp_row_ops: 'At 10<sup>9</sup> ops/s',
+    ecc_dlp_row_years: '≈ 10<sup>22</sup> years (age of the universe ≈ 1.4 × 10<sup>10</sup> years)',
+    ecc_alice_label: '👩 Alice', ecc_bob_label: '👨 Bob', ecc_eve_label: '👁️ Eve',
+    ecc_private_a_label: 'Private a', ecc_private_b_label: 'Private b', ecc_exchange_btn: '▶ Exchange',
+    ecc_eve_sees: 'Eve sees: P, A, B — but not a or b.', ecc_eve_tries_btn: '👁 Eve tries',
+    ecc_bridge_title: 'Bridge to reality', ecc_nist_table_sec: 'Security bits',
+    ecc_nist_footnote: 'Table follows NIST SP 800-57. Lecture 6\'s shorthand ("RSA-2048 for 128-bit") and Module 6\'s teaching (RSA-2048 ≈ 112-bit, per NFS estimates) both round the same curve — this table uses the NIST reference points.',
+    ecc_realworld_callout: 'Google Chrome defaults to ECDHE on TLS. WhatsApp key agreement uses Curve25519.',
+    ecc_try_real_btn: '→ Try the real thing: Web Crypto P-256 ECDH lab, Module 11',
+    ecc_qr_header: 'Quadratic residue?', ecc_yes: 'Yes', ecc_no: 'No',
+    ecc_case_doubling: 'Doubling', ecc_case_infinity: 'Adding the point at infinity', ecc_case_distinct: 'Distinct points',
+    ecc_modinv_note: 'Modular inverse via extended Euclid',
+    ecc_naive_add: 'Naive repeated addition', ecc_double_add: 'Double-and-add',
+    ecc_ops_unit: 'ops', ecc_doublings_unit: 'doublings', ecc_additions_unit: 'additions',
+    ecc_order_label: 'Order of P', ecc_correct_label: 'Correct',
+    ecc_not_quite: 'Not quite — try brute force', ecc_k_found: 'k found in',
+    ecc_dh_mismatch: 'Mismatch — check inputs',
+    ecc_eve_found_prefix: 'Eve found a =', ecc_eve_found_steps: 'in',
+    ecc_eve_real_curve_note: 'On a real curve this search requires 2<sup>128</sup> operations — this is exactly why p is 256 bits in practice.',
+    ecc_selftest_pass_prefix: 'Self-test passed —', ecc_selftest_curves_unit: 'curves',
+    ecc_selftest_assertions_unit: 'assertions verified', ecc_selftest_fail_prefix: 'Self-test FAILED:',
   },
   ar: {
     // Navigation
@@ -18022,6 +18067,54 @@ const i18n = {
     lab_coming_soon: 'هذا المختبر قادم قريبًا', lab_not_found: 'المختبر غير موجود',
     activity_code_label: 'الانتقال إلى نشاط', activity_code_placeholder: 'أدخل الرمز (مثال: 1)',
     activity_code_go: 'انتقال', activity_code_invalid: 'رمز النشاط غير معروف',
+    // ECC lab (Module 7 — Elliptic Curve Explorer)
+    ecc_subtitle: 'صندوق زجاجي لمنحنى مصغّر · عمليات حسابية على النقاط modulo p · يعمل بالكامل داخل المتصفح',
+    ecc_note_summary: '📝 ما الذي يعرضه هذا المختبر',
+    ecc_note_body: 'هذا صندوق زجاجي لمنحنى مصغّر: كل عملية من عمليات التشفير بالمنحنى الإهليلجي المستخدمة فعليًا (مثل P-256 أو Curve25519) تعمل بالطريقة نفسها تمامًا، فقط باستخدام عدد أولي بحجم 256 بت بدلاً من p = 5 أو 17 أو 23. يعرض التبويب الأول شكل المنحنى على الأعداد الحقيقية للتوضيح. يجد التبويب الثاني النقاط الفعلية بترميز modulo p — بما في ذلك المنحنى الشاذ نفسه من مثال المحاضرة 6 (الإعداد أ)، وهو ليس مجموعة رياضية ولذلك يُقفل على إيجاد النقاط فقط. تستخدم التبويبات 3-6 الإعدادات ب-د حيث تُشكّل النقاط مجموعة حقيقية: التبويب 3 هو جمع النقاط يدويًا، والتبويب 4 هو الضرب القياسي (kP) عبر خوارزمية المضاعفة والجمع، والتبويب 5 هو مسألة اللوغاريتم المتقطع على المنحنى الإهليلجي (ECDLP) التي توضح صعوبة عكس kP، والتبويب 6 هو تبادل مفاتيح Diffie-Hellman تجريبي يوضح لماذا لا تستطيع إيف — التي تسمع كل كلمة — حساب السر المشترك.',
+    ecc_tab_shape: '١ · الشكل', ecc_tab_points: '٢ · نقاط mod p', ecc_tab_add: '٣ · الجمع',
+    ecc_tab_scalar: '٤ · kP', ecc_tab_dlp: '٥ · ECDLP', ecc_tab_dh: '٦ · ECDH',
+    ecc_preset_label: 'إعداد المنحنى',
+    ecc_preset_a_name: 'محاضرة 6', ecc_preset_b_name: 'مجموعة صغيرة',
+    ecc_preset_c_name: 'Paar-Pelzl', ecc_preset_d_name: 'ملعب أكبر',
+    ecc_singular: 'شاذ', ecc_smooth: 'أملس',
+    ecc_chord_tangent_caption: 'القاطع والمماس: P + Q = انعكاس نقطة التقاطع الثالثة',
+    ecc_symmetry_label: 'تناظر',
+    ecc_point_infinity: 'نقطة اللانهاية (O)',
+    ecc_singular_note: 'منحنى شاذ: Δ ≡ 0 (mod 5) — صالح لإيجاد النقاط فقط، وليس لعمليات المجموعة. النقطة الشاذة (4, 0) مُبرزة بالأحمر أدناه.',
+    ecc_locked_add: 'مقفل على الإعداد أ — اختر الإعداد ب أو ج أو د لتجربة جمع النقاط.',
+    ecc_locked_scalar: 'مقفل على الإعداد أ — اختر إعدادًا آخر لتجربة الضرب القياسي.',
+    ecc_locked_dlp: 'مقفل على الإعداد أ — اختر إعدادًا آخر لتجربة تحدي ECDLP.',
+    ecc_locked_dh: 'مقفل على الإعداد أ — اختر إعدادًا آخر لتجربة تبادل ECDH.',
+    ecc_compute_btn: '▶ احسب P + Q',
+    ecc_finite_field_caption: 'في الحقل المنتهي لا يظهر "الخط" كخط مستقيم — الهندسة تكمن في الجبر.',
+    ecc_generator_label: 'المولّد P',
+    ecc_animate_btn: '▶ تشغيل', ecc_cancel_btn: 'إلغاء', ecc_run_to_order_btn: '↻ التشغيل حتى الرتبة',
+    ecc_dlp_definition: 'مسألة اللوغاريتم المتقطع على المنحنى الإهليلجي (ECDLP): بمعلومية P وQ ضمن المجموعة التي يولّدها P، أوجد k بحيث Q = kP.',
+    ecc_new_challenge_btn: '🎲 تحدٍّ جديد',
+    ecc_guess_label: 'تخمينك لقيمة k', ecc_check_btn: 'تحقق', ecc_brute_force_btn: '▶ القوة الغاشمة',
+    ecc_dlp_table_curve: 'المنحنى', ecc_dlp_table_cost: 'التكلفة', ecc_dlp_this_curve: 'هذا المنحنى', ecc_dlp_steps_unit: 'خطوة',
+    ecc_dlp_row_p256: 'حجم المجموعة ≈ 2<sup>256</sup>، خوارزمية بولارد rho ≈ 2<sup>128</sup> عملية على المجموعة',
+    ecc_dlp_row_ops: 'بمعدل 10<sup>9</sup> عملية/ثانية',
+    ecc_dlp_row_years: '≈ 10<sup>22</sup> سنة (عمر الكون ≈ 1.4 × 10<sup>10</sup> سنة)',
+    ecc_alice_label: '👩 أليس', ecc_bob_label: '👨 بوب', ecc_eve_label: '👁️ إيف',
+    ecc_private_a_label: 'السر الخاص a', ecc_private_b_label: 'السر الخاص b', ecc_exchange_btn: '▶ تبادل',
+    ecc_eve_sees: 'إيف ترى: P، A، B — ولا ترى a أو b.', ecc_eve_tries_btn: '👁 محاولة إيف',
+    ecc_bridge_title: 'الجسر إلى الواقع', ecc_nist_table_sec: 'بتات الأمان',
+    ecc_nist_footnote: 'يتبع الجدول معيار NIST SP 800-57. اختصار المحاضرة 6 ("RSA-2048 يعادل 128 بت") وتعليم الوحدة 6 (RSA-2048 ≈ 112 بت وفق تقديرات NFS) كلاهما تقريب لنفس المنحنى — يعتمد هذا الجدول نقاط مرجع NIST.',
+    ecc_realworld_callout: 'يعتمد متصفح Google Chrome افتراضيًا على ECDHE في TLS. يستخدم واتساب Curve25519 في تبادل المفاتيح.',
+    ecc_try_real_btn: '← جرّب النسخة الحقيقية: مختبر ECDH الحقيقي (Web Crypto P-256)، الوحدة 11',
+    ecc_qr_header: 'باقٍ تربيعي؟', ecc_yes: 'نعم', ecc_no: 'لا',
+    ecc_case_doubling: 'مضاعفة', ecc_case_infinity: 'الجمع مع نقطة اللانهاية', ecc_case_distinct: 'نقطتان مختلفتان',
+    ecc_modinv_note: 'المعكوس الضربي عبر خوارزمية إقليدس الممتدة',
+    ecc_naive_add: 'الجمع المتكرر الساذج', ecc_double_add: 'المضاعفة والجمع',
+    ecc_ops_unit: 'عملية', ecc_doublings_unit: 'عمليات مضاعفة', ecc_additions_unit: 'عمليات جمع',
+    ecc_order_label: 'رتبة النقطة P', ecc_correct_label: 'صحيح',
+    ecc_not_quite: 'ليس تمامًا — جرّب القوة الغاشمة', ecc_k_found: 'تم إيجاد k خلال',
+    ecc_dh_mismatch: 'عدم تطابق — تحقق من المدخلات',
+    ecc_eve_found_prefix: 'إيف وجدت a =', ecc_eve_found_steps: 'خلال',
+    ecc_eve_real_curve_note: 'على منحنى حقيقي، يتطلب هذا البحث 2<sup>128</sup> عملية — ولهذا يكون p بحجم 256 بت عمليًا.',
+    ecc_selftest_pass_prefix: 'اجتاز الاختبار الذاتي —', ecc_selftest_curves_unit: 'منحنيات',
+    ecc_selftest_assertions_unit: 'تأكيدًا تم التحقق منها', ecc_selftest_fail_prefix: 'فشل الاختبار الذاتي:',
   }
 };
 
