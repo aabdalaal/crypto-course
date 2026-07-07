@@ -29,6 +29,7 @@
   --danger: #EF4444;
   --danger-l: #FEE2E2;
   --purple: #8B5CF6;
+  --purple-d: #6D28D9;
   --purple-l: #EDE9FE;
   --bg: #F0F4FF;
   --surface: #FFFFFF;
@@ -965,33 +966,64 @@ body {
 .sr-section-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
 .sr-section-title { font-size: 12px; font-weight: 800; color: var(--primary); text-transform: uppercase; letter-spacing: 0.07em; display: flex; align-items: center; gap: 6px; }
 .sr-section-count { font-size: 11px; font-weight: 700; padding: 3px 10px; border-radius: 100px; background: var(--primary-l); color: var(--primary); }
-.sr-flashcard { background: var(--surface); border: 2px solid var(--border); border-radius: var(--radius); overflow: hidden; transition: border-color 0.3s; }
-.sr-flashcard.sr-answered { border-color: var(--secondary); }
-.sr-card-body { padding: 18px 20px 14px; }
-.sr-card-from { font-size: 10px; font-weight: 800; color: var(--text2); text-transform: uppercase; letter-spacing: 0.07em; margin-bottom: 8px; opacity: 0.7; }
+.sr-flashcard {
+  position: relative; background: linear-gradient(180deg, var(--secondary-l) 0%, var(--surface) 45%);
+  border: 2px solid var(--secondary); border-radius: var(--radius); overflow: hidden;
+  box-shadow: 0 10px 26px -14px rgba(16,185,129,0.4);
+  transition: border-color 0.3s, box-shadow 0.3s;
+}
+.sr-flashcard::before {
+  content: ''; position: absolute; inset: 0 0 auto 0; height: 5px;
+  background: linear-gradient(90deg, var(--secondary), var(--secondary-d));
+}
+.sr-flashcard.sr-answered { border-color: var(--secondary-d); }
+.sr-card-body { padding: 20px 20px 14px; }
+.sr-card-from {
+  display: inline-flex; align-items: center; font-size: 10px; font-weight: 800; color: var(--secondary-d);
+  text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 10px;
+  background: var(--secondary-l); padding: 4px 10px; border-radius: 100px;
+}
 .sr-card-question { font-size: 15px; font-weight: 700; color: var(--text); line-height: 1.6; }
 .sr-card-footer { padding: 0 20px 18px; }
-.sr-show-btn { width: 100%; padding: 12px; background: var(--primary); color: white; border: none; border-radius: var(--radius-xs); font-size: 14px; font-weight: 700; font-family: var(--font); cursor: pointer; transition: opacity 0.15s; }
-.sr-show-btn:active { opacity: 0.85; }
-.sr-answer-reveal { border-top: 1.5px solid var(--secondary); padding: 16px 20px 0; background: var(--secondary-l); animation: srReveal 0.28s cubic-bezier(0.16,1,0.3,1) both; }
-@keyframes srReveal { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+.sr-show-btn { width: 100%; padding: 12px; background: var(--primary); color: white; border: none; border-radius: var(--radius-xs); font-size: 14px; font-weight: 700; font-family: var(--font); cursor: pointer; transition: opacity 0.15s, transform 0.15s; }
+.sr-show-btn:hover { transform: translateY(-1px); }
+.sr-show-btn:active { opacity: 0.85; transform: none; }
+.sr-answer-reveal {
+  border-top: 1.5px solid var(--secondary); padding: 16px 20px 0; background: var(--secondary-l);
+  animation: srReveal 0.38s cubic-bezier(0.34,1.4,0.4,1) both; transform-origin: top center;
+}
+@keyframes srReveal { from { opacity: 0; transform: translateY(8px) scaleY(0.96); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) {
+  .sr-answer-reveal { animation: srRevealReduced 0.2s ease both; }
+}
+@keyframes srRevealReduced { from { opacity: 0; } to { opacity: 1; } }
 .sr-answer-label { font-size: 10px; font-weight: 800; color: var(--secondary-d); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 6px; }
 .sr-answer-text { font-size: 15px; font-weight: 700; color: var(--secondary-d); line-height: 1.55; margin-bottom: 6px; }
 .sr-why-text { font-size: 12px; color: var(--secondary-d); line-height: 1.55; opacity: 0.85; margin-bottom: 14px; }
 .sr-rating-prompt { font-size: 13px; font-weight: 700; color: var(--secondary-d); margin-bottom: 10px; }
 .sr-rating-btns { display: flex; gap: 8px; padding-bottom: 18px; }
-.sr-btn-hard { flex: 1; padding: 11px 8px; background: var(--surface); border: 2px solid var(--border); border-radius: var(--radius-xs); font-size: 13px; font-weight: 700; font-family: var(--font); cursor: pointer; color: var(--text2); transition: all 0.15s; }
-.sr-btn-hard:active { background: #FEF2F2; border-color: var(--danger); color: var(--danger); }
+.sr-btn-hard { flex: 1; padding: 11px 8px; background: var(--surface); border: 2px solid var(--accent-d2); border-radius: var(--radius-xs); font-size: 13px; font-weight: 700; font-family: var(--font); cursor: pointer; color: var(--accent-d2); transition: all 0.15s; }
+.sr-btn-hard:hover { background: var(--accent-l); }
+.sr-btn-hard:active { background: var(--accent-d2); border-color: var(--accent-d2); color: #fff; }
 .sr-btn-got { flex: 1; padding: 11px 8px; background: var(--secondary); border: 2px solid var(--secondary); border-radius: var(--radius-xs); font-size: 13px; font-weight: 700; font-family: var(--font); cursor: pointer; color: white; transition: opacity 0.15s; }
 .sr-btn-got:active { opacity: 0.82; }
 .sr-progress { display: flex; align-items: center; justify-content: center; gap: 6px; padding: 12px 0 4px; }
-.sr-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--border); transition: background 0.3s, transform 0.3s; flex-shrink: 0; }
-.sr-dot.sr-dot-active { background: var(--primary); transform: scale(1.45); }
+.sr-dot { width: 8px; height: 8px; border-radius: 100px; background: var(--border); transition: background 0.3s, width 0.3s cubic-bezier(0.34,1.56,0.64,1); flex-shrink: 0; }
+.sr-dot.sr-dot-active { background: var(--primary); width: 20px; }
 .sr-dot.sr-dot-done { background: var(--secondary); }
 .sr-progress-label { font-size: 12px; color: var(--text2); font-weight: 600; margin-left: 6px; }
 .sr-skip-btn { display: block; width: 100%; text-align: center; margin-top: 8px; font-size: 13px; color: var(--text2); background: none; border: none; font-family: var(--font); cursor: pointer; padding: 6px; transition: color 0.2s; }
 .sr-skip-btn:hover { color: var(--primary); }
-.sr-complete-card { background: var(--secondary-l); border: 1.5px solid var(--secondary); border-radius: var(--radius-sm); padding: 16px 18px; display: flex; align-items: center; gap: 12px; }
+.sr-complete-card {
+  position: relative; background: linear-gradient(180deg, var(--secondary-l) 0%, var(--surface) 55%);
+  border: 1.5px solid var(--secondary); border-radius: var(--radius-sm); padding: 16px 18px;
+  display: flex; align-items: center; gap: 12px; overflow: hidden;
+  box-shadow: 0 10px 26px -14px rgba(16,185,129,0.35);
+}
+.sr-complete-card::before {
+  content: ''; position: absolute; inset: 0 0 auto 0; height: 5px;
+  background: linear-gradient(90deg, var(--secondary), var(--secondary-d));
+}
 .sr-complete-icon { font-size: 24px; flex-shrink: 0; }
 .sr-complete-text { font-size: 14px; font-weight: 700; color: var(--secondary-d); line-height: 1.4; }
 .sr-complete-sub { font-size: 12px; color: var(--secondary-d); opacity: 0.75; margin-top: 3px; }
@@ -1359,46 +1391,149 @@ body.high-contrast {
 .fc-deck { margin-top: 8px; user-select: none; overflow: hidden; border-radius: var(--radius-sm); }
 .fc-swipe-wrapper { width: 100%; will-change: transform; }
 .fc-scene {
-  perspective: 700px;
+  perspective: 900px;
   width: 100%; min-height: 170px;
   cursor: pointer; -webkit-tap-highlight-color: transparent;
+  border-radius: var(--radius-sm);
+  transition: transform 0.25s cubic-bezier(0.34,1.56,0.64,1);
 }
+@media (hover: hover) and (pointer: fine) {
+  .fc-scene:hover { transform: translateY(-4px); }
+}
+.fc-scene:active { transform: scale(0.97); }
 .fc-inner {
   position: relative; width: 100%; min-height: 170px;
+  display: grid;
   transform-style: preserve-3d;
-  transition: transform 0.45s cubic-bezier(0.4,0,0.2,1);
+  transition: transform 0.55s cubic-bezier(0.34,1.15,0.34,1);
 }
 .fc-inner.flipped { transform: rotateY(180deg); }
 .fc-face {
-  position: absolute; inset: 0;
+  grid-area: 1 / 1;
+  position: relative;
+  width: 100%; min-height: 170px;
   backface-visibility: hidden; -webkit-backface-visibility: hidden;
   border-radius: var(--radius-sm);
   display: flex; flex-direction: column;
   align-items: center; justify-content: center;
-  padding: 24px 20px; text-align: center;
+  padding: 28px 22px; text-align: center;
   border: 2px solid var(--primary);
+  overflow: hidden;
 }
-.fc-face-front { background: white; }
-.fc-face-back  { background: var(--primary-l); transform: rotateY(180deg); border-color: var(--primary-d); }
+.fc-face-front {
+  background: linear-gradient(180deg, var(--primary-l) 0%, var(--surface) 58%);
+  box-shadow: 0 10px 26px -14px rgba(37,99,235,0.4);
+}
+.fc-face-front::before {
+  content: ''; position: absolute; inset: 0 0 auto 0; height: 5px;
+  background: linear-gradient(90deg, var(--primary), var(--primary-d));
+}
+.fc-face-front::after {
+  content: ''; position: absolute; top: -34px; right: -34px; width: 110px; height: 110px;
+  background-image:
+    repeating-linear-gradient(45deg, var(--primary) 0 2px, transparent 2px 14px),
+    repeating-linear-gradient(-45deg, var(--primary) 0 2px, transparent 2px 14px);
+  border-radius: 50%; opacity: 0.08; pointer-events: none;
+}
+.fc-face-back {
+  background: linear-gradient(180deg, var(--secondary-l) 0%, var(--surface) 58%);
+  transform: rotateY(180deg); border-color: var(--secondary-d);
+  box-shadow: 0 10px 26px -14px rgba(16,185,129,0.4);
+}
+.fc-face-back::before {
+  content: ''; position: absolute; inset: 0 0 auto 0; height: 5px;
+  background: linear-gradient(90deg, var(--secondary), var(--secondary-d));
+}
+.fc-face-back::after {
+  content: '🔑'; position: absolute; bottom: -20px; right: -8px; font-size: 84px;
+  line-height: 1; opacity: 0.08; pointer-events: none;
+}
+/* Per-card harmonised hue cycle (index % 5) — front wash/border/ribbon + back border/ribbon echo the hue */
+.fc-hue-0 .fc-face-front { border-color: var(--primary); box-shadow: 0 10px 26px -14px rgba(37,99,235,0.4); }
+.fc-hue-1 .fc-face-front {
+  background: linear-gradient(180deg, var(--secondary-l) 0%, var(--surface) 58%);
+  border-color: var(--secondary); box-shadow: 0 10px 26px -14px rgba(16,185,129,0.4);
+}
+.fc-hue-1 .fc-face-front::before { background: linear-gradient(90deg, var(--secondary), var(--secondary-d)); }
+.fc-hue-1 .fc-face-front::after { background-image: repeating-linear-gradient(45deg, var(--secondary) 0 2px, transparent 2px 14px), repeating-linear-gradient(-45deg, var(--secondary) 0 2px, transparent 2px 14px); }
+.fc-hue-2 .fc-face-front {
+  background: linear-gradient(180deg, var(--accent-l) 0%, var(--surface) 58%);
+  border-color: var(--accent); box-shadow: 0 10px 26px -14px rgba(245,158,11,0.4);
+}
+.fc-hue-2 .fc-face-front::before { background: linear-gradient(90deg, var(--accent), var(--accent-d2)); }
+.fc-hue-2 .fc-face-front::after { background-image: repeating-linear-gradient(45deg, var(--accent) 0 2px, transparent 2px 14px), repeating-linear-gradient(-45deg, var(--accent) 0 2px, transparent 2px 14px); }
+.fc-hue-3 .fc-face-front {
+  background: linear-gradient(180deg, var(--purple-l) 0%, var(--surface) 58%);
+  border-color: var(--purple); box-shadow: 0 10px 26px -14px rgba(139,92,246,0.4);
+}
+.fc-hue-3 .fc-face-front::before { background: linear-gradient(90deg, var(--purple), var(--purple-d)); }
+.fc-hue-3 .fc-face-front::after { background-image: repeating-linear-gradient(45deg, var(--purple) 0 2px, transparent 2px 14px), repeating-linear-gradient(-45deg, var(--purple) 0 2px, transparent 2px 14px); }
+.fc-hue-4 .fc-face-front {
+  background: linear-gradient(180deg, var(--bg) 0%, var(--surface) 58%);
+  border-color: var(--text2); box-shadow: 0 10px 26px -14px rgba(71,85,105,0.35);
+}
+.fc-hue-4 .fc-face-front::before { background: linear-gradient(90deg, var(--text2), var(--text)); }
+.fc-hue-4 .fc-face-front::after { background-image: repeating-linear-gradient(45deg, var(--text2) 0 2px, transparent 2px 14px), repeating-linear-gradient(-45deg, var(--text2) 0 2px, transparent 2px 14px); }
+
+.fc-hue-0 .fc-face-back::before, .fc-hue-1 .fc-face-back::before { background: linear-gradient(90deg, var(--secondary), var(--secondary-d)); }
+.fc-hue-2 .fc-face-back { border-color: var(--accent-d2); }
+.fc-hue-2 .fc-face-back::before { background: linear-gradient(90deg, var(--accent), var(--accent-d2)); }
+.fc-hue-3 .fc-face-back { border-color: var(--purple-d); }
+.fc-hue-3 .fc-face-back::before { background: linear-gradient(90deg, var(--purple), var(--purple-d)); }
+.fc-hue-4 .fc-face-back { border-color: var(--text2); }
+.fc-hue-4 .fc-face-back::before { background: linear-gradient(90deg, var(--text2), var(--text)); }
+
+.fc-chip {
+  display: inline-flex; align-items: center; font-size: 10px; font-weight: 800;
+  letter-spacing: 0.05em; text-transform: uppercase; padding: 4px 11px;
+  border-radius: 100px; margin-bottom: 10px; background: var(--primary-l); color: var(--primary-d);
+  max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.fc-hue-1 .fc-chip { background: var(--secondary-l); color: var(--secondary-d); }
+.fc-hue-2 .fc-chip { background: var(--accent-l); color: var(--accent-d2); }
+.fc-hue-3 .fc-chip { background: var(--purple-l); color: var(--purple-d); }
+.fc-hue-4 .fc-chip { background: var(--bg); color: var(--text2); }
+
 .fc-label {
   font-size: 10px; font-weight: 700; letter-spacing: 0.08em;
   text-transform: uppercase; color: var(--muted); margin-bottom: 10px;
 }
-.fc-face-back .fc-label { color: var(--primary); }
-.fc-text { font-size: 17px; font-weight: 800; color: var(--text); line-height: 1.3; }
-.fc-face-back .fc-text { font-size: 14px; font-weight: 500; color: var(--text2); }
+.fc-face-back .fc-label { color: var(--secondary-d); }
+.fc-text { font-size: 17px; font-weight: 800; color: var(--text); line-height: 1.35; }
+.fc-face-back .fc-text { font-size: 14px; font-weight: 500; color: var(--text2); line-height: 1.7; }
 .fc-hint {
   font-size: 11px; color: var(--muted); margin-top: 12px;
   display: flex; align-items: center; gap: 4px;
 }
 .fc-nav { display: flex; gap: 10px; margin-top: 14px; align-items: center; }
-.fc-dots { display: flex; gap: 6px; flex: 1; justify-content: center; flex-wrap: wrap; }
+.fc-progress { display: flex; flex-direction: column; align-items: center; gap: 6px; flex: 1; }
+.fc-dots { display: flex; gap: 6px; justify-content: center; flex-wrap: wrap; }
 .fc-dot {
-  width: 7px; height: 7px; border-radius: 50%;
-  background: var(--border); transition: background 0.2s, transform 0.2s;
+  width: 7px; height: 7px; border-radius: 100px;
+  background: var(--border); transition: background 0.25s, width 0.25s cubic-bezier(0.34,1.56,0.64,1);
 }
-.fc-dot.active { background: var(--primary); transform: scale(1.3); }
+.fc-dot.active { background: var(--primary); width: 20px; }
 .fc-dot.seen   { background: var(--secondary); }
+.fc-counter { font-size: 11px; font-weight: 700; color: var(--muted); }
+.fc-complete-badge[hidden] { display: none; }
+.fc-complete-badge {
+  display: inline-flex; align-items: center; gap: 3px;
+  font-size: 11px; font-weight: 800; color: var(--secondary-d);
+}
+.fc-deck.fc-all-seen .fc-progress { animation: fcAllSeenGlow 1.8s ease-in-out infinite; }
+@keyframes fcAllSeenGlow {
+  0%, 100% { filter: none; }
+  50% { filter: drop-shadow(0 0 5px var(--secondary)); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .fc-scene, .fc-scene:hover, .fc-scene:active { transform: none !important; transition: none !important; }
+  .fc-inner { transition: none !important; transform: none !important; }
+  .fc-face-front, .fc-face-back { transform: none !important; transition: opacity 0.15s ease !important; }
+  .fc-face-back { opacity: 0; visibility: hidden; }
+  .fc-inner.flipped .fc-face-front { opacity: 0; visibility: hidden; }
+  .fc-inner.flipped .fc-face-back { opacity: 1; visibility: visible; }
+  .fc-deck.fc-all-seen .fc-progress { animation: none; }
+}
 
 /* ── Diagram (Mermaid) ──────────────────────────────────────── */
 .diagram-section { margin: 20px 0; }
@@ -17594,8 +17729,8 @@ function _srRenderSection(wrap) {
 
       <div class="sr-flashcard" id="sr-flashcard" role="group" aria-label="Review card">
         <div class="sr-card-body">
-          <div class="sr-card-from">From ${card.moduleName} · ${card.interval}-day check</div>
-          <div class="sr-card-question" id="sr-question">${card.question}</div>
+          <div class="sr-card-from">🔁 From ${card.moduleName} · ${card.interval}-day check</div>
+          <div class="sr-card-question" id="sr-question" dir="auto">${card.question}</div>
         </div>
         <div class="sr-card-footer" id="sr-card-footer">
           <button class="sr-show-btn" onclick="srShowAnswer()" aria-expanded="false" id="sr-show-btn">
@@ -17627,16 +17762,16 @@ function srShowAnswer() {
   if (flashcard) flashcard.classList.add('sr-answered');
 
   const whyHtml = card.why
-    ? `<div class="sr-why-text">${card.why}</div>`
+    ? `<div class="sr-why-text" dir="auto">${card.why}</div>`
     : '';
   const conceptHtml = card.concept
-    ? `<div style="font-size:11px;color:var(--secondary-d);opacity:0.7;margin-bottom:14px">📖 ${card.concept}</div>`
+    ? `<div style="font-size:11px;color:var(--secondary-d);opacity:0.7;margin-bottom:14px" dir="auto">📖 ${card.concept}</div>`
     : '';
 
   answerEl.innerHTML = `
     <div class="sr-answer-reveal" role="region" aria-label="Answer revealed" aria-live="polite">
       <div class="sr-answer-label">Here's what to remember:</div>
-      <div class="sr-answer-text">✓ ${card.answer}</div>
+      <div class="sr-answer-text" dir="auto">✓ ${card.answer}</div>
       ${whyHtml}
       ${conceptHtml}
       <div class="sr-rating-prompt">How well did you know this?</div>
@@ -26585,35 +26720,43 @@ function renderFlashcards(moduleId) {
   window._fcFlipped = false;
   window._fcSeen    = new Set();
 
+  const modName = getAllModules().find(m => m.id === moduleId)?.name || '';
+  const chipHtml = modName ? `<span class="fc-chip">${_escHtml(modName)}</span>` : '';
+
   const dotItems = cards.map(function(_, i) {
     return '<div class="fc-dot' + (i === 0 ? ' active' : '') + '" id="fc-dot-' + i + '"></div>';
   }).join('');
-  const dots = cards.length <= 12
-    ? '<div class="fc-dots">' + dotItems + '</div>'
-    : '<div id="fc-counter" style="font-size:12px;color:var(--muted);flex:1;text-align:center">1 / ' + cards.length + '</div>';
+  const dotsHtml = cards.length <= 12
+    ? '<div class="fc-dots" id="fc-dots">' + dotItems + '</div>'
+    : '';
 
   return `
     <div class="fc-deck" id="flashcard-deck">
       <div class="fc-swipe-wrapper" id="fc-swipe-wrapper">
-        <div class="fc-scene" id="fc-scene">
-          <div class="fc-inner" id="fc-inner">
+        <div class="fc-scene" id="fc-scene" tabindex="0" role="button" aria-label="Flashcard. Press Enter or Space to flip.">
+          <div class="fc-inner fc-hue-0" id="fc-inner">
             <div class="fc-face fc-face-front">
+              ${chipHtml}
               <div class="fc-label">Term</div>
-              <div class="fc-text" id="fc-front-text">${cards[0].front}</div>
+              <div class="fc-text" id="fc-front-text" dir="auto">${cards[0].front}</div>
               <div class="fc-hint">Tap to flip · Swipe to browse</div>
             </div>
             <div class="fc-face fc-face-back">
               <div class="fc-label">Definition</div>
-              <div class="fc-text" id="fc-back-text">${cards[0].back}</div>
+              <div class="fc-text" id="fc-back-text" dir="auto">${cards[0].back}</div>
               <div class="fc-hint">Tap to flip back · Swipe to browse</div>
             </div>
           </div>
         </div>
       </div>
       <div class="fc-nav">
-        <button class="btn btn-secondary btn-sm" onclick="prevFlashcard()" style="width:auto;padding:8px 16px">‹</button>
-        ${dots}
-        <button class="btn btn-primary btn-sm" onclick="nextFlashcard()" style="width:auto;padding:8px 16px">›</button>
+        <button class="btn btn-secondary btn-sm" onclick="prevFlashcard()" style="width:auto;padding:8px 16px" aria-label="Previous card">‹</button>
+        <div class="fc-progress" id="fc-progress">
+          ${dotsHtml}
+          <span class="fc-counter" id="fc-counter">1 / ${cards.length}</span>
+          <span class="fc-complete-badge" id="fc-complete-badge" hidden aria-hidden="true">✓</span>
+        </div>
+        <button class="btn btn-primary btn-sm" onclick="nextFlashcard()" style="width:auto;padding:8px 16px" aria-label="Next card">›</button>
       </div>
     </div>`;
 }
@@ -26637,17 +26780,25 @@ function flipFlashcard() {
 
 function nextFlashcard() {
   const cards = window._fcCards || [];
+  if (!cards.length) return;
   if (window._fcSeen) window._fcSeen.add(window._fcIdx || 0);
-  window._fcIdx = ((window._fcIdx || 0) + 1) % cards.length;
-  window._fcFlipped = false;
-  _fcUpdateCard();
+  _fcSlideOut(-1, () => {
+    window._fcIdx = ((window._fcIdx || 0) + 1) % cards.length;
+    window._fcFlipped = false;
+    _fcUpdateCard();
+    _fcSlideIn(-1);
+  });
 }
 
 function prevFlashcard() {
   const cards = window._fcCards || [];
-  window._fcIdx = ((window._fcIdx || 0) - 1 + cards.length) % cards.length;
-  window._fcFlipped = false;
-  _fcUpdateCard();
+  if (!cards.length) return;
+  _fcSlideOut(1, () => {
+    window._fcIdx = ((window._fcIdx || 0) - 1 + cards.length) % cards.length;
+    window._fcFlipped = false;
+    _fcUpdateCard();
+    _fcSlideIn(1);
+  });
 }
 
 function _fcUpdateCard() {
@@ -26663,7 +26814,8 @@ function _fcUpdateCard() {
   // Snap to front face without animation, then re-enable
   if (inner) {
     inner.style.transition = 'none';
-    inner.classList.remove('flipped');
+    inner.classList.remove('flipped', 'fc-hue-0', 'fc-hue-1', 'fc-hue-2', 'fc-hue-3', 'fc-hue-4');
+    inner.classList.add('fc-hue-' + (idx % 5));
     requestAnimationFrame(() => { inner.style.transition = ''; });
   }
   if (front) front.textContent = card.front;
@@ -26683,51 +26835,64 @@ function _fcUpdateDots() {
     dot.className = 'fc-dot' + (i === idx ? ' active' : seen.has(i) ? ' seen' : '');
   });
 
-  // Counter fallback (shown when > 12 cards)
+  // Counter (always shown; dots also shown when <= 12 cards)
   const counter = document.getElementById('fc-counter');
   if (counter) counter.textContent = `${idx + 1} / ${cards.length}`;
+
+  // Completion celebration once every card in the deck has been flipped
+  const allSeen = cards.length > 0 && seen.size >= cards.length;
+  const badge = document.getElementById('fc-complete-badge');
+  if (badge) badge.hidden = !allSeen;
+  const deck = document.getElementById('flashcard-deck');
+  if (deck) deck.classList.toggle('fc-all-seen', allSeen);
 }
 
-// Tap-to-flip + swipe-to-navigate
-(function () {
-  let _sx = 0, _sy = 0, _dragging = false, _lastFlipTime = 0;
+// Shared slide-out/slide-in used by both next/prevFlashcard and the swipe gesture below
+function _fcWrap() { return document.getElementById('fc-swipe-wrapper'); }
 
-  // Drag target is the wrapper — keeps #fc-scene's perspective CSS clean
-  function _wrap() { return document.getElementById('fc-swipe-wrapper'); }
+function _fcReducedMotion() {
+  return !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+}
 
-  function _slideOut(dir, cb) {
-    const w = _wrap(); if (!w) { cb(); return; }
-    w.style.transition = 'transform 0.22s ease-in, opacity 0.22s ease-in';
-    w.style.transform  = `translateX(${dir < 0 ? '-110%' : '110%'}) rotate(${dir < 0 ? -6 : 6}deg)`;
-    w.style.opacity    = '0';
-    setTimeout(cb, 230);
-  }
+function _fcSlideOut(dir, cb) {
+  const w = _fcWrap();
+  if (!w || _fcReducedMotion()) { cb(); return; }
+  w.style.transition = 'transform 0.22s ease-in, opacity 0.22s ease-in';
+  w.style.transform  = `translateX(${dir < 0 ? '-110%' : '110%'}) rotate(${dir < 0 ? -6 : 6}deg)`;
+  w.style.opacity    = '0';
+  setTimeout(cb, 230);
+}
 
-  function _slideIn(fromDir) {
-    const w = _wrap(); if (!w) return;
-    w.style.transition = 'none';
-    w.style.transform  = `translateX(${fromDir < 0 ? '80%' : '-80%'})`;
-    w.style.opacity    = '0';
-    requestAnimationFrame(() => requestAnimationFrame(() => {
-      w.style.transition = 'transform 0.3s cubic-bezier(0.2,0,0,1), opacity 0.22s ease-out';
-      w.style.transform  = '';
-      w.style.opacity    = '';
-    }));
-  }
-
-  function _snapBack() {
-    const w = _wrap(); if (!w) return;
-    w.style.transition = 'transform 0.35s cubic-bezier(0.2,0,0,1), opacity 0.2s ease-out';
+function _fcSlideIn(fromDir) {
+  const w = _fcWrap();
+  if (!w || _fcReducedMotion()) return;
+  w.style.transition = 'none';
+  w.style.transform  = `translateX(${fromDir < 0 ? '80%' : '-80%'})`;
+  w.style.opacity    = '0';
+  requestAnimationFrame(() => requestAnimationFrame(() => {
+    w.style.transition = 'transform 0.3s cubic-bezier(0.2,0,0,1), opacity 0.22s ease-out';
     w.style.transform  = '';
     w.style.opacity    = '';
-  }
+  }));
+}
+
+function _fcSnapBack() {
+  const w = _fcWrap(); if (!w) return;
+  w.style.transition = 'transform 0.35s cubic-bezier(0.2,0,0,1), opacity 0.2s ease-out';
+  w.style.transform  = '';
+  w.style.opacity    = '';
+}
+
+// Tap-to-flip + swipe-to-navigate + keyboard flip
+(function () {
+  let _sx = 0, _sy = 0, _dragging = false, _lastFlipTime = 0;
 
   document.addEventListener('touchstart', e => {
     if (!e.target.closest('#flashcard-deck')) return;
     _sx = e.touches[0].clientX;
     _sy = e.touches[0].clientY;
     _dragging = false;
-    const w = _wrap();
+    const w = _fcWrap();
     if (w) w.style.transition = 'none'; // instant tracking during drag
   }, { passive: true });
 
@@ -26737,7 +26902,7 @@ function _fcUpdateDots() {
     const dy = e.touches[0].clientY - _sy;
     if (!_dragging && Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 6) _dragging = true;
     if (!_dragging) return;
-    const w = _wrap();
+    const w = _fcWrap();
     if (w) {
       w.style.transform = `translateX(${dx}px) rotate(${dx * 0.02}deg)`;
       w.style.opacity   = `${1 - Math.min(Math.abs(dx) / 200, 1) * 0.5}`;
@@ -26751,16 +26916,14 @@ function _fcUpdateDots() {
     const now = Date.now();
 
     if (_dragging && Math.abs(dx) > 50) {
-      _slideOut(dx, () => {
-        dx < 0 ? nextFlashcard() : prevFlashcard();
-        _slideIn(dx);
-      });
+      // next/prevFlashcard take over the in-flight drag transform and slide it the rest of the way
+      dx < 0 ? nextFlashcard() : prevFlashcard();
     } else if (!_dragging && Math.abs(dx) < 12 && Math.abs(dy) < 12) {
       // Tap — flip; suppress the 300ms ghost click browsers fire after touchend
-      _snapBack();
+      _fcSnapBack();
       if (now - _lastFlipTime > 350) { flipFlashcard(); _lastFlipTime = now; }
     } else {
-      _snapBack();
+      _fcSnapBack();
     }
     _dragging = false;
   }, { passive: true });
@@ -26769,6 +26932,17 @@ function _fcUpdateDots() {
   document.addEventListener('click', e => {
     if (!e.target.closest('#fc-scene')) return;
     if (Date.now() - _lastFlipTime < 400) return;
+    _lastFlipTime = Date.now();
+    flipFlashcard();
+  });
+
+  // Keyboard flip — Enter / Space (fc-scene is tabindex="0" role="button")
+  document.addEventListener('keydown', e => {
+    if (!e.target.closest('#fc-scene')) return;
+    if (e.key !== 'Enter' && e.key !== ' ' && e.key !== 'Spacebar') return;
+    e.preventDefault();
+    if (Date.now() - _lastFlipTime < 400) return;
+    _lastFlipTime = Date.now();
     flipFlashcard();
   });
 })();
