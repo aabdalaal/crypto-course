@@ -2280,9 +2280,9 @@ body.high-contrast {
 // Bump on EVERY deploy; keep sw.js CACHE_NAME in lockstep.
 // MAJOR = breaking data/schema change · MINOR = feature batch · PATCH = fix
 // ============================================================
-const APP_VERSION = '1.0.3';
+const APP_VERSION = '1.1.0';
 const APP_VERSION_DATE = '2026-06-29';
-const WHATS_NEW = 'Fixed: deleting a semester now removes it from the server so it stops showing up on the student join screen.';
+const WHATS_NEW = 'New lab: Post-Quantum Cryptography (معمل 54) — activity code 54. Compute Shor/Grover impact per primitive, run a real Lamport one-time signature over SHA-256, and browse the five PQC families plus NIST FIPS 203/204/205. This completes all six planned labs (49–54); with the rewired labs (55–57), the app now covers every chapter of the book.';
 
 // EmailJS — student email verification. These travel with the file (USB/WhatsApp/web).
 // Public keys are safe in client-side code; EmailJS is designed for browser use.
@@ -7883,6 +7883,69 @@ function renderModules() {
 }
 
 // ============================================================
+// LAB OVERRIDES — stage-4 content objects for labs not hosted as any
+// module's default lab. A deep-link entry carrying `labOverride` renders
+// this content at stage 4 of the host module instead of mod.content.stage4
+// (identical XP, completion, and recall hooks via completeLabStage).
+// ============================================================
+const LAB_OVERRIDES = {
+  attacks_lab: {
+    type: 'lab',
+    heading: 'Lab: Timing Side-Channels & Integer Factorisation',
+    scenario: '🔬 Attacks Lab: Break a system without touching its mathematics. First, probe a leaky tag-comparison routine that checks HMAC bytes one at a time and bails out early — measure response times, recover the secret tag byte by byte, then flip on the constant-time comparison and watch the leak vanish. Second, race trial division against Fermat and Pollard rho to factor RSA-style moduli and see how the gap between "close" and "random" primes decides the winner.',
+    labId: 'attacks_lab'
+  },
+  pqc_lab: {
+    type: 'lab',
+    heading: 'معمل التشفير ما بعد الكمّيّ (Post-Quantum Cryptography)',
+    scenario: 'الحاسوبُ الكموميّ إن بُني بحجمٍ كافٍ يغيّر قواعدَ اللعبة: خوارزمية شور تكسر RSA وديفي–هيلمان والمنحنيات تمامًا، وخوارزمية غروفر تنصّف أمانَ المتناظر والاختزال. استكشف ثلاث أدوات: حاسبةَ أثر شور وغروفر على كلّ بنية، وتوقيعَ لامبورت لمرّةٍ واحدة بـ SHA-256 حقيقيّ (أساس عائلة التواقيع المبنيّة على الاختزال SLH-DSA)، وجدولَ عائلات ما بعد الكمّ الخمس ومعايير NIST المعتمَدة (FIPS 203/204/205). استكشِف الثلاث لإكمال المعمل — وبه يكتمل خيطُ الكتاب.',
+    labId: 'pqc_lab'
+  },
+  tls13_lab: {
+    type: 'lab',
+    heading: 'معمل مصافحة TLS 1.3 (تتويج الخيط)',
+    scenario: 'تجمع TLS 1.3 كلَّ خيوط الباب في مصافحةٍ واحدةٍ سريعة: تبادلٌ عابرٌ لديفي–هيلمان يعطي السرّيةَ الأمامية، وتوقيعُ الخادم على نصّ المصافحة يطبّق فكرةَ STS فيصادق الهويّةَ ويصدّ الوسيط، والشهادةُ تأتي من بنية المفاتيح العامّة. امضِ في المصافحة رسالةً رسالة — ClientHello ثم ServerHello ثم Certificate/CertificateVerify ثم Finished — وشاهد سلّمَ المفاتيح يُشتَقّ بـ HMAC-SHA-256 حقيقيّ، ثم فعّل تدخّل مالوري لترى كيف يُفشلها توقيعُ الخادم. أكمِل الرسائل الأربع لإتمام المعمل.',
+    labId: 'tls13_lab'
+  },
+  dh_mitm_lab: {
+    type: 'lab',
+    heading: 'معمل الوسيط (MITM) ضدّ ديفي–هيلمان الخام',
+    scenario: 'ديفي–هيلمان يضمن السرّيةَ ضدّ المتنصّت السلبيّ (إيف)، لكنّه لا يصادق: لا شيء يربط الأُسَّ العلنيَّ بهوية مرسِله. هنا تجلس مالوري (المهاجمة النشطة) في منتصف القناة، فتعترض إسهامَي أليس وبوب وتحلّ محلّهما بأُسّها M = gᵐ، فتشتقّ مفتاحَين منفصلَين — واحدًا مع كلٍّ منهما — وتُرحِّل الرسائلَ شفّافةً بينهما. نفّذ التبادلَ الأمين أوّلًا لترى المفتاح الواحد، ثم شغّل هجوم مالوري لترى المفتاحَين، ثم استكشف العلاج (توقيع STS وربطُ الهويّتين في اشتقاق المفتاح). يجسّد جدولَ هجوم الباب 12 بوسائطَ صغيرة (p=23، g=5).',
+    labId: 'dh_mitm_lab'
+  },
+  totp_lab: {
+    type: 'lab',
+    heading: 'معمل كلمات المرور لمرّة (TOTP) والمصادقة الثنائية (2FA)',
+    scenario: 'العاملُ الثاني «شيءٌ تملكه»: تطبيقٌ في هاتفك والخادمُ يتقاسمان سرًّا واحدًا، فيشتقّ كلٌّ منهما بمفرده رمزًا مؤقّتًا يتغيّر كلَّ ثلاثين ثانية — دون أن يُرسَل السرُّ في القناة قطّ. تولّد الرمزَ بخوارزمية TOTP (RFC 6238) القائمة على HOTP (RFC 4226) وHMAC حقيقيّ، ثم تتحقّق منه كما يفعل الخادم، وتستكشف نافذةَ التسامح التي تعالج انجرافَ الساعات وتوازن بينه وبين خطر إعادة الإرسال. ولّد رمزًا، وتحقّق منه، وجرّب النافذة لإكمال المعمل. (يجسّد شكلَي الباب 10: مثال 2FA وطريقة عمل TOTP.)',
+    labId: 'totp_lab'
+  },
+  shamir_lab: {
+    type: 'lab',
+    heading: 'معمل تقاسم أسرار شامير (Shamir Secret Sharing)',
+    scenario: 'وزّع سرًّا بحيث لا يملكه أحدٌ وحده. تُخبّئ خوارزمية شامير السرَّ في الحدّ الثابت لكثيرةِ حدود، وتُعطي كلَّ مشاركٍ نقطةً عليها كحصّة. يكفي تعاونُ t مشاركين لاستعادة السرّ بصيغة لاغرانج، ولا تكشف أيُّ t−1 حصّة عنه شيئًا. المثال الافتراضيّ هو مثال الباب 9 نفسه: السرّ 77 و‏f(x) = 77 + 28x بمخطّط (2 من 3). وزّع الحصص ثم استعِد السرّ لإكمال المعمل، وجرّب نمط الحقل الأوّليّ mod p للسرّية التامّة.',
+    labId: 'shamir_lab'
+  },
+  ddt_lat_lab: {
+    type: 'lab',
+    heading: 'معمل جداول التحليل التفاضليّ والخطّيّ (DDT / LAT)',
+    scenario: 'صندوق زجاجيّ للتحليل: تتبّع كيف يُسرِّب صندوقُ استبدالٍ صغير (3-بت) معلوماتٍ عن مفتاحه. اسرد الأزواج الثمانية لأيّ فرق مدخل Δx وعُدَّ فروق المخرج بيدك، ثم ابنِ جدول التوزيع التفاضليّ (DDT) كاملًا لترى أقوى مُمَيِّز، وأخيرًا جدول التقريب الخطّيّ (LAT) لترى أكبر انحياز. الصندوق الافتراضيّ هو صندوق الباب 13 نفسه: S = [1,0,3,4,5,6,7,2]. استكشِف ٣ أدوات لإكمال المعمل.',
+    labId: 'ddt_lat_lab'
+  },
+  number_theory_lab: {
+    type: 'lab',
+    heading: 'Lab: Number Theory Playground',
+    scenario: '🔬 Foundations Lab: Four hands-on tools behind every public-key system. Do modular arithmetic on seminar-sized numbers, walk the RSA trapdoor c = m^e mod n with square-and-multiply shown step by step, find modular inverses with the extended Euclidean algorithm, and test primality plus elliptic-curve non-singularity. Run any three tools to complete the lab.',
+    labId: 'number_theory_lab'
+  },
+  openssl_rsa_lab: {
+    type: 'lab',
+    heading: 'Lab: RSA Key Generation & Encryption — OpenSSL Mirror',
+    scenario: '🔬 Seminars 5 & 6 Lab: Replicate the RSA exercises from Seminars 5 and 6 in-browser. Generate RSA-1024 and RSA-2048 key pairs and compare their sizes. Inspect public key parameters (modulus n, public exponent e=65537). Encrypt a message with the public key and decrypt it with the private key. Compare RSA vs ECC key sizes for equivalent security. Implement RSA digital signatures (hash-and-sign) and verify them.',
+    labId: 'openssl_rsa_lab'
+  }
+};
+
+// ============================================================
 // LAB DEEP-LINK — QR-code & activity-code routing
 // Maps the short IDs printed on textbook QR codes to module labs.
 // tabFn defaults to switchCipherTab (Module 1's vigenere_lab tab switcher);
@@ -7925,11 +7988,13 @@ const LAB_DEEP_LINK_MAP = {
   rsa_sig:        { moduleId: 5, tab: 'sig',     tabFn: 'setRSATab' },
   // Module 6 — hash_lab (mid-module review, same lab as M0)
   hash_m6:        { moduleId: 6, tab: null },
-  // Module 7 — openssl_rsa_lab (same lab, PKC II context)
-  rsa2_keygen:    { moduleId: 7, tab: 'keygen',  tabFn: 'setRSATab' },
-  rsa2_enc:       { moduleId: 7, tab: 'enc',     tabFn: 'setRSATab' },
-  rsa2_compare:   { moduleId: 7, tab: 'compare', tabFn: 'setRSATab' },
-  rsa2_sig:       { moduleId: 7, tab: 'sig',     tabFn: 'setRSATab' },
+  // Module 7 — openssl_rsa_lab (same lab, PKC II context). M7's default
+  // stage-4 lab is now ecc_lab, so these carry labOverride to keep codes
+  // 28–31 opening the RSA toolbench rather than the ECC Explorer.
+  rsa2_keygen:    { moduleId: 7, tab: 'keygen',  tabFn: 'setRSATab', labOverride: 'openssl_rsa_lab' },
+  rsa2_enc:       { moduleId: 7, tab: 'enc',     tabFn: 'setRSATab', labOverride: 'openssl_rsa_lab' },
+  rsa2_compare:   { moduleId: 7, tab: 'compare', tabFn: 'setRSATab', labOverride: 'openssl_rsa_lab' },
+  rsa2_sig:       { moduleId: 7, tab: 'sig',     tabFn: 'setRSATab', labOverride: 'openssl_rsa_lab' },
   // Module 8 — cert_lab (X.509, CSR, PKI chain)
   cert_inspect:   { moduleId: 8, tab: 'inspect', tabFn: 'setCertTab' },
   cert_csr:       { moduleId: 8, tab: 'csr',     tabFn: 'setCertTab' },
@@ -7954,6 +8019,30 @@ const LAB_DEEP_LINK_MAP = {
   ecc_scalar:     { moduleId: 7, tab: 'scalar', tabFn: 'setEccTab' },
   ecc_dlp:        { moduleId: 7, tab: 'dlp',    tabFn: 'setEccTab' },
   ecc_dh:         { moduleId: 7, tab: 'dh',     tabFn: 'setEccTab' },
+  // Rewired dormant labs — fully built components that had no host module.
+  // attacks_lab rides Module 12 (Attacks); number_theory_lab returns to
+  // Module 7, its home before the ECC Explorer replaced it at stage 4.
+  attacks_timing: { moduleId: 12, tab: 'timing', tabFn: 'setAtkTab', labOverride: 'attacks_lab' },
+  attacks_factor: { moduleId: 12, tab: 'factor', tabFn: 'setAtkTab', labOverride: 'attacks_lab' },
+  number_theory:  { moduleId: 7,  tab: null,     labOverride: 'number_theory_lab' },
+  // DDT/LAT lab (معمل 49) — differential & linear cryptanalysis tables.
+  // Rides Module 12 (Attacks), home of the book's Chapter 13 cryptanalysis.
+  ddt_lat:        { moduleId: 12, tab: null,     labOverride: 'ddt_lat_lab' },
+  // Shamir secret sharing (معمل 50) — book Ch9. Rides Module 8 (Key
+  // Management), where trust distribution and secret sharing are taught.
+  shamir:         { moduleId: 8,  tab: null,     labOverride: 'shamir_lab' },
+  // TOTP/2FA (معمل 51) — book Ch10. Rides Module 9 (Authentication
+  // Protocols), where entity authentication and 2FA are taught.
+  totp:           { moduleId: 9,  tab: null,     labOverride: 'totp_lab' },
+  // DH MITM (معمل 53) — book Ch12. Rides Module 11 (Key Exchange),
+  // home of ecdh_lab, where raw DH and its authentication gap are taught.
+  dh_mitm:        { moduleId: 11, tab: null,     labOverride: 'dh_mitm_lab' },
+  // TLS 1.3 handshake (معمل 52) — book Ch12 finale. Rides Module 11
+  // (Key Exchange), tying ephemeral DHE, STS signatures, and the key schedule.
+  tls13:          { moduleId: 11, tab: null,     labOverride: 'tls13_lab' },
+  // Post-quantum cryptography (معمل 54) — book Ch14 finale. Rides
+  // Module 13 (Developments/Advanced), home of signatures and PQC.
+  pqc:            { moduleId: 13, tab: null,     labOverride: 'pqc_lab' },
 };
 
 // Printed activity codes → lab short IDs. Flat, continuing counter across all modules.
@@ -7991,6 +8080,21 @@ const ACTIVITY_CODE_MAP = {
   '42': 'sign_m13',
   // Module 7 — Elliptic Curve Explorer (replaces Number Theory Playground in stage4)
   '43': 'ecc_shape', '44': 'ecc_points', '45': 'ecc_add', '46': 'ecc_scalar', '47': 'ecc_dlp', '48': 'ecc_dh',
+  // Rewired dormant labs (49–54 are reserved for the six planned new labs:
+  // DDT/LAT, Shamir, TOTP, TLS 1.3, MITM-on-DH, PQC)
+  // Chapter-13 cryptanalysis tables
+  '49': 'ddt_lat',
+  // Chapter-9 secret sharing
+  '50': 'shamir',
+  // Chapter-10 two-factor authentication
+  '51': 'totp',
+  // Chapter-12 man-in-the-middle on raw DH
+  '53': 'dh_mitm',
+  // Chapter-12 TLS 1.3 handshake
+  '52': 'tls13',
+  // Chapter-14 post-quantum cryptography
+  '54': 'pqc',
+  '55': 'attacks_timing', '56': 'attacks_factor', '57': 'number_theory',
 };
 
 // Open a lab directly by short ID (from QR code or activity code).
@@ -8004,6 +8108,7 @@ function openLabDeepLink(shortId) {
     quizAnswered: false, quizAttempts: 0, quizPassed: false,
     labRecallValue: null, masteryGateAttempts: 0,
     currentTier: 'core', tierResults: {}, labCompleted: false,
+    labOverride: mapping.labOverride || null,
     startTime: Date.now()
   };
   startLesson();
@@ -8072,6 +8177,7 @@ function backFromLesson() {
 
 function renderLessonStage() {
   if (window.speechSynthesis && speechSynthesis.speaking) { speechSynthesis.cancel(); if (typeof _naReset === 'function') _naReset(); }
+  if (typeof _totpTimer !== 'undefined' && _totpTimer) { clearInterval(_totpTimer); _totpTimer = null; }
   const mod = MODULES[lessonState.moduleId];
   const stage = lessonState.stage;
   const totalStages = 7;
@@ -8094,7 +8200,7 @@ function renderLessonStage() {
   // Determine content for this stage
   let content;
   if (stage === 1) content = mod.content.stage1;
-  else if (stage === 4) content = mod.content.stage4;
+  else if (stage === 4) content = (lessonState.labOverride && LAB_OVERRIDES[lessonState.labOverride]) || mod.content.stage4;
   else if (stage === 5) content = mod.content.stage5;
   else content = null;
 
@@ -8136,6 +8242,12 @@ function renderLessonStage() {
     if (content.labId === 'meet_middle_lab') { requestAnimationFrame(() => initMeetMidLab()); }
     if (content.labId === 'block_cipher_lab') { requestAnimationFrame(() => initBlockCipherLab()); }
     if (content.labId === 'ecc_lab') { requestAnimationFrame(() => initEccLab()); }
+    if (content.labId === 'ddt_lat_lab') { requestAnimationFrame(() => { if (typeof setDdtTab === 'function') setDdtTab('pairs'); }); }
+    if (content.labId === 'shamir_lab') { requestAnimationFrame(() => { if (typeof sssSyncCoeffs === 'function') { sssSyncCoeffs(); setSssTab('dist'); } }); }
+    if (content.labId === 'totp_lab') { requestAnimationFrame(() => { if (typeof setTotpTab === 'function') { setTotpTab('gen'); totpStartClock(); } }); }
+    if (content.labId === 'dh_mitm_lab') { requestAnimationFrame(() => { if (typeof setMitmTab === 'function') setMitmTab('safe'); }); }
+    if (content.labId === 'tls13_lab') { requestAnimationFrame(() => { if (typeof tlsReset === 'function') { _tlsDone = false; tlsReset(); } }); }
+    if (content.labId === 'pqc_lab') { requestAnimationFrame(() => { if (typeof setPqcTab === 'function') setPqcTab('impact'); }); }
   } else if (content && content.type === 'quiz') {
     // Quiz stage — Phase 4: apply adaptive tier before rendering
     if (content.tiers) {
@@ -8692,6 +8804,321 @@ function getSummary(mod) {
 // ============================================================
 function renderLab(content, mod) {
   const labs = {
+    pqc_lab: `
+      <div class="stage-label">⚗️ Interactive Lab</div>
+      <div class="lab-scenario">${content.scenario}</div>
+      <div class="lab-container">
+        <div class="lab-header">
+          <span class="lab-icon">🛡️</span>
+          <div><div class="lab-title">${content.heading}</div><div class="lab-subtitle">أثر شور وغروفر · توقيع لامبورت لمرّةٍ واحدة بـ SHA-256 حقيقيّ · عائلات ومعايير NIST (FIPS 203/204/205)</div></div>
+        </div>
+        <div style="font-size:12px;font-weight:700;margin-bottom:10px" id="pqc-status" dir="rtl">الأدوات المُستكشَفة: 0 / 3 — استكشِف الثلاث لإكمال المعمل</div>
+
+        <div style="display:flex;gap:8px;margin:4px 0 10px;flex-wrap:wrap">
+          <button class="btn btn-secondary" style="width:auto" id="pqc-tab-impact" onclick="setPqcTab('impact')">1 · شور وغروفر</button>
+          <button class="btn btn-secondary" style="width:auto" id="pqc-tab-lamport" onclick="setPqcTab('lamport')">2 · توقيع لامبورت</button>
+          <button class="btn btn-secondary" style="width:auto" id="pqc-tab-nist" onclick="setPqcTab('nist')">3 · عائلات ومعايير NIST</button>
+        </div>
+
+        <div id="pqc-panel-impact" class="lab-field">
+          <label class="lab-label" dir="rtl">احسب الأمان الفعليّ بعد الهجمات الكمومية</label>
+          <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:8px">
+            <span style="font-size:13px" dir="rtl">اختر البنية:</span>
+            <select class="lab-input" id="pqc-prim" style="width:auto" onchange="pqcImpact()">
+              <option value="rsa">RSA-2048</option>
+              <option value="ecc">ECC P-256</option>
+              <option value="aes128">AES-128</option>
+              <option value="aes256">AES-256</option>
+              <option value="sha256">SHA-256</option>
+              <option value="sha384">SHA-384</option>
+            </select>
+            <button class="btn btn-primary btn-sm" style="width:auto" onclick="pqcImpact()">▶ احسب</button>
+          </div>
+          <div class="lab-output" id="pqc-impact-out" style="font-size:12px;white-space:pre-wrap" dir="rtl">اختر بنيةً واضغط «احسب»…</div>
+        </div>
+
+        <div id="pqc-panel-lamport" class="lab-field" style="display:none">
+          <label class="lab-label" dir="rtl">توقيع لامبورت لمرّةٍ واحدة (Hash-based) — أساس عائلة SLH-DSA</label>
+          <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+            <span style="font-size:13px" dir="rtl">رسالة (0–255):</span>
+            <input class="lab-input" id="pqc-msg" value="178" style="width:80px;font-family:var(--mono);text-align:center">
+            <button class="btn btn-secondary btn-sm" style="width:auto" onclick="pqcLamKeygen()">1) ولّد المفاتيح</button>
+            <button class="btn btn-secondary btn-sm" style="width:auto" onclick="pqcLamSign()">2) وقّع</button>
+            <button class="btn btn-primary btn-sm" style="width:auto" onclick="pqcLamVerify()">3) تحقّق</button>
+            <button class="btn btn-secondary btn-sm" style="width:auto" onclick="pqcLamTamper()">✎ بدّل بتًّا وتحقّق</button>
+          </div>
+          <div class="lab-output" id="pqc-lam-out" style="font-family:var(--mono);font-size:11px;white-space:pre-wrap;overflow-x:auto;margin-top:8px" dir="ltr">ولّد المفاتيح أوّلًا…</div>
+        </div>
+
+        <div id="pqc-panel-nist" class="lab-field" style="display:none">
+          <label class="lab-label" dir="rtl">عائلات التشفير ما بعد الكمّيّ والمعايير المعتمَدة</label>
+          <button class="btn btn-primary btn-sm" style="width:auto;margin-bottom:8px" onclick="pqcNist()">▶ اعرض الجدولين</button>
+          <div class="lab-output" id="pqc-nist-out" style="font-size:12px;overflow-x:auto" dir="rtl">اضغط لعرض العائلات الخمس ومعايير FIPS…</div>
+        </div>
+      </div>
+    `,
+    tls13_lab: `
+      <div class="stage-label">⚗️ Interactive Lab</div>
+      <div class="lab-scenario">${content.scenario}</div>
+      <div class="lab-container">
+        <div class="lab-header">
+          <span class="lab-icon">🤝</span>
+          <div><div class="lab-title">${content.heading}</div><div class="lab-subtitle">مصافحة TLS 1.3 خطوةً خطوة · DHE عابر + توقيع الخادم (STS) + سلّم مفاتيح HKDF حقيقيّ عبر Web Crypto</div></div>
+        </div>
+        <div style="font-size:12px;font-weight:700;margin-bottom:10px" id="tls-status" dir="rtl">الرسائل المُنجَزة: 0 / 4 — امضِ في المصافحة حتى Finished لإكمال المعمل</div>
+
+        <div class="lab-field">
+          <label class="lab-label" dir="rtl">وسائط العرض (زمرةٌ صغيرة كي يتّضح الاشتقاق)</label>
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:8px">
+            <div><div style="font-size:11px;color:var(--muted);margin-bottom:3px" dir="rtl">p</div><input class="lab-input" id="tls-p" value="23" style="font-family:var(--mono);text-align:center"></div>
+            <div><div style="font-size:11px;color:var(--muted);margin-bottom:3px" dir="rtl">g</div><input class="lab-input" id="tls-g" value="5" style="font-family:var(--mono);text-align:center"></div>
+            <div><div style="font-size:11px;color:#2563EB;margin-bottom:3px" dir="rtl">a (العميل)</div><input class="lab-input" id="tls-a" value="6" style="font-family:var(--mono);text-align:center"></div>
+            <div><div style="font-size:11px;color:#10B981;margin-bottom:3px" dir="rtl">b (الخادم)</div><input class="lab-input" id="tls-b" value="15" style="font-family:var(--mono);text-align:center"></div>
+          </div>
+        </div>
+
+        <div style="display:flex;gap:8px;margin:14px 0 10px;flex-wrap:wrap;align-items:center">
+          <button class="btn btn-primary btn-sm" style="width:auto" id="tls-next" onclick="tlsNext()">▶ أرسِل الرسالة التالية</button>
+          <button class="btn btn-secondary btn-sm" style="width:auto" onclick="tlsReset()">↺ ابدأ من جديد</button>
+          <label class="lab-label" style="display:flex;align-items:center;gap:6px;margin:0" dir="rtl"><input type="checkbox" id="tls-mitm" style="width:auto;margin:0" onchange="tlsReset()"> فعّل تدخّل مالوري (تبديل إسهام الخادم)</label>
+        </div>
+
+        <div id="tls-flow" style="display:flex;flex-direction:column;gap:8px"></div>
+
+        <div class="lab-output" id="tls-detail" style="font-family:var(--mono);font-size:11px;white-space:pre-wrap;overflow-x:auto;margin-top:10px" dir="ltr">اضبط الوسائط ثم ابدأ المصافحة برسالة ClientHello…</div>
+      </div>
+    `,
+    dh_mitm_lab: `
+      <div class="stage-label">⚗️ Interactive Lab</div>
+      <div class="lab-scenario">${content.scenario}</div>
+      <div class="lab-container">
+        <div class="lab-header">
+          <span class="lab-icon">🕵️‍♀️</span>
+          <div><div class="lab-title">${content.heading}</div><div class="lab-subtitle">ديفي–هيلمان الخام غيرُ المُصادَق · مالوري (المهاجمة النشطة) تجلس في المنتصف فتشتقّ مفتاحَين منفصلَين</div></div>
+        </div>
+        <div style="font-size:12px;font-weight:700;margin-bottom:10px" id="mitm-status" dir="rtl">الخطوات المُنجَزة: 0 / 3 — نفّذ التبادل الأمين، ثم هجوم مالوري، ثم العلاج</div>
+
+        <div class="lab-field">
+          <label class="lab-label" dir="rtl">وسائط الزمرة العلنية والأُسُس السرّية</label>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+            <div><div style="font-size:11px;color:var(--muted);margin-bottom:3px" dir="rtl">الأوّليّ p</div><input class="lab-input" id="mitm-p" value="23" style="font-family:var(--mono);text-align:center"></div>
+            <div><div style="font-size:11px;color:var(--muted);margin-bottom:3px" dir="rtl">المولّد g</div><input class="lab-input" id="mitm-g" value="5" style="font-family:var(--mono);text-align:center"></div>
+            <div><div style="font-size:11px;color:var(--muted);margin-bottom:3px;color:#2563EB" dir="rtl">أُسّ أليس a (سرّيّ)</div><input class="lab-input" id="mitm-a" value="6" style="font-family:var(--mono);text-align:center"></div>
+            <div><div style="font-size:11px;color:var(--muted);margin-bottom:3px;color:#10B981" dir="rtl">أُسّ بوب b (سرّيّ)</div><input class="lab-input" id="mitm-b" value="15" style="font-family:var(--mono);text-align:center"></div>
+            <div style="grid-column:1 / -1"><div style="font-size:11px;color:#7F1D1D;margin-bottom:3px" dir="rtl">أُسّ مالوري m (سرّيّ — تستعمله للجهتين)</div><input class="lab-input" id="mitm-m" value="9" style="font-family:var(--mono);text-align:center"></div>
+          </div>
+        </div>
+
+        <div style="display:flex;gap:8px;margin:14px 0 10px;flex-wrap:wrap">
+          <button class="btn btn-secondary" style="width:auto" id="mitm-tab-safe" onclick="setMitmTab('safe')">1 · التبادل الأمين</button>
+          <button class="btn btn-secondary" style="width:auto" id="mitm-tab-atk"  onclick="setMitmTab('atk')">2 · هجوم مالوري</button>
+          <button class="btn btn-secondary" style="width:auto" id="mitm-tab-fix"  onclick="setMitmTab('fix')">3 · العلاج (STS / ربط الهويّة)</button>
+        </div>
+
+        <div id="mitm-panel-safe" class="lab-field">
+          <label class="lab-label" dir="rtl">أليس وبوب يتبادلان مباشرةً — لا وسيط</label>
+          <button class="btn btn-primary btn-sm" style="width:auto;margin-bottom:8px" onclick="mitmSafe()">▶ نفّذ التبادل الأمين</button>
+          <div class="lab-output" id="mitm-safe-out" style="font-family:var(--mono);font-size:12px;white-space:pre-wrap;overflow-x:auto" dir="ltr">اضبط الوسائط ثم اضغط للتنفيذ…</div>
+        </div>
+
+        <div id="mitm-panel-atk" class="lab-field" style="display:none">
+          <label class="lab-label" dir="rtl">مالوري تعترض A وB، وتحلّ محلّهما بأُسّها M = gᵐ في الاتجاهين</label>
+          <button class="btn btn-primary btn-sm" style="width:auto;margin-bottom:8px" onclick="mitmAttack()">▶ شغّل هجوم مالوري</button>
+          <div class="lab-output" id="mitm-atk-out" style="font-family:var(--mono);font-size:12px;white-space:pre-wrap;overflow-x:auto" dir="ltr">اضغط لترى كيف تشتقّ مالوري مفتاحَين منفصلَين…</div>
+        </div>
+
+        <div id="mitm-panel-fix" class="lab-field" style="display:none">
+          <label class="lab-label" dir="rtl">جرّب علاجَين: توقيع STS على الإسهامَين، وربطُ الهويّتَين داخل اشتقاق المفتاح</label>
+          <button class="btn btn-primary btn-sm" style="width:auto;margin-bottom:8px" onclick="mitmFix()">▶ أظهر لماذا يسقط الوسيط</button>
+          <div class="lab-output" id="mitm-fix-out" style="font-size:12px;white-space:pre-wrap" dir="rtl">اضغط لرؤية كيف يربط STS الأُسَّ بالهويّة فيُفشل مالوري…</div>
+        </div>
+      </div>
+    `,
+    totp_lab: `
+      <div class="stage-label">⚗️ Interactive Lab</div>
+      <div class="lab-scenario">${content.scenario}</div>
+      <div class="lab-container">
+        <div class="lab-header">
+          <span class="lab-icon">🔐</span>
+          <div><div class="lab-title">${content.heading}</div><div class="lab-subtitle">TOTP وفق RFC 6238 فوق HOTP (RFC 4226) · العامل الثاني: «شيءٌ تملكه» · HMAC حقيقيّ عبر Web Crypto</div></div>
+        </div>
+        <div style="font-size:12px;font-weight:700;margin-bottom:10px" id="totp-status" dir="rtl">الخطوات المُنجَزة: 0 / 3 — ولّد رمزًا، وتحقّق منه، وجرّب نافذة التسامح</div>
+
+        <div class="lab-field">
+          <label class="lab-label" dir="rtl">السرّ المشترك (Base32) — يُزرَع مرّةً في التطبيق والخادم</label>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+            <input class="lab-input" id="totp-secret" value="JBSWY3DPEHPK3PXP" style="font-family:var(--mono);flex:1;min-width:180px">
+            <button class="btn btn-secondary btn-sm" style="width:auto" onclick="totpRandomSecret()">🎲 سرّ جديد</button>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:8px">
+            <div><div style="font-size:11px;color:var(--muted);margin-bottom:3px" dir="rtl">الخطوة الزمنية (ثانية)</div><input class="lab-input" id="totp-step" value="30" style="font-family:var(--mono);text-align:center"></div>
+            <div><div style="font-size:11px;color:var(--muted);margin-bottom:3px" dir="rtl">عدد الخانات</div><select class="lab-input" id="totp-digits" style="font-family:var(--mono);text-align:center"><option>6</option><option>8</option></select></div>
+            <div><div style="font-size:11px;color:var(--muted);margin-bottom:3px" dir="rtl">دالة الاختزال</div><select class="lab-input" id="totp-algo" style="font-family:var(--mono);text-align:center"><option value="SHA-1">SHA-1</option><option value="SHA-256">SHA-256</option></select></div>
+          </div>
+        </div>
+
+        <div style="display:flex;gap:8px;margin:14px 0 10px;flex-wrap:wrap">
+          <button class="btn btn-secondary" style="width:auto" id="totp-tab-gen" onclick="setTotpTab('gen')">1 · المولّد</button>
+          <button class="btn btn-secondary" style="width:auto" id="totp-tab-ver" onclick="setTotpTab('ver')">2 · التحقّق</button>
+          <button class="btn btn-secondary" style="width:auto" id="totp-tab-win" onclick="setTotpTab('win')">3 · نافذة التسامح والانجراف</button>
+        </div>
+
+        <div id="totp-panel-gen" class="lab-field">
+          <label class="lab-label" dir="rtl">الرمز الحاليّ (يتغيّر كلَّ خطوة زمنية)</label>
+          <div style="text-align:center;margin:6px 0">
+            <div id="totp-code" style="font-family:var(--mono);font-size:38px;font-weight:800;letter-spacing:6px;color:var(--primary)" dir="ltr">— — —</div>
+            <div style="height:6px;background:var(--bg2,#e7edf3);border-radius:100px;overflow:hidden;margin:8px auto;max-width:280px"><div id="totp-bar" style="height:100%;width:100%;background:var(--secondary,#0F766E);transition:width .3s linear"></div></div>
+            <div id="totp-remain" style="font-size:12px;color:var(--muted)" dir="rtl">—</div>
+          </div>
+          <div class="lab-output" id="totp-gen-steps" style="font-family:var(--mono);font-size:11px;white-space:pre-wrap;margin-top:8px" dir="ltr">شغّل المولّد لرؤية خطوات RFC 6238…</div>
+        </div>
+
+        <div id="totp-panel-ver" class="lab-field" style="display:none">
+          <label class="lab-label" dir="rtl">أدخل رمزًا كما يفعل الخادم عند التحقّق</label>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+            <input class="lab-input" id="totp-input" placeholder="000000" style="font-family:var(--mono);letter-spacing:3px;width:auto;text-align:center">
+            <button class="btn btn-secondary btn-sm" style="width:auto" onclick="totpFillCurrent()">↧ املأ بالرمز الحاليّ</button>
+            <button class="btn btn-primary btn-sm" style="width:auto" onclick="totpVerify()">▶ تحقّق</button>
+          </div>
+          <div class="lab-output" id="totp-ver-out" style="font-size:12px;margin-top:8px;white-space:pre-wrap" dir="rtl">أدخل رمزًا واضغط «تحقّق»…</div>
+        </div>
+
+        <div id="totp-panel-win" class="lab-field" style="display:none">
+          <label class="lab-label" dir="rtl">نافذة التسامح ±k خطوة تعالج انجرافَ الساعات؛ لكنّها توسّع فرصةَ إعادة الإرسال</label>
+          <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:8px">
+            <span style="font-size:13px" dir="rtl">نافذة التسامح k =</span>
+            <select class="lab-input" id="totp-window" style="width:auto;font-family:var(--mono)"><option value="0">0 (صارم)</option><option value="1" selected>1</option><option value="2">2</option></select>
+            <span style="font-size:13px" dir="rtl">انجراف ساعة العميل (خطوات) =</span>
+            <select class="lab-input" id="totp-drift" style="width:auto;font-family:var(--mono)"><option value="-2">−2</option><option value="-1">−1</option><option value="0" selected>0</option><option value="1">+1</option><option value="2">+2</option></select>
+            <button class="btn btn-primary btn-sm" style="width:auto" onclick="totpWindowTest()">▶ اختبر</button>
+          </div>
+          <div class="lab-output" id="totp-win-out" style="font-family:var(--mono);font-size:11px;white-space:pre-wrap" dir="ltr">اضبط الانجراف والنافذة ثم اضغط «اختبر»…</div>
+        </div>
+      </div>
+    `,
+    shamir_lab: `
+      <div class="stage-label">⚗️ Interactive Lab</div>
+      <div class="lab-scenario">${content.scenario}</div>
+      <div class="lab-container">
+        <div class="lab-header">
+          <span class="lab-icon">🧩</span>
+          <div><div class="lab-title">${content.heading}</div><div class="lab-subtitle">مخطّط عتبة (t, n) · مثال الباب 9: السرّ 77، ‏f(x) = 77 + 28x، الحصص f(1)=105 · f(2)=133 · f(3)=161</div></div>
+        </div>
+        <div style="font-size:12px;font-weight:700;margin-bottom:10px" id="sss-status" dir="rtl">الخطوات المُنجَزة: 0 / 2 — وزّع السرَّ ثم استعِده لإكمال المعمل</div>
+
+        <div class="lab-field">
+          <label class="lab-label" dir="rtl">إعداد المخطّط</label>
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">
+            <div><div style="font-size:11px;color:var(--muted);margin-bottom:3px" dir="rtl">السرّ s = f(0)</div><input class="lab-input" id="sss-secret" value="77" style="font-family:var(--mono);text-align:center"></div>
+            <div><div style="font-size:11px;color:var(--muted);margin-bottom:3px" dir="rtl">العتبة t</div><select class="lab-input" id="sss-t" style="font-family:var(--mono);text-align:center" onchange="sssSyncCoeffs()"><option value="2" selected>2</option><option value="3">3</option><option value="4">4</option></select></div>
+            <div><div style="font-size:11px;color:var(--muted);margin-bottom:3px" dir="rtl">عدد المشاركين n</div><input class="lab-input" id="sss-n" value="3" style="font-family:var(--mono);text-align:center"></div>
+          </div>
+          <div style="margin-top:8px">
+            <div style="font-size:11px;color:var(--muted);margin-bottom:3px" dir="rtl">معاملات كثيرة الحدود ‏a₁ … ‏a₍ₜ₋₁₎ (الحدّ الثابت هو السرّ)</div>
+            <div id="sss-coeffs" style="display:flex;gap:8px;flex-wrap:wrap"></div>
+          </div>
+          <div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap;align-items:center">
+            <button class="btn btn-secondary btn-sm" style="width:auto" onclick="sssRandomCoeffs()">🎲 معاملات عشوائيّة</button>
+            <button class="btn btn-secondary btn-sm" style="width:auto" onclick="sssBookPreset()">↺ مثال الكتاب</button>
+            <label class="lab-label" style="display:flex;align-items:center;gap:6px;margin:0" dir="rtl"><input type="checkbox" id="sss-modp" style="width:auto;margin:0" onchange="sssToggleField()"> احسب في حقلٍ أوّليّ mod p</label>
+            <input class="lab-input" id="sss-p" value="257" style="width:80px;font-family:var(--mono);text-align:center;display:none" placeholder="p">
+          </div>
+        </div>
+
+        <div style="display:flex;gap:8px;margin:14px 0 10px;flex-wrap:wrap">
+          <button class="btn btn-secondary" style="width:auto" id="sss-tab-dist"  onclick="setSssTab('dist')">1 · التوزيع</button>
+          <button class="btn btn-secondary" style="width:auto" id="sss-tab-rec"   onclick="setSssTab('rec')">2 · الاستعادة</button>
+          <button class="btn btn-secondary" style="width:auto" id="sss-tab-ins"   onclick="setSssTab('ins')">3 · لماذا t−1 لا تكفي</button>
+        </div>
+
+        <div id="sss-panel-dist" class="lab-field">
+          <label class="lab-label" dir="rtl">وزّع السرَّ: احسب كثيرةَ الحدود ثم الحصصَ n</label>
+          <button class="btn btn-primary btn-sm" style="width:auto;margin-bottom:8px" onclick="sssDistribute()">▶ وزّع الحصص</button>
+          <div class="lab-output" id="sss-dist-out" style="font-family:var(--mono);font-size:12px;white-space:pre;overflow-x:auto">اضبط الإعداد ثم اضغط «وزّع الحصص»…</div>
+        </div>
+
+        <div id="sss-panel-rec" class="lab-field" style="display:none">
+          <label class="lab-label" dir="rtl">اختر الحصص التي ستجمعها (تحتاج t منها على الأقلّ) ثم استعِد السرّ بلاغرانج</label>
+          <div id="sss-share-picker" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px" dir="ltr">وزّع الحصص أوّلًا…</div>
+          <button class="btn btn-primary btn-sm" style="width:auto;margin-bottom:8px" onclick="sssReconstruct()">▶ استعِد f(0)</button>
+          <div class="lab-output" id="sss-rec-out" style="font-family:var(--mono);font-size:12px;white-space:pre;overflow-x:auto">اختر حصصًا ثم اضغط «استعِد»…</div>
+        </div>
+
+        <div id="sss-panel-ins" class="lab-field" style="display:none">
+          <label class="lab-label" dir="rtl">لماذا لا تكشف t−1 حصّة شيئًا عن السرّ؟</label>
+          <button class="btn btn-primary btn-sm" style="width:auto;margin-bottom:8px" onclick="sssInsufficient()">▶ أظهر البرهان العدديّ</button>
+          <div class="lab-output" id="sss-ins-out" style="font-size:12px;white-space:pre-wrap" dir="rtl">وزّع الحصص أوّلًا، ثم اضغط لترى كيف تبقى كلُّ قيمةٍ للسرّ ممكنةً بالتساوي.</div>
+        </div>
+      </div>
+    `,
+    ddt_lat_lab: `
+      <div class="stage-label">⚗️ Interactive Lab</div>
+      <div class="lab-scenario">${content.scenario}</div>
+      <div class="lab-container">
+        <div class="lab-header">
+          <span class="lab-icon">🎯</span>
+          <div><div class="lab-title">${content.heading}</div><div class="lab-subtitle">صندوق استبدال 3-بت · S = [1,0,3,4,5,6,7,2] · جدول التوزيع التفاضلي (DDT) وجدول التقريب الخطّي (LAT)</div></div>
+        </div>
+        <div style="font-size:12px;font-weight:700;margin-bottom:10px" id="ddt-status" dir="rtl">الأدوات المُستكشَفة: 0 / 3 — استكشِف ٣ لإكمال المعمل</div>
+
+        <div class="lab-field">
+          <label class="lab-label" dir="rtl">صندوق الاستبدال S — ثمانية مخارج للمداخل 0..7 (عدّلها لتجرّب صناديق أخرى)</label>
+          <div style="display:grid;grid-template-columns:repeat(8,1fr);gap:6px">
+            <input class="lab-input" id="sb-0" value="1" style="font-family:var(--mono);text-align:center">
+            <input class="lab-input" id="sb-1" value="0" style="font-family:var(--mono);text-align:center">
+            <input class="lab-input" id="sb-2" value="3" style="font-family:var(--mono);text-align:center">
+            <input class="lab-input" id="sb-3" value="4" style="font-family:var(--mono);text-align:center">
+            <input class="lab-input" id="sb-4" value="5" style="font-family:var(--mono);text-align:center">
+            <input class="lab-input" id="sb-5" value="6" style="font-family:var(--mono);text-align:center">
+            <input class="lab-input" id="sb-6" value="7" style="font-family:var(--mono);text-align:center">
+            <input class="lab-input" id="sb-7" value="2" style="font-family:var(--mono);text-align:center">
+          </div>
+          <div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap">
+            <button class="btn btn-secondary btn-sm" style="width:auto" onclick="ddtResetBox()">↺ إعادة صندوق الكتاب</button>
+            <button class="btn btn-secondary btn-sm" style="width:auto" onclick="ddtCheckPerm()">تحقّق: هل هو تبديل صحيح؟</button>
+          </div>
+          <div class="lab-output" id="ddt-perm-out" style="font-size:12px;margin-top:8px" dir="rtl">صندوق الاستبدال يجب أن يكون تبديلًا للأرقام 0..7 (كلٌّ مرّة واحدة) حتى يكون قابلًا للعكس.</div>
+        </div>
+
+        <div style="display:flex;gap:8px;margin:14px 0 10px;flex-wrap:wrap">
+          <button class="btn btn-secondary" style="width:auto" id="ddt-tab-pairs"  onclick="setDdtTab('pairs')">1 · سرد الأزواج</button>
+          <button class="btn btn-secondary" style="width:auto" id="ddt-tab-ddt"    onclick="setDdtTab('ddt')">2 · جدول DDT</button>
+          <button class="btn btn-secondary" style="width:auto" id="ddt-tab-lat"    onclick="setDdtTab('lat')">3 · جدول LAT</button>
+        </div>
+
+        <div id="ddt-panel-pairs" class="lab-field">
+          <label class="lab-label" dir="rtl">اختر فرق المدخل Δx ثم اسرد الأزواج الثمانية وعُدّ فروق المخرج</label>
+          <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+            <span style="font-size:13px" dir="rtl">Δx =</span>
+            <select class="lab-input" id="ddt-dx" style="width:auto;font-family:var(--mono)" onchange="ddtListPairs()">
+              <option value="1">1 (001)</option>
+              <option value="2" selected>2 (010)</option>
+              <option value="3">3 (011)</option>
+              <option value="4">4 (100)</option>
+              <option value="5">5 (101)</option>
+              <option value="6">6 (110)</option>
+              <option value="7">7 (111)</option>
+            </select>
+            <button class="btn btn-primary btn-sm" style="width:auto" onclick="ddtListPairs()">▶ اسرد وعُدّ</button>
+          </div>
+          <div class="lab-output" id="ddt-pairs-out" style="font-family:var(--mono);font-size:12px;margin-top:8px;white-space:pre;overflow-x:auto">اختر Δx واضغط «اسرد وعُدّ»…</div>
+        </div>
+
+        <div id="ddt-panel-ddt" class="lab-field" style="display:none">
+          <label class="lab-label" dir="rtl">جدول التوزيع التفاضلي الكامل — كل خلية = عدد المداخل التي تحقّق (Δx → Δy) من أصل 8</label>
+          <button class="btn btn-primary btn-sm" style="width:auto;margin-bottom:8px" onclick="ddtBuildTable()">▶ ابنِ جدول DDT</button>
+          <div class="lab-output" id="ddt-table-out" style="font-size:12px;margin-top:4px;overflow-x:auto">اضغط لبناء الجدول…</div>
+          <div id="ddt-table-note" style="font-size:12px;margin-top:8px" dir="rtl"></div>
+        </div>
+
+        <div id="ddt-panel-lat" class="lab-field" style="display:none">
+          <label class="lab-label" dir="rtl">جدول التقريب الخطّي — كل خلية = (عدد مرّات تطابق a·x = b·S(x)) − 4، أي الانحياز مضروبًا في 8</label>
+          <button class="btn btn-primary btn-sm" style="width:auto;margin-bottom:8px" onclick="ddtBuildLat()">▶ ابنِ جدول LAT</button>
+          <div class="lab-output" id="ddt-lat-out" style="font-size:12px;margin-top:4px;overflow-x:auto">اضغط لبناء الجدول…</div>
+          <div id="ddt-lat-note" style="font-size:12px;margin-top:8px" dir="rtl"></div>
+        </div>
+      </div>
+    `,
     schnorr_lab: `
       <div class="stage-label">⚗️ Interactive Lab</div>
       <div class="lab-scenario">${content.scenario}</div>
@@ -11588,6 +12015,766 @@ function ntEC() {
     (disc !== 0n ? 'NON-SINGULAR ✓ — the curve forms a valid group for ECC.' : 'SINGULAR ✗ — the curve has a cusp or node; group law breaks down. Unusable.');
   ntMark('tool4');
 }
+
+// ============================================================
+// DDT / LAT Lab (معمل 49) — 3-bit S-box differential & linear tables
+// Embodies Chapter 13's box S = [1,0,3,4,5,6,7,2].
+// ============================================================
+var _ddtUsed = null, _ddtDone = false;
+function ddtReadBox() {
+  var S = [], seen = {};
+  for (var i = 0; i < 8; i++) {
+    var el = document.getElementById('sb-' + i);
+    var v = el ? parseInt(el.value, 10) : NaN;
+    if (isNaN(v) || v < 0 || v > 7) return { S: null, bad: i };
+    S.push(v);
+  }
+  return { S: S, bad: -1 };
+}
+function ddtIsPerm(S) {
+  if (!S) return false;
+  var seen = new Array(8).fill(0);
+  for (var i = 0; i < 8; i++) seen[S[i]]++;
+  return seen.every(function (c) { return c === 1; });
+}
+function ddtResetBox() {
+  var d = [1, 0, 3, 4, 5, 6, 7, 2];
+  for (var i = 0; i < 8; i++) { var el = document.getElementById('sb-' + i); if (el) el.value = d[i]; }
+  var out = document.getElementById('ddt-perm-out');
+  if (out) out.textContent = 'أُعيد صندوق الكتاب S = [1,0,3,4,5,6,7,2].';
+}
+function ddtCheckPerm() {
+  var r = ddtReadBox(), out = document.getElementById('ddt-perm-out');
+  if (!r.S) { out.textContent = '✗ القيمة عند الموضع ' + r.bad + ' يجب أن تكون رقمًا من 0 إلى 7.'; out.style.color = 'var(--danger)'; return false; }
+  if (ddtIsPerm(r.S)) { out.textContent = '✓ صندوق استبدال صحيح: كل قيمة من 0..7 تظهر مرّة واحدة، فهو قابل للعكس.'; out.style.color = 'var(--secondary)'; return true; }
+  out.textContent = '✗ ليس تبديلًا: بعض القيم مكرّرة أو مفقودة، فلا يمكن عكسه. صحّحه قبل بناء الجداول.'; out.style.color = 'var(--danger)'; return false;
+}
+function b3(z) { return ('000' + z.toString(2)).slice(-3); }
+function setDdtTab(tab) {
+  ['pairs', 'ddt', 'lat'].forEach(function (t) {
+    var p = document.getElementById('ddt-panel-' + t);
+    var b = document.getElementById('ddt-tab-' + t);
+    if (!p || !b) return;
+    p.style.display = t === tab ? '' : 'none';
+    b.style.background = t === tab ? 'var(--primary)' : 'transparent';
+    b.style.color = t === tab ? 'white' : 'var(--muted)';
+  });
+}
+function ddtMark(tool) {
+  _ddtUsed = _ddtUsed || {};
+  _ddtUsed[tool] = true;
+  var count = Object.keys(_ddtUsed).length;
+  var st = document.getElementById('ddt-status');
+  if (st) st.textContent = 'الأدوات المُستكشَفة: ' + count + ' / 3' + (count >= 3 ? ' — اكتمل المعمل ✓' : '');
+  if (!_ddtDone && count >= 3) { _ddtDone = true; completeLabStage(); }
+}
+function ddtListPairs() {
+  var r = ddtReadBox(), out = document.getElementById('ddt-pairs-out');
+  if (!ddtIsPerm(r.S)) { out.textContent = 'صحّح صندوق الاستبدال أوّلًا (يجب أن يكون تبديلًا صحيحًا).'; return; }
+  var S = r.S, dx = parseInt(document.getElementById('ddt-dx').value, 10);
+  var lines = ['Δx = ' + dx + ' (' + b3(dx) + ')  —  الأزواج الثمانية (x , x⊕Δx):', ''];
+  var counts = {};
+  for (var x = 0; x < 8; x++) {
+    var x2 = x ^ dx, dy = S[x] ^ S[x2];
+    counts[dy] = (counts[dy] || 0) + 1;
+    lines.push('x=' + x + ' , x⊕Δx=' + x2 + '  →  S=' + S[x] + ',' + S[x2] + '  →  Δy=' + dy + ' (' + b3(dy) + ')');
+  }
+  lines.push('');
+  lines.push('توزيع فرق المخرج (من 8):');
+  var keys = Object.keys(counts).map(Number).sort(function (a, b) { return a - b; });
+  keys.forEach(function (k) {
+    var frac = counts[k] + '/8';
+    lines.push('  Δy=' + k + ' (' + b3(k) + '): ' + counts[k] + '  → احتمال ' + frac + (counts[k] === 4 ? '  = 1/2' : ''));
+  });
+  var best = keys.reduce(function (a, b) { return counts[b] > counts[a] ? b : a; }, keys[0]);
+  lines.push('');
+  lines.push('أعلى احتمال: Δy=' + best + ' (' + b3(best) + ') باحتمال ' + counts[best] + '/8.');
+  out.textContent = lines.join('\n');
+  ddtMark('pairs');
+}
+function ddtComputeDDT(S) {
+  var T = [];
+  for (var dx = 0; dx < 8; dx++) { T.push(new Array(8).fill(0)); for (var x = 0; x < 8; x++) T[dx][S[x] ^ S[x ^ dx]]++; }
+  return T;
+}
+function ddtTableHTML(T, opts) {
+  opts = opts || {};
+  var h = '<table style="border-collapse:collapse;font-family:var(--mono);font-size:12px" dir="ltr"><tr><th style="padding:4px 7px;border:1px solid var(--border);background:var(--primary);color:#fff">Δx＼' + (opts.col || 'Δy') + '</th>';
+  for (var c = 0; c < 8; c++) h += '<th style="padding:4px 7px;border:1px solid var(--border);background:var(--primary);color:#fff">' + c + '</th>';
+  h += '</tr>';
+  for (var r = 0; r < 8; r++) {
+    h += '<tr><th style="padding:4px 7px;border:1px solid var(--border);background:var(--primary);color:#fff">' + r + '</th>';
+    for (var c = 0; c < 8; c++) {
+      var v = T[r][c], bg = 'transparent', col = 'var(--text2)';
+      if (opts.diag && r === 0 && c === 0) { bg = 'var(--secondary-l)'; col = 'var(--secondary-d)'; }
+      else if (opts.hi && Math.abs(v) === opts.hi && !(r === 0)) { bg = 'var(--warn-l, #FBF1DE)'; col = 'var(--warn-d, #C08A2E)'; }
+      else if (v === 0) col = 'var(--muted)';
+      var disp = opts.signed ? (v > 0 ? '+' + v : '' + v) : v;
+      h += '<td style="padding:4px 7px;border:1px solid var(--border);text-align:center;background:' + bg + ';color:' + col + ';font-weight:' + (Math.abs(v) === (opts.hi || 99) ? '700' : '400') + '">' + disp + '</td>';
+    }
+    h += '</tr>';
+  }
+  return h + '</table>';
+}
+function ddtBuildTable() {
+  var r = ddtReadBox(), out = document.getElementById('ddt-table-out'), note = document.getElementById('ddt-table-note');
+  if (!ddtIsPerm(r.S)) { out.textContent = 'صحّح صندوق الاستبدال أوّلًا.'; return; }
+  var T = ddtComputeDDT(r.S);
+  out.innerHTML = ddtTableHTML(T, { hi: 4, diag: true });
+  var maxOff = 0, cell = '';
+  for (var dx = 1; dx < 8; dx++) for (var dy = 0; dy < 8; dy++) if (T[dx][dy] > maxOff) { maxOff = T[dx][dy]; cell = 'Δx=' + dx + ' → Δy=' + dy; }
+  note.innerHTML = 'صفّ Δx=0 كله أصفار عدا الخانة (0,0)=8 (فرق مدخل صفريّ ⇐ فرق مخرج صفريّ دائمًا). أعلى قيمة خارج ذلك الصفّ هي <b>' + maxOff + '/8</b> عند ' + cell + '؛ وهي أقوى مُمَيِّز تفاضليّ لهذا الصندوق. كلّما صغُرت أعلى قيمة، كان الصندوق أمتن ضدّ التحليل التفاضليّ.';
+  ddtMark('ddt');
+}
+function ddtBuildLat() {
+  var r = ddtReadBox(), out = document.getElementById('ddt-lat-out'), note = document.getElementById('ddt-lat-note');
+  if (!ddtIsPerm(r.S)) { out.textContent = 'صحّح صندوق الاستبدال أوّلًا.'; return; }
+  var S = r.S, par = function (z) { var c = 0; while (z) { c ^= (z & 1); z >>= 1; } return c; };
+  var L = [];
+  for (var a = 0; a < 8; a++) { L.push(new Array(8).fill(0)); for (var b = 0; b < 8; b++) { var m = 0; for (var x = 0; x < 8; x++) if (par(a & x) === par(b & S[x])) m++; L[a][b] = m - 4; } }
+  out.innerHTML = ddtTableHTML(L, { col: 'b', signed: true, hi: 4 });
+  var maxBias = 0, cell = '';
+  for (var a = 0; a < 8; a++) for (var b = 0; b < 8; b++) if (!(a === 0 && b === 0) && Math.abs(L[a][b]) > maxBias) { maxBias = Math.abs(L[a][b]); cell = 'a=' + a + ', b=' + b; }
+  note.innerHTML = 'الخانة (0,0)=+4 دائمًا (تطابق تامّ للمُقرّب الصفريّ). أكبر انحياز خارجها هو <b>±' + maxBias + '</b> عند ' + cell + '، ويقابله احتمال تطابقٍ ' + (4 + maxBias) + '/8. كلّما اقتربت القيم من الصفر، ضعُف التقريب الخطّيّ وقوِي الصندوق ضدّ التحليل الخطّيّ.';
+  ddtMark('lat');
+}
+
+// ============================================================
+// Shamir Secret Sharing Lab (معمل 50) — (t, n) threshold scheme
+// Embodies Chapter 9's example: s = 77, f(x) = 77 + 28x.
+// Integer mode reproduces the book exactly; optional prime-field
+// mode (mod p) shows the cryptographically sound construction.
+// ============================================================
+var _sssUsed = null, _sssDone = false, _sssShares = null, _sssMeta = null;
+function sssGcd(a, b) { a = a < 0n ? -a : a; b = b < 0n ? -b : b; while (b) { var t = b; b = a % b; a = t; } return a; }
+function sssFr(n, d) { if (d < 0n) { n = -n; d = -d; } var g = sssGcd(n, d) || 1n; return [n / g, d / g]; }
+function sssFadd(A, B) { return sssFr(A[0] * B[1] + B[0] * A[1], A[1] * B[1]); }
+function sssFmul(A, B) { return sssFr(A[0] * B[0], A[1] * B[1]); }
+function sssEgcd(a, b) { if (b === 0n) return [a, 1n, 0n]; var r = sssEgcd(b, a % b); return [r[0], r[2], r[1] - (a / b) * r[2]]; }
+function sssModinv(a, p) { a = ((a % p) + p) % p; var r = sssEgcd(a, p); if (r[0] !== 1n) return null; return ((r[1] % p) + p) % p; }
+function sssPolyEval(coeffs, x, modp) { var y = 0n, pw = 1n; for (var i = 0; i < coeffs.length; i++) { y += coeffs[i] * pw; pw *= x; } if (modp) y = ((y % modp) + modp) % modp; return y; }
+function sssBig(id, dflt) { var el = document.getElementById(id); if (!el) return dflt; var v = el.value.trim(); if (!/^-?\d+$/.test(v)) return dflt; try { return BigInt(v); } catch (e) { return dflt; } }
+function sssState() {
+  var t = parseInt(document.getElementById('sss-t').value, 10);
+  var n = Number(sssBig('sss-n', 3n));
+  var s = sssBig('sss-secret', 77n);
+  var modp = document.getElementById('sss-modp').checked ? sssBig('sss-p', 257n) : null;
+  var coeffs = [s];
+  for (var i = 1; i < t; i++) coeffs.push(sssBig('sss-a' + i, 1n));
+  return { t: t, n: n, s: s, modp: modp, coeffs: coeffs };
+}
+function sssSyncCoeffs() {
+  var t = parseInt(document.getElementById('sss-t').value, 10);
+  var wrap = document.getElementById('sss-coeffs');
+  var cur = {};
+  for (var i = 1; i <= 3; i++) { var el = document.getElementById('sss-a' + i); if (el) cur[i] = el.value; }
+  var html = '';
+  for (var i = 1; i < t; i++) {
+    var def = (i in cur) ? cur[i] : (i === 1 ? '28' : '1');
+    html += '<div><div style="font-size:11px;color:var(--muted);margin-bottom:3px;text-align:center">a' + i + '</div><input class="lab-input" id="sss-a' + i + '" value="' + def + '" style="width:70px;font-family:var(--mono);text-align:center"></div>';
+  }
+  wrap.innerHTML = html;
+}
+function sssRandomCoeffs() {
+  var t = parseInt(document.getElementById('sss-t').value, 10);
+  var modp = document.getElementById('sss-modp').checked ? Number(sssBig('sss-p', 257n)) : 100;
+  for (var i = 1; i < t; i++) { var el = document.getElementById('sss-a' + i); if (el) el.value = Math.max(1, Math.floor(Math.random() * (modp - 1))); }
+}
+function sssBookPreset() {
+  document.getElementById('sss-secret').value = '77';
+  document.getElementById('sss-t').value = '2';
+  document.getElementById('sss-n').value = '3';
+  document.getElementById('sss-modp').checked = false;
+  sssToggleField(); sssSyncCoeffs();
+  var a1 = document.getElementById('sss-a1'); if (a1) a1.value = '28';
+  document.getElementById('sss-dist-out').textContent = 'أُعيد مثال الكتاب: s = 77، ‏f(x) = 77 + 28x، مخطّط (2 من 3).';
+}
+function sssToggleField() {
+  document.getElementById('sss-p').style.display = document.getElementById('sss-modp').checked ? '' : 'none';
+}
+function setSssTab(tab) {
+  ['dist', 'rec', 'ins'].forEach(function (t) {
+    var p = document.getElementById('sss-panel-' + t); var b = document.getElementById('sss-tab-' + t);
+    if (!p || !b) return;
+    p.style.display = t === tab ? '' : 'none';
+    b.style.background = t === tab ? 'var(--primary)' : 'transparent';
+    b.style.color = t === tab ? 'white' : 'var(--muted)';
+  });
+}
+function sssMark(step) {
+  _sssUsed = _sssUsed || {}; _sssUsed[step] = true;
+  var count = (_sssUsed.dist ? 1 : 0) + (_sssUsed.rec ? 1 : 0);
+  var st = document.getElementById('sss-status');
+  if (st) st.textContent = 'الخطوات المُنجَزة: ' + count + ' / 2' + (count >= 2 ? ' — اكتمل المعمل ✓' : '');
+  if (!_sssDone && count >= 2) { _sssDone = true; completeLabStage(); }
+}
+function sssFmt(coeffs) {
+  var parts = [];
+  for (var i = 0; i < coeffs.length; i++) {
+    if (i === 0) parts.push(coeffs[i].toString());
+    else parts.push(coeffs[i].toString() + (i === 1 ? 'x' : 'x^' + i));
+  }
+  return 'f(x) = ' + parts.join(' + ');
+}
+function sssDistribute() {
+  var S = sssState(), out = document.getElementById('sss-dist-out');
+  if (S.n < S.t) { out.textContent = 'يجب أن يكون n ≥ t (عدد المشاركين لا يقلّ عن العتبة).'; return; }
+  if (S.n < 1 || S.n > 12) { out.textContent = 'اجعل n بين 1 و12 لهذا العرض.'; return; }
+  if (S.modp !== null) {
+    if (S.modp <= BigInt(S.n) || S.s >= S.modp) { out.textContent = 'اختر أوّليًّا p أكبر من n ومن السرّ s.'; return; }
+  }
+  _sssShares = [];
+  for (var x = 1; x <= S.n; x++) _sssShares.push([BigInt(x), sssPolyEval(S.coeffs, BigInt(x), S.modp)]);
+  _sssMeta = S;
+  var lines = [];
+  lines.push(sssFmt(S.coeffs) + (S.modp !== null ? '   (mod ' + S.modp + ')' : '   (أعداد صحيحة — كنمط الكتاب)'));
+  lines.push('السرّ مخبّأ في الحدّ الثابت: f(0) = ' + S.s);
+  lines.push('');
+  lines.push('الحصص (كلٌّ نقطةٌ على المنحنى):');
+  _sssShares.forEach(function (p) { lines.push('  f(' + p[0] + ') = ' + p[1]); });
+  lines.push('');
+  lines.push('أيّ ' + S.t + ' من هذه الحصص تكفي لاستعادة السرّ؛ وأيُّ ' + (S.t - 1) + ' لا تكشف عنه شيئًا.');
+  out.textContent = lines.join('\n');
+  sssRenderPicker();
+  sssMark('dist');
+}
+function sssRenderPicker() {
+  var wrap = document.getElementById('sss-share-picker');
+  if (!_sssShares) { wrap.textContent = 'وزّع الحصص أوّلًا…'; return; }
+  var html = '';
+  _sssShares.forEach(function (p, i) {
+    html += '<label style="display:inline-flex;align-items:center;gap:5px;font-family:var(--mono);font-size:12px;background:var(--bg2,#f2f5f8);padding:5px 9px;border-radius:8px;cursor:pointer"><input type="checkbox" class="sss-pick" value="' + i + '" style="width:auto;margin:0"> (' + p[0] + ', ' + p[1] + ')</label>';
+  });
+  wrap.innerHTML = html;
+}
+function sssReconstruct() {
+  var out = document.getElementById('sss-rec-out');
+  if (!_sssShares) { out.textContent = 'وزّع الحصص أوّلًا (التبويب 1).'; return; }
+  var picks = Array.prototype.slice.call(document.querySelectorAll('.sss-pick:checked')).map(function (c) { return _sssShares[parseInt(c.value, 10)]; });
+  var S = _sssMeta;
+  if (picks.length < S.t) { out.textContent = 'اخترت ' + picks.length + ' حصّة، والعتبة t = ' + S.t + '. اختر ' + S.t + ' على الأقلّ.'; return; }
+  var use = picks.slice(0, S.t);
+  var lines = ['استعادة f(0) بصيغة لاغرانج من ' + S.t + ' حصص:', ''];
+  lines.push('النقاط: ' + use.map(function (p) { return '(' + p[0] + ',' + p[1] + ')'; }).join('  '));
+  lines.push('');
+  if (S.modp === null) {
+    var acc = [0n, 1n];
+    use.forEach(function (pi, i) {
+      var term = [pi[1], 1n], basisParts = [];
+      use.forEach(function (pj, j) { if (j === i) return; term = sssFmul(term, sssFr(0n - pj[0], pi[0] - pj[0])); basisParts.push('(0−' + pj[0] + ')/(' + pi[0] + '−' + pj[0] + ')'); });
+      acc = sssFadd(acc, term);
+      var tv = term[1] === 1n ? term[0].toString() : term[0] + '/' + term[1];
+      lines.push('  ' + pi[1] + ' · ' + basisParts.join('·') + '  =  ' + tv);
+    });
+    var res = acc[1] === 1n ? acc[0].toString() : acc[0] + '/' + acc[1];
+    lines.push('');
+    lines.push('f(0) = ' + res);
+    lines.push((acc[1] === 1n && acc[0] === S.s) ? '✓ استُعيد السرّ ' + S.s + ' بالضبط.' : '⚠ الناتج ' + res + ' — تحقّق من الحصص.');
+  } else {
+    var p = S.modp, acc = 0n;
+    use.forEach(function (pi, i) {
+      var num = 1n, den = 1n;
+      use.forEach(function (pj, j) { if (j === i) return; num = (num * (((0n - pj[0]) % p + p) % p)) % p; den = (den * (((pi[0] - pj[0]) % p + p) % p)) % p; });
+      var inv = sssModinv(den, p);
+      var term = (pi[1] * num % p) * inv % p;
+      acc = (acc + term) % p;
+      lines.push('  ' + pi[1] + ' · [Π] · (denom)⁻¹  ≡  ' + term + '  (mod ' + p + ')');
+    });
+    acc = ((acc % p) + p) % p;
+    lines.push('');
+    lines.push('f(0) ≡ ' + acc + '  (mod ' + p + ')');
+    lines.push(acc === S.s ? '✓ استُعيد السرّ ' + S.s + ' بالضبط.' : '⚠ الناتج ' + acc + ' — تحقّق من الحصص.');
+  }
+  out.textContent = lines.join('\n');
+  sssMark('rec');
+}
+function sssInsufficient() {
+  var out = document.getElementById('sss-ins-out');
+  if (!_sssShares) { out.textContent = 'وزّع الحصص أوّلًا (التبويب 1).'; return; }
+  var S = _sssMeta, one = _sssShares[0];
+  var lines = [];
+  if (S.modp === null) {
+    lines.push('العتبة t = ' + S.t + '، فلنأخذ ' + (S.t - 1) + ' حصّة فقط، مثلًا (' + one[0] + ', ' + one[1] + ').');
+    lines.push('');
+    lines.push('كثيرةُ الحدود من الدرجة ' + (S.t - 1) + ' لها ' + S.t + ' معاملات مجهولة، ولدينا ' + (S.t - 1) + ' معادلة فقط.');
+    lines.push('فلكلِّ قيمةٍ نفترضها للسرّ s = f(0) يوجد حلٌّ واحدٌ متّسقٌ مع الحصص الناقصة — أي منحنًى يمرّ بها.');
+    lines.push('مثال: لو t = 2 ولدينا النقطة (' + one[0] + ', ' + one[1] + ')، فلأيّ سرٍّ s0 يوجد ميلٌ وحيد a1 = (' + one[1] + ' − s0)/' + one[0] + ' يجعل الخطّ يمرّ بها.');
+    lines.push('إذن كلُّ قيمةٍ للسرّ تبقى ممكنةً — لا تسريبَ من ' + (S.t - 1) + ' حصّة. (السرّية التامّة تتحقّق تمامًا في نمط mod p.)');
+  } else {
+    var p = S.modp;
+    lines.push('العتبة t = ' + S.t + '، والحقل mod ' + p + '. لنأخذ ' + (S.t - 1) + ' حصّة فقط، مثلًا (' + one[0] + ', ' + one[1] + ').');
+    lines.push('');
+    lines.push('لكلِّ قيمةٍ مرشّحة للسرّ s0 ∈ {0, …, ' + (p - 1n) + '} توجد كثيرةُ حدودٍ واحدةٌ بالضبط من الدرجة ' + (S.t - 1) + ' تمرّ بالحصص الناقصة وتحقّق f(0) = s0.');
+    lines.push('عددُ الأسرار الممكنة = ' + p + '، وكلُّها متساويةُ الاحتمال تمامًا.');
+    lines.push('⇒ سرّيةٌ تامّة (Perfect Secrecy): ' + (S.t - 1) + ' حصّة لا تعطي أيَّ معلومةٍ عن السرّ — تمامًا كوسادة المرّة الواحدة.');
+  }
+  out.textContent = lines.join('\n');
+}
+
+// ============================================================
+// TOTP / 2FA Lab (معمل 51) — RFC 6238 over HOTP (RFC 4226)
+// Real HMAC via Web Crypto (crypto.subtle), matching the app's
+// existing HMAC usage. Embodies Chapter 10 figures 10.1–10.2.
+// ============================================================
+var _totpUsed = null, _totpDone = false, _totpTimer = null;
+function totpBase32Decode(s) {
+  var A = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
+  s = (s || '').toUpperCase().replace(/=+$/, '').replace(/\s+/g, '');
+  var bits = '', out = [];
+  for (var i = 0; i < s.length; i++) { var v = A.indexOf(s[i]); if (v < 0) return null; bits += v.toString(2).padStart(5, '0'); }
+  for (var j = 0; j + 8 <= bits.length; j += 8) out.push(parseInt(bits.slice(j, j + 8), 2));
+  return new Uint8Array(out);
+}
+function totpBase32Random(n) {
+  var A = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567', s = '';
+  var r = new Uint8Array(n); (self.crypto || window.crypto).getRandomValues(r);
+  for (var i = 0; i < n; i++) s += A[r[i] & 31];
+  return s;
+}
+function totpCounterBytes(counter) {
+  var buf = new Uint8Array(8);
+  var c = BigInt(counter);
+  for (var i = 7; i >= 0; i--) { buf[i] = Number(c & 0xffn); c >>= 8n; }
+  return buf;
+}
+async function totpHOTP(keyBytes, counter, digits, algo) {
+  var key = await crypto.subtle.importKey('raw', keyBytes, { name: 'HMAC', hash: algo }, false, ['sign']);
+  var sig = new Uint8Array(await crypto.subtle.sign('HMAC', key, totpCounterBytes(counter)));
+  var off = sig[sig.length - 1] & 0x0f;
+  var bin = ((sig[off] & 0x7f) << 24) | ((sig[off + 1] & 0xff) << 16) | ((sig[off + 2] & 0xff) << 8) | (sig[off + 3] & 0xff);
+  var mod = Math.pow(10, digits);
+  return { code: (bin % mod).toString().padStart(digits, '0'), off: off, bin: bin >>> 0, hex: Array.from(sig).map(function (b) { return b.toString(16).padStart(2, '0'); }).join('') };
+}
+function totpCfg() {
+  return {
+    secret: document.getElementById('totp-secret').value,
+    step: Math.max(1, parseInt(document.getElementById('totp-step').value, 10) || 30),
+    digits: parseInt(document.getElementById('totp-digits').value, 10) || 6,
+    algo: document.getElementById('totp-algo').value || 'SHA-1'
+  };
+}
+function totpMark(step) {
+  _totpUsed = _totpUsed || {}; _totpUsed[step] = true;
+  var count = Object.keys(_totpUsed).length;
+  var st = document.getElementById('totp-status');
+  if (st) st.textContent = 'الخطوات المُنجَزة: ' + count + ' / 3' + (count >= 3 ? ' — اكتمل المعمل ✓' : '');
+  if (!_totpDone && count >= 3) { _totpDone = true; completeLabStage(); }
+}
+function totpRandomSecret() { document.getElementById('totp-secret').value = totpBase32Random(16); }
+function setTotpTab(tab) {
+  ['gen', 'ver', 'win'].forEach(function (t) {
+    var p = document.getElementById('totp-panel-' + t); var b = document.getElementById('totp-tab-' + t);
+    if (!p || !b) return;
+    p.style.display = t === tab ? '' : 'none';
+    b.style.background = t === tab ? 'var(--primary)' : 'transparent';
+    b.style.color = t === tab ? 'white' : 'var(--muted)';
+  });
+}
+async function totpTick() {
+  var cfg = totpCfg(), key = totpBase32Decode(cfg.secret);
+  var codeEl = document.getElementById('totp-code'), barEl = document.getElementById('totp-bar'), remEl = document.getElementById('totp-remain');
+  if (!codeEl) { if (_totpTimer) { clearInterval(_totpTimer); _totpTimer = null; } return; } // panel gone
+  if (!key) { codeEl.textContent = '— — —'; if (remEl) remEl.textContent = 'سرّ Base32 غير صالح.'; return; }
+  var now = Math.floor(Date.now() / 1000), counter = Math.floor(now / cfg.step), rem = cfg.step - (now % cfg.step);
+  var r = await totpHOTP(key, counter, cfg.digits, cfg.algo);
+  codeEl.textContent = r.code.replace(/(.{3})(?=.)/g, '$1 ').trim();
+  if (barEl) barEl.style.width = (100 * rem / cfg.step) + '%';
+  if (remEl) remEl.textContent = 'يتبقّى ' + rem + ' ثانية · الخطوة T = ' + counter;
+  var steps = document.getElementById('totp-gen-steps');
+  if (steps) steps.textContent =
+    'T = floor(unixTime / ' + cfg.step + ') = floor(' + now + ' / ' + cfg.step + ') = ' + counter + '\n' +
+    'HMAC-' + cfg.algo + '(K, T) = ' + r.hex.slice(0, 40) + '…\n' +
+    'الإزاحة الديناميكية offset = آخر نصف بايت = ' + r.off + '\n' +
+    'الأربع بايتات عند الإزاحة (بعد قناع 0x7fffffff) = ' + r.bin + '\n' +
+    'الرمز = ' + r.bin + ' mod 10^' + cfg.digits + ' = ' + r.code;
+  window._totpCurrent = r.code;
+  totpMark('gen');
+}
+function totpStartClock() {
+  if (_totpTimer) clearInterval(_totpTimer);
+  totpTick();
+  _totpTimer = setInterval(totpTick, 1000);
+}
+function totpFillCurrent() { if (window._totpCurrent) document.getElementById('totp-input').value = window._totpCurrent; }
+async function totpVerify() {
+  var cfg = totpCfg(), key = totpBase32Decode(cfg.secret), out = document.getElementById('totp-ver-out');
+  if (!key) { out.textContent = 'سرّ Base32 غير صالح.'; return; }
+  var entered = (document.getElementById('totp-input').value || '').replace(/\s+/g, '');
+  if (!entered) { out.textContent = 'أدخل رمزًا أوّلًا.'; return; }
+  var now = Math.floor(Date.now() / 1000), counter = Math.floor(now / cfg.step);
+  var r = await totpHOTP(key, counter, cfg.digits, cfg.algo);
+  if (entered === r.code) {
+    out.textContent = '✓ مقبول. الخادم حسب الرمز نفسه من السرّ المشترك والخطوة الزمنية الحالية T = ' + counter + '، فتطابقا.\nلاحظ: السرّ K لم يُرسَل قطّ في القناة — أُرسِل الرمزُ المشتقّ فقط، وهو صالحٌ لهذه الخطوة وحدها.';
+    out.style.color = 'var(--secondary-d, #0F766E)';
+  } else {
+    out.textContent = '✗ مرفوض. الرمز المُدخَل ' + entered + ' لا يطابق رمزَ الخطوة الحالية ' + r.code + '.\nقد يكون الرمز قديمًا (انقضت خطوتُه) أو خاطئًا، أو ساعةُ العميل منجرفة — جرّب تبويب نافذة التسامح.';
+    out.style.color = 'var(--danger)';
+  }
+  totpMark('ver');
+}
+async function totpWindowTest() {
+  var cfg = totpCfg(), key = totpBase32Decode(cfg.secret), out = document.getElementById('totp-win-out');
+  if (!key) { out.textContent = 'سرّ Base32 غير صالح.'; return; }
+  var k = parseInt(document.getElementById('totp-window').value, 10);
+  var drift = parseInt(document.getElementById('totp-drift').value, 10);
+  var now = Math.floor(Date.now() / 1000), server = Math.floor(now / cfg.step), client = server + drift;
+  var clientCode = (await totpHOTP(key, client, cfg.digits, cfg.algo)).code;
+  var lines = [];
+  lines.push('خطوة الخادم  T_s = ' + server);
+  lines.push('خطوة العميل T_c = T_s + (' + drift + ') = ' + client + '  → رمزه ' + clientCode);
+  lines.push('');
+  lines.push('يقبل الخادمُ الخطواتِ من T_s−' + k + ' إلى T_s+' + k + ':');
+  var accepted = false, hitAt = null;
+  for (var d = -k; d <= k; d++) {
+    var c = server + d;
+    var code = (await totpHOTP(key, c, cfg.digits, cfg.algo)).code;
+    var match = (code === clientCode);
+    if (match) { accepted = true; hitAt = d; }
+    lines.push('  T_s' + (d >= 0 ? '+' : '') + d + ' = ' + c + ' → ' + code + (match ? '   ✓ تطابق' : ''));
+  }
+  lines.push('');
+  if (accepted) lines.push('النتيجة: ✓ مقبول (طابق عند الإزاحة ' + (hitAt >= 0 ? '+' : '') + hitAt + '). النافذة استوعبت الانجراف.');
+  else lines.push('النتيجة: ✗ مرفوض. الانجراف ' + drift + ' خطوة خارج النافذة ±' + k + '.');
+  lines.push('مفاضلة: توسيع k يعالج انجرافًا أكبر لكنه يمدّد صلاحية كلّ رمز فيرفع خطرَ إعادة الإرسال.');
+  out.textContent = lines.join('\n');
+  totpMark('win');
+}
+
+// ============================================================
+// DH Man-in-the-Middle Lab (معمل 53) — raw unauthenticated DH
+// Embodies Chapter 12's MITM attack table: intercept-and-substitute,
+// two separate keys, transparent relay — and the STS / identity-bound
+// KDF remedy. Uses small textbook parameters (p=23, g=5).
+// ============================================================
+var _mitmUsed = null, _mitmDone = false;
+function mitmModPow(base, exp, mod) {
+  base = ((base % mod) + mod) % mod; var r = 1n;
+  while (exp > 0n) { if (exp & 1n) r = r * base % mod; base = base * base % mod; exp >>= 1n; }
+  return r;
+}
+function mitmBig(id, dflt) {
+  var el = document.getElementById(id); if (!el) return dflt;
+  var v = el.value.trim(); if (!/^\d+$/.test(v)) return null;
+  try { return BigInt(v); } catch (e) { return null; }
+}
+function mitmIsProbablePrime(n) {
+  if (n < 2n) return false;
+  for (var d = 2n; d * d <= n; d++) { if (n % d === 0n) return false; }
+  return true;
+}
+function mitmParams() {
+  var p = mitmBig('mitm-p', null), g = mitmBig('mitm-g', null);
+  var a = mitmBig('mitm-a', null), b = mitmBig('mitm-b', null), m = mitmBig('mitm-m', null);
+  if (p === null || g === null || a === null || b === null || m === null) return { err: 'أدخل أعدادًا صحيحةً موجبة في كلّ الحقول.' };
+  if (p < 5n || p > 100000n) return { err: 'اجعل p أوّليًّا صغيرًا بين 5 و100000 لأغراض العرض.' };
+  if (!mitmIsProbablePrime(p)) return { err: 'p = ' + p + ' ليس أوّليًّا؛ اختر أوّليًّا (مثل 23 أو 97).' };
+  if (g < 2n || g >= p) return { err: 'اجعل المولّد g بين 2 و p−1.' };
+  return { p: p, g: g, a: a, b: b, m: m };
+}
+function setMitmTab(tab) {
+  ['safe', 'atk', 'fix'].forEach(function (t) {
+    var pa = document.getElementById('mitm-panel-' + t); var bt = document.getElementById('mitm-tab-' + t);
+    if (!pa || !bt) return;
+    pa.style.display = t === tab ? '' : 'none';
+    bt.style.background = t === tab ? 'var(--primary)' : 'transparent';
+    bt.style.color = t === tab ? 'white' : 'var(--muted)';
+  });
+}
+function mitmMark(step) {
+  _mitmUsed = _mitmUsed || {}; _mitmUsed[step] = true;
+  var count = Object.keys(_mitmUsed).length;
+  var st = document.getElementById('mitm-status');
+  if (st) st.textContent = 'الخطوات المُنجَزة: ' + count + ' / 3' + (count >= 3 ? ' — اكتمل المعمل ✓' : '');
+  if (!_mitmDone && count >= 3) { _mitmDone = true; completeLabStage(); }
+}
+function mitmSafe() {
+  var P = mitmParams(), out = document.getElementById('mitm-safe-out');
+  if (P.err) { out.textContent = P.err; return; }
+  var A = mitmModPow(P.g, P.a, P.p), B = mitmModPow(P.g, P.b, P.p);
+  var Ka = mitmModPow(B, P.a, P.p), Kb = mitmModPow(A, P.b, P.p);
+  out.textContent =
+    'الوسائط العلنية: p = ' + P.p + '، g = ' + P.g + '\n\n' +
+    'أليس ← بوب:  A = g^a mod p = ' + P.g + '^' + P.a + ' mod ' + P.p + ' = ' + A + '\n' +
+    'بوب ← أليس:  B = g^b mod p = ' + P.g + '^' + P.b + ' mod ' + P.p + ' = ' + B + '\n\n' +
+    'أليس تحسب: K = B^a mod p = ' + B + '^' + P.a + ' mod ' + P.p + ' = ' + Ka + '\n' +
+    'بوب  يحسب: K = A^b mod p = ' + A + '^' + P.b + ' mod ' + P.p + ' = ' + Kb + '\n\n' +
+    (Ka === Kb ? '✓ اتّفق الطرفان على مفتاحٍ سرّيٍّ واحد K = ' + Ka + '. إيف ترى A وB فقط وتعجز عن اللوغاريتم المتقطّع.'
+      : '⚠ عدم تطابق — تحقّق من الوسائط.');
+  mitmMark('safe');
+}
+function mitmAttack() {
+  var P = mitmParams(), out = document.getElementById('mitm-atk-out');
+  if (P.err) { out.textContent = P.err; return; }
+  var A = mitmModPow(P.g, P.a, P.p), B = mitmModPow(P.g, P.b, P.p), M = mitmModPow(P.g, P.m, P.p);
+  var Ka = mitmModPow(M, P.a, P.p), Kam = mitmModPow(A, P.m, P.p);   // Alice ↔ Mallory
+  var Kb = mitmModPow(M, P.b, P.p), Kbm = mitmModPow(B, P.m, P.p);   // Bob ↔ Mallory
+  out.textContent =
+    '1) اعتراضٌ وإحلال: مالوري تحبس A وB، وترسل بدلهما أُسَّها M = g^m mod p = ' + M + '\n' +
+    '   أليس تظنّ M إسهامَ بوب، وبوب يظنّ M إسهامَ أليس.\n\n' +
+    '2) مفتاحان منفصلان:\n' +
+    '   جهة أليس:  أليس تحسب  M^a = ' + Ka + '   ومالوري تحسب A^m = ' + Kam + '   → ' + (Ka === Kam ? 'تطابق ✓ (مفتاح أليس↔مالوري = ' + Ka + ')' : '✗') + '\n' +
+    '   جهة بوب:   بوب  يحسب  M^b = ' + Kb + '   ومالوري تحسب B^m = ' + Kbm + '   → ' + (Kb === Kbm ? 'تطابق ✓ (مفتاح بوب↔مالوري = ' + Kb + ')' : '✗') + '\n\n' +
+    '3) تنصّتٌ شفّاف: مالوري تجلس بين مفتاحَين مختلفَين (' + Ka + ' و' + Kb + ')، تفكّ بكلٍّ ما يخصّه وتعيد التشفير بالآخر.\n' +
+    '   لا يلاحظ أليس ولا بوب شيئًا: كلٌّ منهما «اتّفق على مفتاح» بنجاح — لكن مع مالوري لا مع الآخر.\n\n' +
+    'الدرس: ديفي–هيلمان الخام يضمن السرّيةَ ضدّ المتنصّت السلبيّ (إيف) لا المصادقةَ ضدّ المهاجم النشط (مالوري).';
+  mitmMark('atk');
+}
+function mitmFix() {
+  var P = mitmParams(), out = document.getElementById('mitm-fix-out');
+  if (P.err) { out.textContent = P.err; return; }
+  var A = mitmModPow(P.g, P.a, P.p), B = mitmModPow(P.g, P.b, P.p), M = mitmModPow(P.g, P.m, P.p);
+  out.textContent =
+    'العلاج الأوّل — بروتوكول المحطة-إلى-المحطة (STS):\n' +
+    'يوقّع كلُّ طرفٍ على الإسهامَين معًا بمفتاحه الخاصّ: Sig_A(A ‖ B) وSig_B(A ‖ B)، ويُرسَل التوقيع مشفَّرًا بالمفتاح المشترك.\n' +
+    'حين تُحلّ مالوري M محلّ A، يتوقّع بوب توقيعَ أليس على (M ‖ B)، لكنّ مالوري لا تملك مفتاحَ أليس الخاصّ فتعجز عن تزويره ⇒ يفشل التحقّق ويسقط الوسيط.\n\n' +
+    'العلاج الثاني — ربط الهويّتين في اشتقاق المفتاح:\n' +
+    'بدل K = KDF(g^{ab}) نحسب K = KDF(g^{ab} ‖ ID_A ‖ ID_B).\n' +
+    'لأنّ كلَّ جهةٍ في هجوم مالوري تشتقّ مفتاحًا بهويّاتٍ مختلفة، لا يمكن أن تتّفق الجهتان على القيمة نفسها، فينكشف التلاعبُ عند أوّل رسالةٍ مصادَقة.\n\n' +
+    'خلاصة: السرّية وحدها لا تكفي؛ لا بدّ من ربط الأُسّ العلنيّ (' + A + ' أو ' + B + ') بهويّةٍ مُصادَقة — وهو ما يفعله TLS 1.3 بتوقيع الخادم على نصّ المصافحة (CertificateVerify).';
+  mitmMark('fix');
+}
+
+// ============================================================
+// TLS 1.3 Handshake Lab (معمل 52) — book Ch12 "crowning the thread".
+// Ephemeral DHE + server signature (STS) + a didactic HKDF-style key
+// schedule via real HMAC-SHA-256 (Web Crypto). Four messages:
+// ClientHello → ServerHello → Certificate+CertificateVerify → Finished.
+// Optional Mallory toggle shows why the signature defeats a MITM.
+// ============================================================
+var _tlsUsed = null, _tlsDone = false, _tlsStep = 0, _tls = null;
+function tlsModPow(base, exp, mod) { base = ((base % mod) + mod) % mod; var r = 1n; while (exp > 0n) { if (exp & 1n) r = r * base % mod; base = base * base % mod; exp >>= 1n; } return r; }
+function tlsBig(id) { var el = document.getElementById(id); if (!el) return null; var v = el.value.trim(); if (!/^\d+$/.test(v)) return null; try { return BigInt(v); } catch (e) { return null; } }
+function tlsHex(buf) { return Array.prototype.map.call(new Uint8Array(buf), function (b) { return b.toString(16).padStart(2, '0'); }).join(''); }
+async function tlsSha(str) { return tlsHex(await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str))); }
+async function tlsHmac(keyHex, msg) {
+  var kb = Uint8Array.from(keyHex.match(/../g).map(function (h) { return parseInt(h, 16); }));
+  var k = await crypto.subtle.importKey('raw', kb, { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']);
+  return tlsHex(await crypto.subtle.sign('HMAC', k, new TextEncoder().encode(msg)));
+}
+function setTlsCard(role, title, body, color) {
+  var side = role === 'client' ? 'flex-start' : 'flex-end';
+  var div = document.createElement('div');
+  div.style.cssText = 'align-self:' + side + ';max-width:88%;background:var(--bg2,#f2f5f8);border-' + (role === 'client' ? 'right' : 'left') + ':3px solid ' + color + ';border-radius:10px;padding:8px 11px';
+  div.innerHTML = '<div style="font-size:12px;font-weight:700;color:' + color + '" dir="rtl">' + title + '</div><div style="font-size:11px;color:var(--text2);font-family:var(--mono);margin-top:3px" dir="ltr">' + body + '</div>';
+  document.getElementById('tls-flow').appendChild(div);
+}
+function tlsMark() {
+  _tlsUsed = _tlsUsed || {}; _tlsUsed[_tlsStep] = true;
+  var st = document.getElementById('tls-status');
+  if (st) st.textContent = 'الرسائل المُنجَزة: ' + Math.min(_tlsStep, 4) + ' / 4' + (_tlsStep >= 4 ? ' — اكتمل المعمل ✓' : '');
+  if (!_tlsDone && _tlsStep >= 4) { _tlsDone = true; completeLabStage(); }
+}
+function tlsReset() {
+  _tlsStep = 0; _tls = null; _tlsUsed = null; _tlsDone = _tlsDone; // keep completion once earned
+  var flow = document.getElementById('tls-flow'); if (flow) flow.innerHTML = '';
+  var d = document.getElementById('tls-detail'); if (d) d.textContent = 'اضبط الوسائط ثم ابدأ المصافحة برسالة ClientHello…';
+  var st = document.getElementById('tls-status'); if (st && !_tlsDone) st.textContent = 'الرسائل المُنجَزة: 0 / 4 — امضِ في المصافحة حتى Finished لإكمال المعمل';
+  var nb = document.getElementById('tls-next'); if (nb) { nb.disabled = false; nb.textContent = '▶ أرسِل الرسالة التالية'; }
+}
+async function tlsNext() {
+  var p = tlsBig('tls-p'), g = tlsBig('tls-g'), a = tlsBig('tls-a'), b = tlsBig('tls-b');
+  var detail = document.getElementById('tls-detail');
+  if (p === null || g === null || a === null || b === null) { detail.textContent = 'أدخل أعدادًا صحيحةً في كلّ الحقول.'; return; }
+  var mitm = document.getElementById('tls-mitm').checked;
+  _tlsStep++;
+  if (_tlsStep === 1) {
+    _tls = { A: tlsModPow(g, a, p), p: p, g: g, a: a, b: b, mitm: mitm };
+    setTlsCard('client', '1 · ClientHello', 'المعاملات المدعومة + إسهام DHE العابر:  g^a mod p = ' + _tls.A, '#2563EB');
+    detail.textContent = 'ClientHello: يرسل العميلُ قائمةَ الأصفار المدعومة وإسهامَه العابر A = g^a mod p = ' + _tls.A + '.\nلا سرّية بعد — هذه الرسالة علنيّة.';
+  } else if (_tlsStep === 2) {
+    _tls.B = tlsModPow(g, b, p);
+    _tls.Bseen = _tls.B;
+    if (mitm) { _tls.m = 9n; _tls.Bseen = tlsModPow(g, _tls.m, p); }
+    setTlsCard('server', '2 · ServerHello', 'إسهام الخادم العابر:  g^b mod p = ' + _tls.B + (mitm ? '   ⚠ مالوري تبدّله إلى ' + _tls.Bseen : ''), '#10B981');
+    // shared secret each side computes
+    _tls.ssClient = tlsModPow(_tls.Bseen, a, p).toString();       // client uses what it received
+    _tls.ssServer = tlsModPow(_tls.A, b, p).toString();           // server uses real A
+    _tls.th = await tlsSha('CH|A=' + _tls.A + '|SH|B=' + _tls.Bseen);
+    _tls.hsClient = await tlsHmac(await tlsSha('DHE|' + _tls.ssClient), 'hs|' + _tls.th);
+    _tls.hsServer = await tlsHmac(await tlsSha('DHE|' + _tls.ssServer), 'hs|' + _tls.th);
+    var agree = _tls.hsClient === _tls.hsServer;
+    detail.textContent =
+      'ServerHello: الخادم يرسل B = g^b mod p = ' + _tls.B + '.\n' +
+      (mitm ? '⚠ مالوري تعترض وتحلّ محلّه ' + _tls.Bseen + '.\n' : '') +
+      'من هذه اللحظة يشتقّ كلُّ طرفٍ السرَّ المشترك ومفاتيحَ المصافحة، ويُشفَّر ما بعدها.\n\n' +
+      'السرّ عند العميل  = ' + _tls.ssClient + '\nالسرّ عند الخادم = ' + _tls.ssServer + '\n' +
+      'هاش النصّ (transcript) = ' + _tls.th.slice(0, 32) + '…\n' +
+      'سرّ المصافحة عند العميل  = ' + _tls.hsClient.slice(0, 24) + '…\n' +
+      'سرّ المصافحة عند الخادم = ' + _tls.hsServer.slice(0, 24) + '…\n' +
+      (agree ? '✓ تطابق سرّ المصافحة.' : '✗ اختلف السرّان — لن تُنهى المصافحة إلا بتزييف التوقيع (مستحيل).');
+  } else if (_tlsStep === 3) {
+    // server signs the transcript (STS). Mallory cannot forge the server's private key.
+    _tls.serverKeyOK = !mitm; // with MITM, Mallory can't produce a signature valid under the server's real cert
+    var sig = await tlsHmac('5365727665725369676e', 'CertificateVerify|' + _tls.th); // "ServerSign" pseudo private key
+    setTlsCard('server', '3 · Certificate + CertificateVerify', 'شهادة الخادم + توقيع على هاش النصّ:  Sig = ' + sig.slice(0, 20) + '…', '#10B981');
+    detail.textContent =
+      'الخادم يرسل شهادتَه وتوقيعًا (CertificateVerify) على هاش النصّ كلِّه — تطبيقٌ مباشر لفكرة STS.\n' +
+      'العميل يتحقّق من التوقيع بالمفتاح العامّ في الشهادة الموثّقة من CA.\n\n' +
+      (mitm
+        ? '⚠ في هجوم مالوري: النصّ الذي يراه العميل يحوي B المبدَّل (' + _tls.Bseen + ')، فالتوقيع الصحيح للخادم لا يطابقه، ومالوري لا تملك مفتاحَ الخادم الخاصّ لتوقّع النصّ المبدَّل.\n✗ يفشل التحقّق من التوقيع ← يقطع العميلُ المصافحة. هذا ما يُسقط الوسيط.'
+        : '✓ التوقيع يطابق النصّ الذي رآه العميل، والهويّةُ مربوطةٌ بهذا التبادل بالذات.');
+  } else if (_tlsStep >= 4) {
+    var nb = document.getElementById('tls-next'); if (nb) { nb.disabled = true; nb.textContent = 'اكتملت المصافحة'; }
+    if (_tls.mitm) {
+      setTlsCard('client', '4 · Finished — مقطوع', 'العميل قطع الاتصال بعد فشل التحقّق من التوقيع.', '#7F1D1D');
+      detail.textContent = 'لم تكتمل المصافحة: التوقيع في الخطوة 3 لم يتحقّق تحت شهادة الخادم، فرفض العميلُ المتابعة.\nالدرس: DHE يعطي السرّيةَ الأمامية، وتوقيعُ الخادم (STS) يعطي المصادقةَ ويصدّ مالوري.';
+    } else {
+      var sKey = await tlsHmac(_tls.hsServer, 's hs traffic');
+      var cKey = await tlsHmac(_tls.hsClient, 'c hs traffic');
+      var fin = await tlsHmac(sKey, 'Finished|' + _tls.th);
+      var clientVerify = await tlsHmac(sKey, 'Finished|' + _tls.th);
+      setTlsCard('server', '4 · Finished', 'MAC على النصّ كلِّه:  ' + fin.slice(0, 20) + '…', '#10B981');
+      setTlsCard('client', '4 · Finished (تحقّق)', (fin === clientVerify ? '✓ تطابق — اكتملت المصافحة' : '✗'), '#2563EB');
+      detail.textContent =
+        'مفاتيح المرور مشتقّةٌ من سرّ المصافحة بلواصقَ مختلفة:\n' +
+        '  مفتاح الخادم (s hs traffic) = ' + sKey.slice(0, 24) + '…\n' +
+        '  مفتاح العميل (c hs traffic) = ' + cKey.slice(0, 24) + '…\n' +
+        'رسالة Finished تحمل MAC على النصّ كلِّه، فيتحقّق كلُّ طرفٍ من سلامته.\n' +
+        (fin === clientVerify ? '✓ تطابق ← اكتملت المصافحة وثبتت سلامتُها.\n\nاجتمعت الخيوط: DHE (سرّية أمامية) + توقيع الخادم (مصادقة تصدّ الوسيط) + شهادة CA (ربط الهويّة).' : '✗ عدم تطابق.');
+    }
+  }
+  tlsMark();
+}
+
+// ============================================================
+// Post-Quantum Cryptography Lab (معمل 54) — book Ch14 finale.
+// Three tools: (1) Shor/Grover impact calculator, (2) a real Lamport
+// one-time signature over SHA-256 (Web Crypto) illustrating hash-based
+// signatures behind SLH-DSA, (3) NIST families & FIPS 203/204/205.
+// ============================================================
+var _pqcUsed = null, _pqcDone = false, _pqcSK = null, _pqcPK = null, _pqcSig = null, _pqcSignedMsg = null;
+var PQC_MSG_BITS = 8;
+function pqcHexBytes(buf) { return Array.prototype.map.call(new Uint8Array(buf), function (b) { return b.toString(16).padStart(2, '0'); }).join(''); }
+async function pqcSha(bytes) { return pqcHexBytes(await crypto.subtle.digest('SHA-256', bytes)); }
+function pqcRand(n) { var r = new Uint8Array(n); (self.crypto || window.crypto).getRandomValues(r); return r; }
+function setPqcTab(tab) {
+  ['impact', 'lamport', 'nist'].forEach(function (t) {
+    var p = document.getElementById('pqc-panel-' + t), b = document.getElementById('pqc-tab-' + t);
+    if (!p || !b) return;
+    p.style.display = t === tab ? '' : 'none';
+    b.style.background = t === tab ? 'var(--primary)' : 'transparent';
+    b.style.color = t === tab ? 'white' : 'var(--muted)';
+  });
+}
+function pqcMark(tool) {
+  _pqcUsed = _pqcUsed || {}; _pqcUsed[tool] = true;
+  var count = Object.keys(_pqcUsed).length;
+  var st = document.getElementById('pqc-status');
+  if (st) st.textContent = 'الأدوات المُستكشَفة: ' + count + ' / 3' + (count >= 3 ? ' — اكتمل المعمل ✓' : '');
+  if (!_pqcDone && count >= 3) { _pqcDone = true; completeLabStage(); }
+}
+function pqcImpact() {
+  var prim = document.getElementById('pqc-prim').value, out = document.getElementById('pqc-impact-out');
+  var data = {
+    rsa: { name: 'RSA-2048', bits: '≈112', algo: 'شور (Shor)', after: 'تنكسر تمامًا', note: 'التحليلُ إلى عوامل يصبح كثيرَ الحدود ⇒ لا بدّ من بديلٍ ما بعد الكمّ (ML-KEM للتبادل، ML-DSA للتوقيع).' },
+    ecc: { name: 'ECC P-256', bits: '≈128', algo: 'شور (Shor)', after: 'تنكسر تمامًا', note: 'اللوغاريتم المتقطّع على المنحنيات يصبح كثيرَ الحدود ⇒ يُهاجَر إلى تواقيع الشبكات/الاختزال.' },
+    aes128: { name: 'AES-128', bits: '128', algo: 'غروفر (Grover)', after: 'ينخفض إلى ≈64 بتًّا', note: 'تسريعٌ تربيعيّ يُنصِّف الأمان الفعليّ ⇒ 64 بتًّا غيرُ كافٍ؛ رقِّ إلى AES-256.' },
+    aes256: { name: 'AES-256', bits: '256', algo: 'غروفر (Grover)', after: 'يبقى ≈128 بتًّا', note: 'حتى بعد التنصيف يبقى 128 بتًّا آمنًا عمليًّا ⇒ الردّ المتناظر يكفيه مضاعفةُ الطول.' },
+    sha256: { name: 'SHA-256', bits: '128 (اصطدام)', algo: 'غروفر (Grover)', after: 'تُنصَّف مقاومتُها', note: 'يُنصَح بـ SHA-384 فأعلى للحفاظ على هامشٍ كمومِيّ.' },
+    sha384: { name: 'SHA-384', bits: '192 (اصطدام)', algo: 'غروفر (Grover)', after: 'يبقى هامشٌ وافٍ', note: 'الخيارُ المُوصى به بعد الكمّ لدوال الاختزال.' }
+  };
+  var d = data[prim];
+  out.textContent =
+    'البنية: ' + d.name + '  ·  الأمان الكلاسيكيّ: ' + d.bits + ' بت\n' +
+    'الخوارزمية الكمومية: ' + d.algo + '\n' +
+    'الأثر: ' + d.after + '\n\n' + d.note + '\n\n' +
+    'القاعدة العامّة: غيرُ المتناظر (RSA/DH/ECC) يسقط أمام شور فيحتاج ثورةً كاملة؛ والمتناظرُ (AES/الاختزال) يصمد أمام غروفر بمضاعفة الطول.';
+  pqcMark('impact');
+}
+async function pqcLamKeygen() {
+  var out = document.getElementById('pqc-lam-out');
+  _pqcSK = []; _pqcPK = []; _pqcSig = null; _pqcSignedMsg = null;
+  for (var i = 0; i < PQC_MSG_BITS; i++) {
+    var s0 = pqcRand(16), s1 = pqcRand(16);
+    _pqcSK.push([s0, s1]);
+    _pqcPK.push([await pqcSha(s0), await pqcSha(s1)]);
+  }
+  var lines = ['المفتاح الخاصّ: ' + PQC_MSG_BITS + ' زوجًا من القيم العشوائية (قيمتان لكلّ بتّ).', 'المفتاح العامّ: هاش كلِّ قيمة (SHA-256، أوّل 8 محارف):', ''];
+  for (var i = 0; i < PQC_MSG_BITS; i++) lines.push('bit ' + i + ':  H(x0)=' + _pqcPK[i][0].slice(0, 8) + '…   H(x1)=' + _pqcPK[i][1].slice(0, 8) + '…');
+  lines.push('', 'المفتاح جاهز. لمرّةٍ واحدة فقط: توقيعُ رسالتين بالمفتاح نفسه يُفشي نصفَ السرّ ويكسره.');
+  out.textContent = lines.join('\n');
+  pqcMark('lamport');
+}
+function pqcReadMsg() { var v = parseInt(document.getElementById('pqc-msg').value, 10); if (isNaN(v) || v < 0 || v > 255) return null; return v; }
+async function pqcLamSign() {
+  var out = document.getElementById('pqc-lam-out');
+  if (!_pqcSK) { out.textContent = 'ولّد المفاتيح أوّلًا.'; return; }
+  var m = pqcReadMsg(); if (m === null) { out.textContent = 'أدخل رسالةً صحيحة بين 0 و255.'; return; }
+  _pqcSig = []; _pqcSignedMsg = m;
+  var bits = m.toString(2).padStart(PQC_MSG_BITS, '0');
+  var lines = ['الرسالة m = ' + m + '  (ثنائيّ: ' + bits + ')', 'التوقيع: نكشف من كلّ زوجٍ القيمةَ الموافقةَ لبتّ الرسالة:', ''];
+  for (var i = 0; i < PQC_MSG_BITS; i++) {
+    var bit = parseInt(bits[i], 10);
+    _pqcSig.push(_pqcSK[i][bit]);
+    lines.push('bit ' + i + ' = ' + bit + '  →  نكشف x' + bit + ' = ' + pqcHexBytes(_pqcSK[i][bit]).slice(0, 12) + '…');
+  }
+  lines.push('', 'أُرسِل التوقيع (القيم المكشوفة) مع الرسالة. القيمُ غيرُ المكشوفة تبقى سرًّا.');
+  out.textContent = lines.join('\n');
+  pqcMark('lamport');
+}
+async function pqcLamVerifyCore(msg) {
+  var bits = msg.toString(2).padStart(PQC_MSG_BITS, '0'), ok = true, rows = [];
+  for (var i = 0; i < PQC_MSG_BITS; i++) {
+    var bit = parseInt(bits[i], 10);
+    var hv = await pqcSha(_pqcSig[i]);
+    var match = hv === _pqcPK[i][bit];
+    if (!match) ok = false;
+    rows.push('bit ' + i + ' = ' + bit + '  H(sig)=' + hv.slice(0, 8) + '…  vs pk=' + _pqcPK[i][bit].slice(0, 8) + '…  ' + (match ? '✓' : '✗'));
+  }
+  return { ok: ok, rows: rows, bits: bits };
+}
+async function pqcLamVerify() {
+  var out = document.getElementById('pqc-lam-out');
+  if (!_pqcSig) { out.textContent = 'وقّع أوّلًا.'; return; }
+  var r = await pqcLamVerifyCore(_pqcSignedMsg);
+  out.textContent = 'التحقّق من الرسالة m = ' + _pqcSignedMsg + ' (' + r.bits + '):\n\n' + r.rows.join('\n') +
+    '\n\n' + (r.ok ? '✓ توقيعٌ صحيح: هاشُ كلِّ قيمةٍ مكشوفةٍ طابق المفتاحَ العامّ.' : '✗ توقيعٌ غير صحيح.');
+  pqcMark('lamport');
+}
+async function pqcLamTamper() {
+  var out = document.getElementById('pqc-lam-out');
+  if (!_pqcSig) { out.textContent = 'وقّع أوّلًا ثم جرّب التبديل.'; return; }
+  var tampered = _pqcSignedMsg ^ 1; // flip least-significant bit
+  var r = await pqcLamVerifyCore(tampered);
+  out.textContent = 'المهاجم بدّل الرسالة إلى m\' = ' + tampered + ' (' + r.bits + ') لكنه يملك التوقيعَ القديمَ فقط:\n\n' + r.rows.join('\n') +
+    '\n\n' + (r.ok ? '⚠ تطابق (غير متوقّع).' : '✗ يفشل التحقّق: البتّ المبدَّل يستلزم كشفَ القيمة الأخرى من زوجه، وهي سرٌّ لا يملكه المهاجم. هذا ما يربط التوقيعَ بالرسالة بالذات.');
+  pqcMark('lamport');
+}
+function pqcNist() {
+  var out = document.getElementById('pqc-nist-out');
+  var fam = [
+    ['الشبكات (Lattice-based)', 'التعلّم مع الأخطاء (LWE) / أقصر متجّه', 'تصدّرت: ML-KEM وML-DSA'],
+    ['الاختزال (Hash-based)', 'مقاومة الاصطدام في دوال الاختزال', 'معتمَدٌ للتواقيع: SLH-DSA'],
+    ['الترميز (Code-based)', 'فكّ شِفراتٍ خطّيةٍ عامّة', 'مرشّحٌ احتياطيّ: HQC'],
+    ['متعدّدة المتغيّرات (Multivariate)', 'حلّ جُمَلٍ متعدّدةِ الحدود', 'تراجعت (كُسِر Rainbow)'],
+    ['الإيزوجيني (Isogeny)', 'إيجاد تماثلاتٍ بين منحنيات', 'تراجعت (كُسِر SIKE 2022)']
+  ];
+  var std = [
+    ['FIPS 203', 'ML-KEM (Kyber)', 'تغليف المفاتيح · شبكات'],
+    ['FIPS 204', 'ML-DSA (Dilithium)', 'التواقيع · شبكات (الأساسيّ)'],
+    ['FIPS 205', 'SLH-DSA (SPHINCS+)', 'التواقيع · اختزال (احتياطيّ محافِظ)']
+  ];
+  function tbl(head, rows) {
+    var h = '<table style="border-collapse:collapse;font-size:12px;width:100%;margin-bottom:10px" dir="rtl"><tr>';
+    head.forEach(function (c) { h += '<th style="padding:5px 8px;border:1px solid var(--border);background:var(--primary);color:#fff;text-align:right">' + c + '</th>'; });
+    h += '</tr>';
+    rows.forEach(function (r, idx) { h += '<tr style="background:' + (idx % 2 ? 'var(--bg2,#f2f5f8)' : 'transparent') + '">'; r.forEach(function (c) { h += '<td style="padding:5px 8px;border:1px solid var(--border);text-align:right">' + c + '</td>'; }); h += '</tr>'; });
+    return h + '</table>';
+  }
+  out.innerHTML =
+    '<div style="font-weight:700;margin-bottom:5px" dir="rtl">العائلات الخمس</div>' +
+    tbl(['العائلة', 'المسألة الصعبة', 'الحالة'], fam) +
+    '<div style="font-weight:700;margin:8px 0 5px" dir="rtl">معايير NIST المعتمَدة (أغسطس 2024) + HQC (مارس 2025)</div>' +
+    tbl(['المعيار', 'الخوارزمية (الأصل)', 'الدور والعائلة'], std) +
+    '<div style="font-size:12px;margin-top:4px" dir="rtl">ولم يتوقّف المسار: HQC (ترميز) مرشّحٌ احتياطيّ للتغليف (مارس 2025)، وFN-DSA (Falcon، FIPS 206) قيد المسوّدات للتواقيع.</div>';
+  pqcMark('nist');
+}
+
+
+
+
+
+
 
 // ── M01 Part B: One-Time Pad lab (Week 2 challenge mirror) ──────────────────
 const OTP_WEEK2_CT = '11100011 11000100 10001010 11011110 11000010 11001111 10001010 11011010 11000101 11011010 11011111 11000110 11001011 11011000 10001010 11000011 11000111 11001011 11001101 11000011 11000100 11001011 11011110 11000011 11000101 11000100 10001010 11001001 11011000 11010011 11011010 11011110 11000101 11001101 11011000 11001011 11011010 11000010 11010011 10001010 11001111 11011011 11011111 11001011 11011110 11001111 11011001 10001010 11011110 11000101 10001010 11001111 11000100 11001001 11011000 11010011 11011010 11011110 11000011 11000101 11000100 10010001 10001010 11001011 10001010 11001001 11011000 11010011 11011010 11011110 11000101 11001101 11011000 11001011 11011010 11000010 11000011 11001001 10001010 11000111 11001111 11001001 11000010 11001011 11000100 11000011 11011001 11000111 10001010 11011010 11011000 11000101 11011100 11000011 11001110 11000011 11000100 11001101 10001010 11001001 11000101 11000100 11001100 11000011 11001110 11001111 11000100 11011110 11000011 11001011 11000110 11000011 11011110 11010011 10001010 11011001 11001111 11011000 11011100 11000011 11001001 11001111 11011001 10000100 10001010 11100011 11000100 10001010 11011000 11001111 11001011 11000110 11000011 11011110 11010011 10000110 10001010 11001001 11011000 11010011 11011010 11011110 11000101 11001101 11011000 11001011 11011010 11000010 11010011 10001010 11001101 11000101 11001111 11011001 10001010 11001100 11001011 11011000 10001010 11001000 11001111 11010011 11000101 11000100 11001110 10001010 11011110 11000010 11000011 11011001 10001010 11011110 11000101 10001010 11011010 11011000 11000101 11011100 11000011 11001110 11001111 10001010 11001011 11000100 10001010 11011111 11000100 11001110 11001111 11011000 11011010 11000011 11000100 11000100 11000011 11000100 11001101 10001010 11011110 11001111 11001001 11000010 11000100 11000101 11000110 11000101 11001101 11010011 10001010 11001100 11000101 11011000 10001010 11001000 11011111 11000011 11000110 11001110 11000011 11000100 11001101 10001010 11011001 11001111 11001001 11011111 11011000 11000011 11011110 11010011 10001010 11011001 11001111 11011000 11011100 11000011 11001001 11001111 11011001 10001010 11000111 11000101 11011000 11001111 10001010 11001000 11011000 11000101 11001011 11001110 11000110 11010011 10000100 10001010 10001010 10001010 10001010 10001010 10001010';
