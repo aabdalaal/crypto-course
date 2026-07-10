@@ -2415,9 +2415,9 @@ body.high-contrast {
 // Bump on EVERY deploy; keep sw.js CACHE_NAME in lockstep.
 // MAJOR = breaking data/schema change · MINOR = feature batch · PATCH = fix
 // ============================================================
-const APP_VERSION = '1.1.0';
-const APP_VERSION_DATE = '2026-06-29';
-const WHATS_NEW = 'New lab: Post-Quantum Cryptography (معمل 54) — activity code 54. Compute Shor/Grover impact per primitive, run a real Lamport one-time signature over SHA-256, and browse the five PQC families plus NIST FIPS 203/204/205. This completes all six planned labs (49–54); with the rewired labs (55–57), the app now covers every chapter of the book.';
+const APP_VERSION = '1.1.1';
+const APP_VERSION_DATE = '2026-07-08';
+const WHATS_NEW = 'Pre-print alignment patch: UKS attack direction unified with the book (Mallory registers Alice\'s key as her own; Bob is the deceived party — lesson text and both quiz items updated), qr_xor deep link now opens the OTP/XOR tool (same destination as activity code 16), ECDH cross-link unit label corrected to Unit 12, and minor digit cleanup in the DDT lab. With the rewired labs (55–57), the app now covers every chapter of the book.';
 
 // EmailJS — student email verification. These travel with the file (USB/WhatsApp/web).
 // Public keys are safe in client-side code; EmailJS is designed for browser use.
@@ -6649,16 +6649,17 @@ Eve knows both K_AE = 3 and K_BE = 6 — she can decrypt, re-encrypt, and relay 
   <div class="predict-body">Plain DHKE authenticates no one, so Mallory can substitute her own shares to both ends. A signature binds each share to a verified identity &mdash; her substituted value fails verification. Confidentiality was never the gap; <em>authenticity</em> was.</div>
 </details>
 <h3>The Unknown Key Share (UKS) Attack</h3>
-<p>A subtle but serious attack where two honest parties agree on a valid key, but each believes the key is shared with a different partner. Mallory does not learn K — but Alice thinks she's talking to Mallory, while Mallory convinces Bob the key is shared with Alice.</p>
+<p>A subtle but serious attack where two honest parties agree on a valid key, but one of them is wrong about whom it is shared with. Mallory does not learn K — she registers Alice's public key with the CA as her <em>own</em> (possible when the CA does not require Proof of Possession of the private key), then substitutes her certificate during the exchange. Bob ends up believing the key is shared with Mallory, while it is actually shared with Alice.</p>
 <div class="code-block"><span class="comment">// UKS Attack — identities are confused, not the key</span>
-Alice  →  Mallory: g^a (Alice believes she is talking to Mallory)
-Mallory → Bob:    g^a (Mallory forwards, Bob believes he is talking to Alice)
-Bob    → Mallory: g^b
-Mallory → Alice:  g^b
-Result: K = g^(ab) is correct, but:
-  - Alice thinks K is shared with Mallory
-  - Bob thinks K is shared with Alice
-  - Mallory can later attribute messages from Alice to herself with Bob</div>
+Setup:  Mallory registers Alice's public key with the CA as her OWN
+        (possible when the CA skips Proof-of-Possession checks)
+Alice  →  Bob:   g^a   (Mallory swaps the attached certificate:
+                        "this key share belongs to Mallory")
+Bob    →  Alice: g^b
+Result: K = g^(ab) is correct and actually shared between Alice and Bob, but:
+  - Alice (correctly) believes K is shared with Bob
+  - Bob   (wrongly)   believes K is shared with Mallory
+  - Bob now attributes Alice's messages to Mallory</div>
 <p>Countermeasure: include explicit identity labels inside the signed transcript (STS-MAC variant). TLS prevents UKS by including the server's certificate identity in the signed handshake transcript.</p>
 <h3>Real-World Key Establishment Protocols</h3>
 <div class="concept-box cb-wild">
@@ -6713,11 +6714,11 @@ Result: K = g^(ab) is correct, but:
             question: 'An Unknown Key Share (UKS) attack leaves the session key K intact but corrupts which property of the key exchange?',
             options: [
               { text: 'Confidentiality — the attacker learns K', correct: false },
-              { text: 'Partner authentication — each party believes K is shared with a different entity than it actually is', correct: true },
+              { text: 'Partner authentication — one party believes K is shared with a different entity than it actually is', correct: true },
               { text: 'Forward secrecy — past sessions become decryptable', correct: false },
               { text: 'Key freshness — the same K is reused across sessions', correct: false },
             ],
-            why: 'In a UKS attack the key K is correctly derived by both honest parties — its secrecy and freshness are preserved. What is violated is authentication: Alice believes K is shared with Mallory, while Bob believes it is shared with Alice. This confusion can later be exploited for attribution attacks. The fix is to include explicit identity labels inside the authenticated transcript.',
+            why: 'In a UKS attack the key K is correctly derived by both honest parties — its secrecy and freshness are preserved. What is violated is authentication: Bob believes K is shared with Mallory, while it is actually shared with Alice (Alice correctly believes she shares it with Bob). This confusion can later be exploited for attribution attacks. The fix is to include explicit identity labels inside the authenticated transcript.',
             concept: 'Unknown Key Share (UKS) attack — Module 11'
           },
           {
@@ -6808,11 +6809,11 @@ Result: K = g^(ab) is correct, but:
             question: 'An Unknown Key Share (UKS) attack does not expose the session key K or break confidentiality. What property does it corrupt, and what change to the STS protocol prevents it?',
             options: [
               { text: 'UKS corrupts confidentiality; the fix is to use a larger DH group', correct: false },
-              { text: 'UKS corrupts partner authentication — each party believes K is shared with a different entity than it actually is; the fix is to include explicit identity labels inside the signed transcript', correct: true },
+              { text: 'UKS corrupts partner authentication — one party believes K is shared with a different entity than it actually is; the fix is to include explicit identity labels inside the signed transcript', correct: true },
               { text: 'UKS corrupts forward secrecy; the fix is to use ephemeral rather than static DH keys', correct: false },
               { text: 'UKS corrupts key freshness; the fix is to add a timestamp to the DH exchange', correct: false },
             ],
-            why: 'In a UKS attack, Alice and Bob correctly derive K = g^(ab) — the key is secure and fresh. What is violated is authentication: Alice believes K is shared with Mallory, while Bob believes it is shared with Alice. Mallory can later attribute messages from Alice to herself with Bob. The countermeasure is to include explicit identity labels {Alice, Bob} inside the signed and encrypted STS transcript: Sign(sk_Bob, {g^b, g^a, "Alice", "Bob"}). Now each party signs who they intend to talk to, and any identity confusion is detectable.',
+            why: 'In a UKS attack, Alice and Bob correctly derive K = g^(ab) — the key is secure and fresh. What is violated is authentication: Bob believes K is shared with Mallory, while it is actually shared with Alice — Alice\'s own belief that she shares it with Bob is correct. Mallory can later attribute Alice\'s messages to herself with Bob. The countermeasure is to include explicit identity labels {Alice, Bob} inside the signed and encrypted STS transcript: Sign(sk_Bob, {g^b, g^a, "Alice", "Bob"}). Now each party signs who they intend to talk to, and any identity confusion is detectable.',
             concept: 'Unknown Key Share attack and fix — Module 11',
             hintVideoYtId: 'AQDCe585Lnc',
             hintVideoTitle: 'Key Establishment Protocol Security',
@@ -8063,7 +8064,7 @@ const LAB_OVERRIDES = {
   ddt_lat_lab: {
     type: 'lab',
     heading: 'معمل جداول التحليل التفاضليّ والخطّيّ (DDT / LAT)',
-    scenario: 'صندوق زجاجيّ للتحليل: تتبّع كيف يُسرِّب صندوقُ استبدالٍ صغير (3-بت) معلوماتٍ عن مفتاحه. اسرد الأزواج الثمانية لأيّ فرق مدخل Δx وعُدَّ فروق المخرج بيدك، ثم ابنِ جدول التوزيع التفاضليّ (DDT) كاملًا لترى أقوى مُمَيِّز، وأخيرًا جدول التقريب الخطّيّ (LAT) لترى أكبر انحياز. الصندوق الافتراضيّ هو صندوق الباب 13 نفسه: S = [1,0,3,4,5,6,7,2]. استكشِف ٣ أدوات لإكمال المعمل.',
+    scenario: 'صندوق زجاجيّ للتحليل: تتبّع كيف يُسرِّب صندوقُ استبدالٍ صغير (3-بت) معلوماتٍ عن مفتاحه. اسرد الأزواج الثمانية لأيّ فرق مدخل Δx وعُدَّ فروق المخرج بيدك، ثم ابنِ جدول التوزيع التفاضليّ (DDT) كاملًا لترى أقوى مُمَيِّز، وأخيرًا جدول التقريب الخطّيّ (LAT) لترى أكبر انحياز. الصندوق الافتراضيّ هو صندوق الباب 13 نفسه: S = [1,0,3,4,5,6,7,2]. استكشِف 3 أدوات لإكمال المعمل.',
     labId: 'ddt_lat_lab'
   },
   number_theory_lab: {
@@ -8093,7 +8094,7 @@ const LAB_DEEP_LINK_MAP = {
   caesar:         { moduleId: 1, tab: 'caesar' },
   frequency:      { moduleId: 1, tab: 'freq' },
   vigenere:       { moduleId: 1, tab: 'vigenere' },
-  xor:            { moduleId: 1, tab: null },
+  xor:            { moduleId: 2, tab: 'otp',  tabFn: 'setOSSLSymTab' }, // printed qr_xor — same destination as activity code 16 (OTP/XOR tool)
   playfair:       { moduleId: 1, tab: 'playfair' },
   hill:           { moduleId: 1, tab: 'hill' },
   railfence:      { moduleId: 1, tab: 'railfence' },
@@ -19424,7 +19425,7 @@ const i18n = {
     ecc_bridge_title: 'الجسر إلى الواقع', ecc_nist_table_sec: 'بتات الأمان',
     ecc_nist_footnote: 'يتبع الجدول معيار NIST SP 800-57. اختصار المحاضرة 6 ("RSA-2048 يعادل 128 بت") وتعليم الوحدة 6 (RSA-2048 ≈ 112 بت وفق تقديرات NFS) كلاهما تقريب لنفس المنحنى — يعتمد هذا الجدول نقاط مرجع NIST.',
     ecc_realworld_callout: 'يعتمد متصفح Google Chrome افتراضيًا على ECDHE في TLS. يستخدم واتساب Curve25519 في تبادل المفاتيح.',
-    ecc_try_real_btn: '← جرّب النسخة الحقيقية: مختبر ECDH الحقيقي (Web Crypto P-256)، الوحدة 11',
+    ecc_try_real_btn: '← جرّب النسخة الحقيقية: مختبر ECDH الحقيقي (Web Crypto P-256)، الوحدة 12',
     ecc_qr_header: 'باقٍ تربيعي؟', ecc_yes: 'نعم', ecc_no: 'لا',
     ecc_case_doubling: 'مضاعفة', ecc_case_infinity: 'الجمع مع نقطة اللانهاية', ecc_case_distinct: 'نقطتان مختلفتان',
     ecc_modinv_note: 'المعكوس الضربي عبر خوارزمية إقليدس الممتدة',
