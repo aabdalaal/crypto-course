@@ -4323,8 +4323,7 @@ const INTERACTIVE_DIAGRAM_TEMPLATES = [
  "desc": "Book-twin (LTR) of model.png: shared key, ciphertext over the channel, Eve listening",
  "audioDesc": "يطابق شكل «نموذج المراسلة مع وجود طرف ثالث» في الكتاب: أليس وبوب يتشاركان المفتاح k مسبقاً، والرسالة تعبر القناة مشفّرةً، وإيف المتنصّتة لا ترى إلا النصّ المشفّر.",
  "modules": [
-  2,
-  3
+  2
  ],
  "type": "interactive",
  "steps": [
@@ -4626,8 +4625,7 @@ const INTERACTIVE_DIAGRAM_TEMPLATES = [
  "audioDesc": "يطابق هذا المخطّط شكل الكتاب «مراحل المراسلة المشفّرة بين الطرفين»، والمسار من اليسار إلى اليمين: في مرحلة التشفير تحوّل أليس النصّ الصريح x بالمفتاح k إلى النصّ المشفّر Y، وفي مرحلة الإرسال يعبر Y القناة العامة حيث لا ترى المتنصّتة إيف سواه، وفي مرحلة فكّ التشفير يستعيد بوب النصّ الصريح بالمفتاح k نفسه.",
  "modules": [
   0,
-  2,
-  3
+  2
  ],
  "type": "interactive",
  "steps": [
@@ -36728,6 +36726,8 @@ function saveModuleIGraphs(moduleId, igraphs) {
 function _instructorNoteHTML(d) {
   try {
     if (!d || !d.instructorNotes) return '';
+    // ملاحظات المحاضر: العرض المضمّن معطّل (2026-07-11) — البيانات محفوظة وتُدار من لوحة المشرف؛ للإرجاع احذف السطر التالي
+    return '';
     if (typeof canAccess !== 'function' || !canAccess(ROLES.TEACHER)) return '';
     var en = d.instructorNotes.en || ''; var ar = d.instructorNotes.ar || '';
     if (!en && !ar) return '';
@@ -36888,31 +36888,98 @@ function _naBumpStat(title) {
   } catch (err) {}
 }
 
+
+// ── أنسنة النص المنطوق: رموز رياضية ← كلام، وإسقاط الزخارف ──
+function _naHumanize(text) {
+  var ar = /[\u0600-\u06FF]/.test(text);
+  var t = String(text || '');
+  var SUP = {'\u2070':'0','\u00b9':'1','\u00b2':'2','\u00b3':'3','\u2074':'4','\u2075':'5','\u2076':'6','\u2077':'7','\u2078':'8','\u2079':'9','\u1d43':'a','\u1d47':'b','\u1d9c':'c','\u1d48':'d','\u1d49':'e','\u1d4f':'k','\u207f':'n','\u02e2':'s'};
+  t = t.replace(/[\u2070\u00b9\u00b2\u00b3\u2074-\u2079\u1d43\u1d47\u1d9c\u1d48\u1d49\u1d4f\u207f\u02e2]+/g, function(run) {
+    var plain = run.split('').map(function(c) { return SUP[c] || ''; }).join('');
+    if (/[a-z]/.test(plain) && plain.length > 1) plain = plain.split('').join(' ');
+    return (ar ? ' \u0623\u064f\u0633 ' : ' to the power ') + plain + ' ';
+  });
+  var map = ar ? [
+    [/\u2295/g, ' \u0625\u0643\u0633 \u0623\u0648\u0631 '], [/\u2225/g, ' \u0645\u062a\u0628\u0648\u0639\u0627\u064b \u0628\u0640 '],
+    [/[\u21d2\u2192]/g, ' \u064a\u0639\u0637\u064a '], [/\u225f/g, ' \u0647\u0644 \u064a\u0633\u0627\u0648\u064a '],
+    [/\u00bd/g, ' \u0646\u0635\u0641 '], [/[\u00b7\u00d7]/g, ' \u0641\u064a '], [/\u2248/g, ' \u062a\u0642\u0631\u064a\u0628\u0627\u064b '], [/\u226a/g, ' \u0623\u0635\u063a\u0631 \u0628\u0643\u062b\u064a\u0631 \u0645\u0646 '],
+    [/[\u2014\u2013]/g, '\u060c '], [/[\u00ab\u00bb"\u201c\u201d]/g, ''], [/[\u2713\u2717]/g, ''],
+  ] : [
+    [/\u2295/g, ' XOR '], [/\u2225/g, ' concatenated with '],
+    [/[\u21d2\u2192]/g, ' gives '], [/\u225f/g, ' equals '],
+    [/\u00bd/g, ' one half '], [/[\u00b7\u00d7]/g, ' times '], [/\u2248/g, ' about '], [/\u226a/g, ' far less than '],
+    [/[\u2014\u2013]/g, ', '], [/[\u00ab\u00bb"\u201c\u201d]/g, ''], [/[\u2713\u2717]/g, ''],
+  ];
+  map.forEach(function(m) { t = t.replace(m[0], m[1]); });
+  try { t = t.replace(/\p{Extended_Pictographic}/gu, ''); } catch (e) {}
+  return t.replace(/\s+/g, ' ').replace(/\s+([\u060c\u061b.,;:!?])/g, '$1').trim();
+}
+
+// ── انتقاء أفضل صوت عربي متاح على الجهاز (Natural/Neural/Online قبل الأصوات الأساسية) ──
+function _naBestArVoice() {
+  try {
+    var vs = window.speechSynthesis.getVoices() || [];
+    if (!vs.length && !window._naVoicesHooked) {
+      window._naVoicesHooked = true;
+      window.speechSynthesis.onvoiceschanged = function() { window._naArVoice = null; };
+    }
+    if (window._naArVoice && vs.indexOf(window._naArVoice) !== -1) return window._naArVoice;
+    var best = null, bs = -Infinity;
+    vs.forEach(function(v) {
+      if (!/^ar/i.test(v.lang || '')) return;
+      var n = (v.name || '') + ' ' + (v.voiceURI || ''), s = 0;
+      if (/natural|neural|online|premium|enhanced|wavenet|google|microsoft/i.test(n)) s += 10;
+      if (/hamed|salma|majed|laila|hoda|zariyah|naayf|shakir|fatima|amina|tarik/i.test(n)) s += 4;
+      if (/espeak|compact/i.test(n)) s -= 8;
+      if (v.localService === false) s += 2;
+      if (s > bs) { bs = s; best = v; }
+    });
+    window._naArVoice = best;
+    return best;
+  } catch (e) { return null; }
+}
+
+// ── تقطيع جملي: نطق متتابع بوقفات طبيعية بدل جملة واحدة رتيبة ──
+function _naChunks(text) {
+  var raw = String(text || '').match(/[^.!\u061f?\u061b]+[.!\u061f?\u061b]?/g) || [];
+  var out = [];
+  raw.forEach(function(p) {
+    p = p.trim();
+    if (!p) return;
+    if (out.length && p.length < 18) out[out.length - 1] += ' ' + p;
+    else out.push(p);
+  });
+  return out;
+}
+
 function _naSpeak(rawText, btn, xapiName, onDone) {
   if (!window.speechSynthesis) { showToast(t('tts_unsupported_device')); return false; }
   var text = (typeof preprocessSpeechText === 'function') ? preprocessSpeechText(rawText) : rawText;
-  var utt = new SpeechSynthesisUtterance(text);
-  if (/[\u0600-\u06FF]/.test(text)) {
-    // Arabic narration (book-twin diagrams): let the browser pick an Arabic voice
-    utt.lang = 'ar';
-    var vAr = (window.speechSynthesis.getVoices() || []).find(function(v0) { return /^ar/i.test(v0.lang); });
-    if (vAr) utt.voice = vAr;
-  } else {
-    var v = (typeof getBestVoice === 'function') ? getBestVoice() : null;
-    if (v) utt.voice = v; else utt.lang = 'en-GB';
-  }
-  utt.rate = _naGetRate();
-  utt.pitch = 0.97;
-  utt.volume = 1;
-  utt.onend = function() { if (onDone) onDone(); else _naReset(); };
-  utt.onerror = function() { _naReset(); };
+  text = _naHumanize(text);
+  var isAr = /[\u0600-\u06FF]/.test(text);
+  var parts = _naChunks(text);
+  if (!parts.length) return false;
+  var vAr = isAr ? _naBestArVoice() : null;
+  var vEn = !isAr && (typeof getBestVoice === 'function') ? getBestVoice() : null;
   if (btn) {
     if (!btn.dataset.naIcon) btn.dataset.naIcon = btn.textContent;
     window._naBtn = btn;
     btn.textContent = '⏹';
   }
   if (xapiName && typeof emitXAPI === 'function') emitXAPI('interacted', xapiName, { tts: true });
-  speechSynthesis.speak(utt);
+  var done = false;
+  var finish = function() { if (done) return; done = true; if (onDone) onDone(); else _naReset(); };
+  parts.forEach(function(pt, i) {
+    var utt = new SpeechSynthesisUtterance(pt);
+    if (isAr) { utt.lang = 'ar'; if (vAr) utt.voice = vAr; }
+    else { if (vEn) utt.voice = vEn; else utt.lang = 'en-GB'; }
+    utt.rate = _naGetRate();
+    utt.pitch = 1;
+    utt.volume = 1;
+    if (i === parts.length - 1) utt.onend = finish;
+    utt.onerror = function() { done = true; _naReset(); };
+    speechSynthesis.speak(utt);
+  });
   return true;
 }
 
@@ -36964,7 +37031,7 @@ function _naStepText(kind, key) {
   var structure = _naStructure(kind, steps[cur]);
   var title = ((maps.title || {})[key]) || (kind === 'graph' ? 'Graph' : 'Diagram');
   var stepWord = _idagLang() === 'ar' ? ('الخطوة ' + (cur + 1) + ' من ' + total + '. ') : ('Step ' + (cur + 1) + ' of ' + total + '. ');
-  return { text: intro + stepWord + caption + (structure ? ' ' + structure : ''), title: title, cur: cur, total: total };
+  return { text: intro + caption, srText: structure, title: title, cur: cur, total: total };
 }
 
 function speakDiagramDesc(key, btn) {
@@ -37326,6 +37393,15 @@ function idiagNav(key, dir) {
     dir
   );
   _animateCaptionSwap(player.querySelector('.idag-caption'), _idagT(step, 'caption'));
+      var _srd = player.querySelector('.idag-srdesc');
+      if (!_srd) {
+        _srd = document.createElement('div');
+        _srd.className = 'idag-srdesc';
+        _srd.setAttribute('aria-live', 'polite');
+        _srd.style.cssText = 'position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;';
+        player.appendChild(_srd);
+      }
+      _srd.textContent = _naStructure('diagram', step);
   _updateStepChrome(player, next, total);
 }
 
