@@ -15,7 +15,7 @@
 <link rel="manifest" href="./manifest.json">
 <title>Crypto-Course</title>
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&family=Cairo:wght@400;600;700&family=Tajawal:wght@400;500;700&display=swap');
 
 :root {
   --primary: #2563EB;
@@ -1600,8 +1600,11 @@ body.high-contrast {
 .idag-player { background: white; border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 16px; margin-bottom: 12px; }
 /* Node & edge transitions */
 .idag-node-rect { transition: fill 0.35s ease, stroke 0.35s ease, filter 0.35s ease; }
-.idag-node-text { transition: fill 0.35s ease; font-family: 'Outfit', sans-serif; }
+.idag-node-text { transition: fill 0.35s ease; font-family: 'Tajawal', 'Cairo', 'Outfit', 'Segoe UI', 'Tahoma', sans-serif; }
 .idag-edge-line { transition: stroke 0.35s ease, opacity 0.35s ease; }
+/* Book-twin additions: actor circles + free text labels (stage titles, math symbols) */
+.idag-actor circle { transition: fill 0.35s ease, filter 0.35s ease; }
+.idag-caption { unicode-bidi: plaintext; }
 /* Entry animations — opacity included so elements materialise instead of popping */
 @keyframes idagNodeIn {
   from { opacity: 0; transform: translateY(10px) scale(0.92); }
@@ -2415,8 +2418,8 @@ body.high-contrast {
 // Bump on EVERY deploy; keep sw.js CACHE_NAME in lockstep.
 // MAJOR = breaking data/schema change · MINOR = feature batch · PATCH = fix
 // ============================================================
-const APP_VERSION = '1.1.1';
-const APP_VERSION_DATE = '2026-07-08';
+const APP_VERSION = '1.3.0';
+const APP_VERSION_DATE = '2026-07-11';
 const WHATS_NEW = 'Pre-print alignment patch: UKS attack direction unified with the book (Mallory registers Alice\'s key as her own; Bob is the deceived party — lesson text and both quiz items updated), qr_xor deep link now opens the OTP/XOR tool (same destination as activity code 16), ECDH cross-link unit label corrected to Unit 12, and minor digit cleanup in the DDT lab. With the rewired labs (55–57), the app now covers every chapter of the book.';
 
 // EmailJS — student email verification. These travel with the file (USB/WhatsApp/web).
@@ -2651,1090 +2654,5177 @@ function getNextLevel(xp) {
 // ── Interactive diagram templates (no Mermaid, pure SVG+CSS) ──────────────
 const INTERACTIVE_DIAGRAM_TEMPLATES = [
 {
-  "id": "kerckhoffs_m1",
-  "icon": "🗝️",
-  "name": "Kerckhoffs's Principle",
-  "desc": "3 steps: security through obscurity, the leak that breaks it, and why only the key should be secret",
-  "audioDesc": "This diagram contrasts two designs: one that hides its algorithm and collapses the moment the design leaks, and Kerckhoffs's principle, where the algorithm is public and only the key is secret, so the system stays safe even when the attacker knows exactly how it works",
-  "modules": [
-    1
-  ],
-  "type": "interactive",
-  "instructorNotes": {
-    "en": "The single idea: security must rest on the secrecy of the KEY, never the secrecy of the algorithm. Misconception to dismantle: 'a hidden algorithm is safer.' Hidden designs leak — through reverse engineering, insiders, or publication — and then offer zero protection, whereas a public algorithm with a secret key stays secure under scrutiny. That is exactly why AES and RSA are open standards. Ask the class to name a system whose security depended on obscurity and failed once leaked.",
-    "ar": "الفكرة الواحدة: يجب أن يقوم الأمان (security) على سرّيّة المفتاح (key) لا على سرّيّة الخوارزمية (algorithm). المفهوم الخاطئ المطلوب هدمه: «الخوارزمية المخفيّة أكثر أمانًا». التصاميم المخفيّة تتسرّب — بالهندسة العكسية (reverse engineering)، أو من الداخل، أو بالنشر — فلا تقدّم بعدها أيّ حماية، بينما تبقى الخوارزمية المعلَنة ذات المفتاح السرّي آمنة تحت التدقيق. ولهذا بالضبط فإنّ AES وRSA معاييرُ مفتوحة (open standards). اسأل الصفّ أن يذكروا نظامًا اعتمد أمانه على الغموض (obscurity) ثمّ سقط حين تسرّب."
-  },
-  "steps": [
+ "id": "kerckhoffs_m1",
+ "name": "Kerckhoffs's Principle",
+ "icon": "🗝️",
+ "desc": "Book-twin (LTR): security by obscurity vs Kerckhoffs — الأمن في المفتاح لا في كتمان الخوارزمية",
+ "audioDesc": "يقابل المخطّط مبدأ كيرشوف في الفصل الأوّل: نظامٌ يعتمد كتمان خوارزميّته ينهار حين تتسرّب، أمّا النظام المفتوح فيحصر السرّ كلّه في المفتاح k القابل للتبديل.",
+ "modules": [
+  1
+ ],
+ "type": "interactive",
+ "steps": [
+  {
+   "caption": "الأمن بالغموض: يراهن النظام على بقاء الخوارزمية نفسها سرّاً — تصميمٌ شائع قديماً، لكنّ السرّ الكبير يصعب حفظه.",
+   "w": 560,
+   "h": 240,
+   "guides": [
     {
-      "caption": "Step 1 — Security through obscurity: this design hides how the algorithm works and relies on no one finding out.",
-      "nodes": [
-        {
-          "id": "PT",
-          "label": "plaintext",
-          "x": 155,
-          "y": 50,
-          "w": 120,
-          "h": 34,
-          "color": "blue"
-        },
-        {
-          "id": "ALG",
-          "label": "SECRET algorithm",
-          "x": 155,
-          "y": 128,
-          "w": 170,
-          "h": 36,
-          "color": "red"
-        },
-        {
-          "id": "CT",
-          "label": "ciphertext",
-          "x": 155,
-          "y": 208,
-          "w": 120,
-          "h": 34,
-          "color": "blue"
-        }
-      ],
-      "edges": [
-        {
-          "from": "PT",
-          "to": "ALG",
-          "color": "blue"
-        },
-        {
-          "from": "ALG",
-          "to": "CT",
-          "color": "blue"
-        }
-      ]
-    },
-    {
-      "caption": "Step 2 — The leak: reverse engineering, an insider, or publication exposes the algorithm. With no separate key, the whole system falls at once.",
-      "nodes": [
-        {
-          "id": "ALG",
-          "label": "algorithm now PUBLIC",
-          "x": 155,
-          "y": 80,
-          "w": 190,
-          "h": 36,
-          "color": "red",
-          "hl": true
-        },
-        {
-          "id": "BRK",
-          "label": "system broken — nothing left to protect messages",
-          "x": 155,
-          "y": 170,
-          "w": 250,
-          "h": 48,
-          "color": "red",
-          "hl": true
-        }
-      ],
-      "edges": [
-        {
-          "from": "ALG",
-          "to": "BRK",
-          "hl": true,
-          "color": "red"
-        }
-      ]
-    },
-    {
-      "caption": "Step 3 — Kerckhoffs's principle: publish the algorithm; keep only the key secret. The system stays secure even when Eve knows the full design. This is why AES and RSA are open.",
-      "nodes": [
-        {
-          "id": "ALG",
-          "label": "PUBLIC algorithm",
-          "x": 95,
-          "y": 90,
-          "w": 150,
-          "h": 36,
-          "color": "blue"
-        },
-        {
-          "id": "KEY",
-          "label": "secret KEY",
-          "x": 230,
-          "y": 90,
-          "w": 110,
-          "h": 36,
-          "color": "green",
-          "hl": true
-        },
-        {
-          "id": "SEC",
-          "label": "secure even if Eve knows the design",
-          "x": 155,
-          "y": 190,
-          "w": 230,
-          "h": 44,
-          "color": "green",
-          "hl": true
-        }
-      ],
-      "edges": [
-        {
-          "from": "ALG",
-          "to": "SEC",
-          "color": "blue"
-        },
-        {
-          "from": "KEY",
-          "to": "SEC",
-          "hl": true,
-          "color": "green"
-        }
-      ]
+     "x": 284,
+     "y1": 48,
+     "y2": 222
     }
-  ]
-},
-{
-  "id": "block_modes_m3",
-  "icon": "🐧",
-  "name": "Block Cipher Modes — ECB vs CBC",
-  "desc": "3 steps: ECB encrypts blocks independently, identical blocks leak, and CBC chaining destroys the pattern",
-  "audioDesc": "This diagram shows why the mode of operation matters: in E C B mode two identical plaintext blocks become two identical ciphertext blocks, so patterns survive, while C B C mode chains each block to the previous ciphertext so that identical plaintext blocks now encrypt to different outputs",
-  "modules": [
-    3
-  ],
-  "type": "interactive",
-  "instructorNotes": {
-    "en": "The lesson lives in one image — the ECB penguin. Drive home that the AES block cipher itself is fine; the failure is the MODE wrapping it. ECB encrypts each block independently, so identical plaintext blocks become identical ciphertext blocks and large-scale patterns survive. CBC and CTR chain each block to the previous, so repetition vanishes. Misconception: 'a strong cipher means strong encryption' — mode choice is a separate, equally critical decision. Board cue: shade two identical input blocks, then show them identical under ECB but different under CBC.",
-    "ar": "الدرس كلّه في صورة واحدة — بطريق ECB. رسّخ أنّ الشيفرة الكتليّة (block cipher) AES نفسها سليمة؛ والخلل في النمط (mode) الذي يغلّفها. نمط ECB يشفّر كلّ كتلة (block) على حدة، فتصبح الكتل المتطابقة في النصّ الصريح (plaintext) كتلًا متطابقة في النصّ المشفّر (ciphertext)، وتبقى الأنماط الكبيرة ظاهرة. أمّا CBC وCTR فيربطان كلّ كتلة بسابقتها، فيختفي التكرار. مفهوم خاطئ: «الشيفرة القويّة تعني تشفيرًا قويًّا» — اختيار النمط (mode) قرار منفصل لا يقلّ أهمّية. إشارة على السبّورة: ظلّل كتلتي إدخال متطابقتين، ثمّ أظهرهما متطابقتين في ECB ومختلفتين في CBC."
-  },
-  "steps": [
+   ],
+   "nodes": [
     {
-      "caption": "Step 1 — ECB mode: each block is encrypted on its own with the same key. Two identical plaintext blocks pass through AES separately.",
-      "nodes": [
-        {
-          "id": "P1",
-          "label": "block P",
-          "x": 95,
-          "y": 50,
-          "w": 90,
-          "h": 34,
-          "color": "blue"
-        },
-        {
-          "id": "P2",
-          "label": "block P (same)",
-          "x": 215,
-          "y": 50,
-          "w": 120,
-          "h": 34,
-          "color": "blue"
-        },
-        {
-          "id": "E1",
-          "label": "AES",
-          "x": 110,
-          "y": 128,
-          "w": 60,
-          "h": 32,
-          "color": "default"
-        },
-        {
-          "id": "E2",
-          "label": "AES",
-          "x": 240,
-          "y": 128,
-          "w": 60,
-          "h": 32,
-          "color": "default"
-        },
-        {
-          "id": "C1",
-          "label": "C1",
-          "x": 110,
-          "y": 205,
-          "w": 70,
-          "h": 34,
-          "color": "green"
-        },
-        {
-          "id": "C2",
-          "label": "C2 = C1",
-          "x": 240,
-          "y": 205,
-          "w": 90,
-          "h": 34,
-          "color": "green"
-        }
-      ],
-      "edges": [
-        {
-          "from": "P1",
-          "to": "E1",
-          "color": "blue"
-        },
-        {
-          "from": "E1",
-          "to": "C1",
-          "color": "green"
-        },
-        {
-          "from": "P2",
-          "to": "E2",
-          "color": "blue"
-        },
-        {
-          "from": "E2",
-          "to": "C2",
-          "color": "green"
-        }
-      ]
+     "id": "TQ",
+     "shape": "text",
+     "label": "الأمن بالغموض",
+     "x": 96,
+     "y": 60,
+     "fs": 11,
+     "fw": 700,
+     "color": "mallory"
     },
     {
-      "caption": "Step 2 — The leak: because equal inputs give equal outputs, identical ciphertext blocks reveal repetition. This is the ECB penguin — structure survives encryption.",
-      "nodes": [
-        {
-          "id": "C1",
-          "label": "C1",
-          "x": 110,
-          "y": 110,
-          "w": 70,
-          "h": 36,
-          "color": "red",
-          "hl": true
-        },
-        {
-          "id": "C2",
-          "label": "C2 = C1",
-          "x": 240,
-          "y": 110,
-          "w": 90,
-          "h": 36,
-          "color": "red",
-          "hl": true
-        },
-        {
-          "id": "LEAK",
-          "label": "pattern visible in ciphertext",
-          "x": 175,
-          "y": 195,
-          "w": 220,
-          "h": 40,
-          "color": "red",
-          "hl": true
-        }
-      ],
-      "edges": [
-        {
-          "from": "C1",
-          "to": "LEAK",
-          "color": "red"
-        },
-        {
-          "from": "C2",
-          "to": "LEAK",
-          "color": "red"
-        }
-      ]
+     "id": "TK",
+     "shape": "text",
+     "label": "مبدأ كيرشوف",
+     "x": 452,
+     "y": 60,
+     "fs": 11,
+     "fw": 700,
+     "color": "teal"
     },
     {
-      "caption": "Step 3 — CBC mode: each block is XORed with the previous ciphertext (an IV seeds the first) before AES. Now identical plaintext blocks encrypt to different ciphertext — the pattern is gone.",
-      "nodes": [
-        {
-          "id": "P2",
-          "label": "block P (same)",
-          "x": 95,
-          "y": 50,
-          "w": 120,
-          "h": 34,
-          "color": "blue"
-        },
-        {
-          "id": "PREV",
-          "label": "XOR previous C",
-          "x": 225,
-          "y": 50,
-          "w": 130,
-          "h": 34,
-          "color": "blue"
-        },
-        {
-          "id": "E",
-          "label": "AES",
-          "x": 160,
-          "y": 128,
-          "w": 70,
-          "h": 32,
-          "color": "default"
-        },
-        {
-          "id": "C2",
-          "label": "C2 ≠ C1",
-          "x": 160,
-          "y": 205,
-          "w": 100,
-          "h": 36,
-          "color": "green",
-          "hl": true
-        }
-      ],
-      "edges": [
-        {
-          "from": "P2",
-          "to": "E",
-          "color": "blue"
-        },
-        {
-          "from": "PREV",
-          "to": "E",
-          "color": "blue"
-        },
-        {
-          "from": "E",
-          "to": "C2",
-          "hl": true,
-          "color": "green"
-        }
-      ]
+     "id": "A1",
+     "label": "الخوارزمية سرّية\nSecurity by Obscurity",
+     "x": 140,
+     "y": 110,
+     "w": 168,
+     "h": 46,
+     "color": "cream",
+     "hl": true
+    },
+    {
+     "id": "A2",
+     "label": "أمنٌ هشّ: يسقط بالتسريب",
+     "x": 140,
+     "y": 185,
+     "w": 168,
+     "h": 36,
+     "color": "default"
+    },
+    {
+     "id": "B1",
+     "label": "الخوارزمية معلَنة\nOpen Design",
+     "x": 428,
+     "y": 110,
+     "w": 158,
+     "h": 46,
+     "color": "teal"
+    },
+    {
+     "id": "B2",
+     "label": "الأمن كلّه في المفتاح k",
+     "x": 428,
+     "y": 185,
+     "w": 168,
+     "h": 36,
+     "color": "amber"
+    },
+    {
+     "id": "KM",
+     "shape": "text",
+     "label": "k",
+     "x": 528,
+     "y": 110,
+     "fs": 13,
+     "fw": 700,
+     "color": "amber"
     }
-  ]
-},
-{
-  "id": "rsa_trapdoor_m5",
-  "icon": "🗝️",
-  "name": "RSA — From Primes to Trapdoor",
-  "desc": "4 steps: key generation, encryption, decryption, and the factoring trapdoor that protects d",
-  "audioDesc": "This diagram walks through R S A: two primes p and q multiply to the public modulus n, while Euler's totient gives the private exponent d. Encryption raises the message to the public exponent, decryption raises the ciphertext to the private exponent, and an attacker must factor n to recover the private key",
-  "modules": [
-    5
-  ],
-  "type": "interactive",
-  "instructorNotes": {
-    "en": "Stress the asymmetry: multiplying p·q is instant, but factoring n back is the whole wall — that one-way gap IS RSA. Common misconception: students assume the public key encrypts and the private key decrypts because they are 'opposite numbers'; make clear that recovering the private exponent d requires Euler's totient φ(n), which requires the secret factors. Board cue: draw the arrow p,q→n thick and solid, the reverse n→p,q thin and dashed.",
-    "ar": "شدّد على اللاتماثل (asymmetry): ضربُ العددين الأوّليّين (primes) p·q فوريّ، لكنّ تحليلَ n إلى عامليه (factoring) هو الجدارُ كلُّه — هذه الفجوةُ أُحاديّةُ الاتجاه (one-way) هي جوهرُ RSA. مفهومٌ خاطئ شائع: يفترض الطلبةُ أنّ المفتاحَ العامّ (public key) يُشفّر والخاصَّ (private key) يفكّ لأنّهما «رقمان متعاكسان»؛ وضّح أنّ استخراجَ الأُسِّ الخاصّ (private exponent) d يتطلّب دالّةَ أويلر (Euler's totient) φ(n)، وهي تتطلّب العامِلَين السرّيّين. إشارةٌ على السبّورة: ارسم سهمَ p,q→n سميكًا متّصلًا، وسهمَ العكس n→p,q رفيعًا متقطّعًا."
-  },
-  "steps": [
+   ],
+   "edges": [
     {
-      "caption": "Step 1 — Key Generation: two large primes p and q multiply to the public modulus n. Euler's totient φ(n)=(p-1)(q-1) stays secret and yields the private exponent d with public exponent e=65537.",
-      "nodes": [
-        {
-          "id": "P",
-          "label": "prime p",
-          "x": 95,
-          "y": 52,
-          "w": 90,
-          "h": 34,
-          "color": "blue"
-        },
-        {
-          "id": "Q",
-          "label": "prime q",
-          "x": 215,
-          "y": 52,
-          "w": 90,
-          "h": 34,
-          "color": "blue"
-        },
-        {
-          "id": "N",
-          "label": "n = p×q\n(public)",
-          "x": 95,
-          "y": 135,
-          "w": 110,
-          "h": 42,
-          "color": "blue"
-        },
-        {
-          "id": "PHI",
-          "label": "φ(n)\n(secret)",
-          "x": 215,
-          "y": 135,
-          "w": 110,
-          "h": 42,
-          "color": "green"
-        },
-        {
-          "id": "D",
-          "label": "d = e⁻¹ mod φ(n)\n(private)",
-          "x": 155,
-          "y": 218,
-          "w": 160,
-          "h": 42,
-          "color": "green",
-          "hl": true
-        }
-      ],
-      "edges": [
-        {
-          "from": "P",
-          "to": "N",
-          "color": "blue"
-        },
-        {
-          "from": "Q",
-          "to": "N",
-          "color": "blue"
-        },
-        {
-          "from": "P",
-          "to": "PHI",
-          "color": "green"
-        },
-        {
-          "from": "Q",
-          "to": "PHI",
-          "color": "green"
-        },
-        {
-          "from": "PHI",
-          "to": "D",
-          "hl": true,
-          "color": "green"
-        }
-      ]
+     "from": "A1",
+     "to": "A2",
+     "color": "default"
     },
     {
-      "caption": "Step 2 — Encryption: anyone with Alice's public key (e, n) can send her a message. The ciphertext is c = mᵉ mod n.",
-      "nodes": [
-        {
-          "id": "M",
-          "label": "message m",
-          "x": 155,
-          "y": 52,
-          "w": 130,
-          "h": 34,
-          "color": "blue"
-        },
-        {
-          "id": "PUB",
-          "label": "public key (e, n)",
-          "x": 155,
-          "y": 130,
-          "w": 150,
-          "h": 34,
-          "color": "blue"
-        },
-        {
-          "id": "C",
-          "label": "c = mᵉ mod n",
-          "x": 155,
-          "y": 210,
-          "w": 150,
-          "h": 40,
-          "color": "green",
-          "hl": true
-        }
-      ],
-      "edges": [
-        {
-          "from": "M",
-          "to": "C",
-          "hl": true,
-          "color": "green"
-        },
-        {
-          "from": "PUB",
-          "to": "C",
-          "color": "blue"
-        }
-      ]
+     "from": "B1",
+     "to": "B2",
+     "color": "teal"
     },
     {
-      "caption": "Step 3 — Decryption: only Alice holds the private key (d, n), so only she recovers m = cᵈ mod n.",
-      "nodes": [
-        {
-          "id": "C",
-          "label": "ciphertext c",
-          "x": 155,
-          "y": 52,
-          "w": 130,
-          "h": 34,
-          "color": "blue"
-        },
-        {
-          "id": "PRIV",
-          "label": "private key (d, n)",
-          "x": 155,
-          "y": 130,
-          "w": 160,
-          "h": 34,
-          "color": "green"
-        },
-        {
-          "id": "M",
-          "label": "m = cᵈ mod n",
-          "x": 155,
-          "y": 210,
-          "w": 150,
-          "h": 40,
-          "color": "green",
-          "hl": true
-        }
-      ],
-      "edges": [
-        {
-          "from": "C",
-          "to": "M",
-          "hl": true,
-          "color": "green"
-        },
-        {
-          "from": "PRIV",
-          "to": "M",
-          "color": "green"
-        }
-      ]
-    },
-    {
-      "caption": "Step 4 — The Trapdoor: Eve sees the public key (e, n) but to find d she must factor n back into p and q. Multiplying is easy; factoring is the wall RSA leans on.",
-      "nodes": [
-        {
-          "id": "PUB",
-          "label": "Eve has (e, n)",
-          "x": 155,
-          "y": 52,
-          "w": 150,
-          "h": 34,
-          "color": "blue"
-        },
-        {
-          "id": "FAC",
-          "label": "must factor n → p, q",
-          "x": 155,
-          "y": 130,
-          "w": 180,
-          "h": 34,
-          "color": "red"
-        },
-        {
-          "id": "D",
-          "label": "only then: recover d",
-          "x": 155,
-          "y": 210,
-          "w": 170,
-          "h": 40,
-          "color": "red",
-          "hl": true
-        }
-      ],
-      "edges": [
-        {
-          "from": "PUB",
-          "to": "FAC",
-          "color": "red"
-        },
-        {
-          "from": "FAC",
-          "to": "D",
-          "hl": true,
-          "color": "red"
-        }
-      ]
+     "from": "KM",
+     "to": "B2",
+     "color": "amber"
     }
-  ]
-},
-  {
-    id: 'stream_cipher', icon: '🔐', name: 'Stream Cipher Flow',
-    desc: '4-step interactive: key expansion, encryption, decryption, key-reuse attack',
-    audioDesc: 'This diagram walks through a stream cipher: a secret key seeds a keystream generator, and the keystream combines with the plaintext one bit at a time using exclusive OR to produce ciphertext. The same keystream reverses it',
-    modules: [2], type: 'interactive',
-    steps: [
-      {
-        caption: 'Step 1 — Key Expansion: A short secret key feeds a Pseudo-Random Generator (PRG) to produce a long keystream equal in length to the message.',
-        nodes: [
-          { id: 'K',   label: 'Secret Key\n128 bits',         x: 160, y: 55,  w: 130, h: 42, color: 'blue' },
-          { id: 'PRG', label: 'PRG',                           x: 160, y: 130, w: 80,  h: 34, color: 'default' },
-          { id: 'KS',  label: 'Keystream\n(long as message)', x: 160, y: 205, w: 150, h: 42, color: 'green', hl: true }
-        ],
-        edges: [
-          { from: 'K',   to: 'PRG', hl: true,  color: 'blue'  },
-          { from: 'PRG', to: 'KS',  hl: true,  color: 'green' }
-        ]
-      },
-      {
-        caption: 'Step 2 — Encryption: Each plaintext bit is XOR-ed with the matching keystream bit to produce ciphertext. XOR is its own inverse.',
-        nodes: [
-          { id: 'PT',  label: 'Plaintext',  x: 80,  y: 70,  w: 110, h: 34, color: 'blue' },
-          { id: 'KS',  label: 'Keystream',  x: 240, y: 70,  w: 110, h: 34, color: 'green' },
-          { id: 'XOR', label: 'XOR',        x: 160, y: 150, w: 60,  h: 34, color: 'default', hl: true },
-          { id: 'CT',  label: 'Ciphertext', x: 160, y: 225, w: 110, h: 34, color: 'yellow', hl: true }
-        ],
-        edges: [
-          { from: 'PT',  to: 'XOR', hl: true,  color: 'blue'   },
-          { from: 'KS',  to: 'XOR', hl: true,  color: 'green'  },
-          { from: 'XOR', to: 'CT',  hl: true,  color: 'yellow' }
-        ]
-      },
-      {
-        caption: 'Step 3 — Decryption: The receiver generates the same keystream and XORs it with the ciphertext. The key cancels out, recovering the original plaintext.',
-        nodes: [
-          { id: 'CT',  label: 'Ciphertext C',    x: 80,  y: 70,  w: 120, h: 34, color: 'yellow' },
-          { id: 'KS',  label: 'Same Keystream',  x: 245, y: 70,  w: 130, h: 34, color: 'green' },
-          { id: 'XOR', label: 'XOR',             x: 160, y: 150, w: 60,  h: 34, color: 'default' },
-          { id: 'PT',  label: 'Plaintext\nrecovered', x: 160, y: 228, w: 130, h: 42, color: 'blue', hl: true }
-        ],
-        edges: [
-          { from: 'CT',  to: 'XOR', hl: true,  color: 'yellow' },
-          { from: 'KS',  to: 'XOR', hl: true,  color: 'green'  },
-          { from: 'XOR', to: 'PT',  hl: true,  color: 'blue'   }
-        ]
-      },
-      {
-        caption: 'Step 4 — Key Reuse Attack: XOR-ing two ciphertexts cancels the key entirely (C1 XOR C2 = P1 XOR P2). NEVER reuse a stream cipher key.',
-        nodes: [
-          { id: 'C1',   label: 'C1 = P1 XOR K',          x: 85,  y: 65,  w: 130, h: 34, color: 'yellow' },
-          { id: 'C2',   label: 'C2 = P2 XOR K',          x: 235, y: 65,  w: 130, h: 34, color: 'yellow' },
-          { id: 'XOR',  label: 'XOR',                    x: 160, y: 145, w: 60,  h: 34, color: 'default' },
-          { id: 'LEAK', label: 'P1 XOR P2\nKey cancels out!', x: 160, y: 225, w: 160, h: 42, color: 'red', hl: true }
-        ],
-        edges: [
-          { from: 'C1',  to: 'XOR',  hl: true, color: 'yellow' },
-          { from: 'C2',  to: 'XOR',  hl: true, color: 'yellow' },
-          { from: 'XOR', to: 'LEAK', hl: true, color: 'red'    }
-        ]
-      }
-    ]
+   ]
   },
   {
-    id: 'sym_enc_overview', icon: '🔒', name: 'Symmetric Encryption Overview',
-    desc: '3-step: shared key setup, encrypt, decrypt',
-    audioDesc: 'This diagram shows symmetric encryption end to end: plaintext and a shared secret key enter the encryption algorithm to produce ciphertext, and the same key drives decryption back to the original plaintext',
-    modules: [2, 3], type: 'interactive',
-    steps: [
-      {
-        caption: 'Step 1 — Shared Secret: Both Alice and Bob share the same secret key through a secure channel before communication begins.',
-        nodes: [
-          { id: 'A',   label: 'Alice',       x: 80,  y: 100, w: 90,  h: 34, color: 'blue' },
-          { id: 'K',   label: 'Shared Key',  x: 200, y: 100, w: 100, h: 34, color: 'purple', hl: true },
-          { id: 'B',   label: 'Bob',         x: 320, y: 100, w: 90,  h: 34, color: 'green' }
-        ],
-        edges: [
-          { from: 'A', to: 'K', label: 'pre-share', hl: true, color: 'purple' },
-          { from: 'K', to: 'B', label: 'pre-share', hl: true, color: 'purple' }
-        ]
-      },
-      {
-        caption: 'Step 2 — Encryption: Alice encrypts the plaintext using the shared key to produce ciphertext, which is safe to send over a public channel.',
-        nodes: [
-          { id: 'PT',  label: 'Plaintext',   x: 80,  y: 80,  w: 100, h: 34, color: 'blue' },
-          { id: 'K',   label: 'Shared Key',  x: 80,  y: 160, w: 100, h: 34, color: 'purple' },
-          { id: 'ENC', label: 'Encrypt',     x: 220, y: 120, w: 90,  h: 34, color: 'default', hl: true },
-          { id: 'CT',  label: 'Ciphertext',  x: 350, y: 120, w: 100, h: 34, color: 'yellow', hl: true }
-        ],
-        edges: [
-          { from: 'PT',  to: 'ENC', hl: true, color: 'blue'   },
-          { from: 'K',   to: 'ENC', hl: true, color: 'purple' },
-          { from: 'ENC', to: 'CT',  hl: true, color: 'yellow' }
-        ]
-      },
-      {
-        caption: 'Step 3 — Decryption: Bob uses the same shared key to decrypt the ciphertext and recover the original plaintext.',
-        nodes: [
-          { id: 'CT',  label: 'Ciphertext',  x: 80,  y: 80,  w: 100, h: 34, color: 'yellow' },
-          { id: 'K',   label: 'Shared Key',  x: 80,  y: 160, w: 100, h: 34, color: 'purple' },
-          { id: 'DEC', label: 'Decrypt',     x: 220, y: 120, w: 90,  h: 34, color: 'default', hl: true },
-          { id: 'PT',  label: 'Plaintext',   x: 350, y: 120, w: 100, h: 34, color: 'blue', hl: true }
-        ],
-        edges: [
-          { from: 'CT',  to: 'DEC', hl: true, color: 'yellow' },
-          { from: 'K',   to: 'DEC', hl: true, color: 'purple' },
-          { from: 'DEC', to: 'PT',  hl: true, color: 'blue'   }
-        ]
-      }
-    ]
+   "caption": "التسريب: هندسة عكسية، أو مطّلِعٌ من الداخل، أو مجرّد نشرٍ للشيفرة — تكشف مالوري الخوارزمية فينهار كلّ شيء دفعةً واحدة.",
+   "w": 560,
+   "h": 240,
+   "guides": [
+    {
+     "x": 284,
+     "y1": 48,
+     "y2": 222
+    }
+   ],
+   "nodes": [
+    {
+     "id": "TQ",
+     "shape": "text",
+     "label": "الأمن بالغموض",
+     "x": 96,
+     "y": 60,
+     "fs": 11,
+     "fw": 700,
+     "color": "mallory"
+    },
+    {
+     "id": "TK",
+     "shape": "text",
+     "label": "مبدأ كيرشوف",
+     "x": 452,
+     "y": 60,
+     "fs": 11,
+     "fw": 700,
+     "color": "teal"
+    },
+    {
+     "id": "A1",
+     "label": "الخوارزمية سرّية\nSecurity by Obscurity",
+     "x": 140,
+     "y": 110,
+     "w": 168,
+     "h": 46,
+     "color": "cream"
+    },
+    {
+     "id": "A2",
+     "label": "أمنٌ هشّ: يسقط بالتسريب",
+     "x": 140,
+     "y": 185,
+     "w": 168,
+     "h": 36,
+     "color": "default",
+     "hl": true
+    },
+    {
+     "id": "B1",
+     "label": "الخوارزمية معلَنة\nOpen Design",
+     "x": 428,
+     "y": 110,
+     "w": 158,
+     "h": 46,
+     "color": "teal"
+    },
+    {
+     "id": "B2",
+     "label": "الأمن كلّه في المفتاح k",
+     "x": 428,
+     "y": 185,
+     "w": 168,
+     "h": 36,
+     "color": "amber"
+    },
+    {
+     "id": "KM",
+     "shape": "text",
+     "label": "k",
+     "x": 528,
+     "y": 110,
+     "fs": 13,
+     "fw": 700,
+     "color": "amber"
+    },
+    {
+     "id": "MAL",
+     "shape": "actor",
+     "letter": "M",
+     "label": "مالوري",
+     "sub": "Mallory",
+     "x": 252,
+     "y": 110,
+     "r": 16,
+     "color": "mallory",
+     "hl": true
+    },
+    {
+     "id": "XX",
+     "shape": "text",
+     "label": "✗",
+     "x": 140,
+     "y": 148,
+     "fs": 20,
+     "fw": 700,
+     "color": "mallory"
+    }
+   ],
+   "edges": [
+    {
+     "from": "A1",
+     "to": "A2",
+     "color": "default"
+    },
+    {
+     "from": "B1",
+     "to": "B2",
+     "color": "teal"
+    },
+    {
+     "from": "KM",
+     "to": "B2",
+     "color": "amber"
+    },
+    {
+     "from": "MAL",
+     "to": "A1",
+     "color": "mallory",
+     "hl": true,
+     "dash": true
+    }
+   ]
   },
   {
-    id: 'sym_enc_system',
-    name: 'The Standard Cryptographic Process',
-    icon: '🔐',
-    desc: '3-step: key generation, encryption, decryption — the standard symmetric model',
-    audioDesc: 'This diagram shows the three algorithms of a symmetric cryptosystem: key generation produces the shared key, encryption turns plaintext into ciphertext under that key, and decryption recovers the plaintext with the same key',
-    modules: [0, 2, 3],
-    type: 'interactive',
-    steps: [
-      {
-        caption: 'Step 1 — Key Generation: KeyGen() produces a secret key k shared by both sender and receiver. The same key on both sides is what makes this "symmetric".',
-        nodes: [
-          { id: 'KG', label: 'Key Generation\nKeyGen()', x: 160, y: 60,  w: 155, h: 42, color: 'default' },
-          { id: 'K',  label: 'Secret Key (k)',            x: 160, y: 145, w: 130, h: 34, color: 'purple', hl: true }
-        ],
-        edges: [
-          { from: 'KG', to: 'K', hl: true, color: 'purple' }
-        ]
-      },
-      {
-        caption: 'Step 2 — Encryption: Enc(k, m) takes the plaintext m and the secret key k to produce ciphertext c. Safe to send over a public channel.',
-        nodes: [
-          { id: 'K',   label: 'Secret Key (k)',    x: 215, y: 60,  w: 130, h: 34, color: 'purple' },
-          { id: 'PT',  label: 'Plaintext (m)',      x: 75,  y: 160, w: 120, h: 34, color: 'blue' },
-          { id: 'ENC', label: 'Encryption\nEnc()', x: 215, y: 160, w: 115, h: 42, color: 'yellow', hl: true },
-          { id: 'CT',  label: 'Ciphertext (c)',     x: 365, y: 160, w: 120, h: 34, color: 'red',    hl: true }
-        ],
-        edges: [
-          { from: 'K',   to: 'ENC', hl: true, color: 'purple' },
-          { from: 'PT',  to: 'ENC', hl: true, color: 'blue'   },
-          { from: 'ENC', to: 'CT',  hl: true, color: 'red'    }
-        ]
-      },
-      {
-        caption: 'Step 3 — Decryption: Dec(k, c) uses the same key k to recover the original plaintext m. Correctness: Dec(k, Enc(k, m)) = m always holds.',
-        nodes: [
-          { id: 'K',   label: 'Secret Key (k)',    x: 310, y: 60,  w: 130, h: 34, color: 'purple' },
-          { id: 'CT',  label: 'Ciphertext (c)',    x: 75,  y: 160, w: 120, h: 34, color: 'red' },
-          { id: 'DEC', label: 'Decryption\nDec()', x: 215, y: 160, w: 115, h: 42, color: 'green', hl: true },
-          { id: 'PT2', label: 'Plaintext (m)',      x: 365, y: 160, w: 120, h: 34, color: 'green', hl: true }
-        ],
-        edges: [
-          { from: 'K',   to: 'DEC', hl: true, color: 'purple' },
-          { from: 'CT',  to: 'DEC', hl: true, color: 'red'    },
-          { from: 'DEC', to: 'PT2', hl: true, color: 'green'  }
-        ]
-      }
-    ]
-  },
-  {
-    id: 'security_services', icon: '🛡️', name: 'Threats, Services & Mechanisms',
-    desc: '4-step interactive: four classic threats, the services that answer them, and the mechanisms that deliver each service',
-    audioDesc: 'This diagram maps the four classic threats, eavesdropping, tampering, impersonation and repudiation, to the security services that answer them, and then to the mechanisms that deliver each service',
-    modules: [0], type: 'interactive',
-    steps: [
-      {
-        caption: 'Step 1 — Four classic threats: an attacker can read, modify, impersonate, or later deny. Every cryptographic mechanism in this course exists to defeat one of these.',
-        nodes: [
-          { id: 'T1', label: 'Eavesdrop',   x: 110, y: 70,  w: 130, h: 38, color: 'red' },
-          { id: 'T2', label: 'Tamper',      x: 290, y: 70,  w: 130, h: 38, color: 'red' },
-          { id: 'T3', label: 'Impersonate', x: 110, y: 165, w: 130, h: 38, color: 'red' },
-          { id: 'T4', label: 'Deny sending\n(repudiate)', x: 290, y: 165, w: 130, h: 42, color: 'red' }
-        ],
-        edges: []
-      },
-      {
-        caption: 'Step 2 — Each threat is answered by a security service: confidentiality, integrity, authentication and non-repudiation.',
-        nodes: [
-          { id: 'T1', label: 'Eavesdrop',       x: 65,  y: 60,  w: 100, h: 36, color: 'red' },
-          { id: 'T2', label: 'Tamper',          x: 175, y: 60,  w: 100, h: 36, color: 'red' },
-          { id: 'T3', label: 'Impersonate',     x: 285, y: 60,  w: 100, h: 36, color: 'red' },
-          { id: 'T4', label: 'Repudiate',       x: 395, y: 60,  w: 100, h: 36, color: 'red' },
-          { id: 'S1', label: 'Confidentiality', x: 65,  y: 160, w: 100, h: 36, color: 'blue',   hl: true },
-          { id: 'S2', label: 'Integrity',       x: 175, y: 160, w: 100, h: 36, color: 'green',  hl: true },
-          { id: 'S3', label: 'Authentication',  x: 285, y: 160, w: 100, h: 36, color: 'yellow', hl: true },
-          { id: 'S4', label: 'Non-repudiation', x: 395, y: 160, w: 100, h: 36, color: 'purple', hl: true }
-        ],
-        edges: [
-          { from: 'T1', to: 'S1', hl: true, color: 'blue' },
-          { from: 'T2', to: 'S2', hl: true, color: 'green' },
-          { from: 'T3', to: 'S3', hl: true, color: 'yellow' },
-          { from: 'T4', to: 'S4', hl: true, color: 'purple' }
-        ]
-      },
-      {
-        caption: 'Step 3 — Services map to mechanisms: encryption for confidentiality, hashes and MACs for integrity, MACs and signatures for authentication — and only signatures give non-repudiation.',
-        nodes: [
-          { id: 'S1', label: 'Confidentiality', x: 65,  y: 60,  w: 100, h: 36, color: 'blue' },
-          { id: 'S2', label: 'Integrity',       x: 175, y: 60,  w: 100, h: 36, color: 'green' },
-          { id: 'S3', label: 'Authentication',  x: 285, y: 60,  w: 100, h: 36, color: 'yellow' },
-          { id: 'S4', label: 'Non-repudiation', x: 395, y: 60,  w: 100, h: 36, color: 'purple' },
-          { id: 'M1', label: 'Encryption\n(AES)',      x: 65,  y: 165, w: 100, h: 42, color: 'default' },
-          { id: 'M2', label: 'Hash / MAC\n(SHA-256)',  x: 175, y: 165, w: 100, h: 42, color: 'default' },
-          { id: 'M3', label: 'MAC /\nSignature',       x: 285, y: 165, w: 100, h: 42, color: 'default' },
-          { id: 'M4', label: 'Digital\nSignature',     x: 395, y: 165, w: 100, h: 42, color: 'purple', hl: true }
-        ],
-        edges: [
-          { from: 'S1', to: 'M1', hl: true, color: 'blue' },
-          { from: 'S2', to: 'M2', hl: true, color: 'green' },
-          { from: 'S3', to: 'M3', hl: true, color: 'yellow' },
-          { from: 'S4', to: 'M4', hl: true, color: 'purple' }
-        ]
-      },
-      {
-        caption: 'Step 4 — The design mindset: name the threat, choose the service, deploy the mechanism. You will repeat this mapping in every module that follows.',
-        nodes: [
-          { id: 'TH', label: 'Threat:\nEavesdropping',     x: 200, y: 55,  w: 160, h: 42, color: 'red' },
-          { id: 'SV', label: 'Service:\nConfidentiality',  x: 200, y: 140, w: 160, h: 42, color: 'blue' },
-          { id: 'ME', label: 'Mechanism:\nAES-256-GCM',    x: 200, y: 225, w: 160, h: 42, color: 'green', hl: true }
-        ],
-        edges: [
-          { from: 'TH', to: 'SV', hl: true, color: 'blue' },
-          { from: 'SV', to: 'ME', hl: true, color: 'green' }
-        ]
-      }
-    ]
-  },
-  {
-    id: 'crypto_toolbox', icon: '🧰', name: 'The Toolbox So Far',
-    desc: '4-step review map: confidentiality, integrity, the key distribution problem, and the public-key idea ahead',
-    audioDesc: 'This review diagram recaps the toolbox so far: A. E. S. for confidentiality, hashes and MACs for integrity, then shows why shared keys do not scale, and previews the public key idea that solves it',
-    modules: [6], type: 'interactive',
-    steps: [
-      {
-        caption: 'Step 1 — Confidentiality so far: a shared secret key K turns plaintext into ciphertext with AES, in a mode such as CBC, CTR or GCM.',
-        nodes: [
-          { id: 'PT',  label: 'Plaintext',              x: 200, y: 55,  w: 130, h: 36, color: 'blue' },
-          { id: 'AES', label: 'AES with\nshared key K', x: 200, y: 140, w: 150, h: 42, color: 'default' },
-          { id: 'CT',  label: 'Ciphertext',             x: 200, y: 225, w: 130, h: 36, color: 'yellow', hl: true }
-        ],
-        edges: [
-          { from: 'PT',  to: 'AES', hl: true, color: 'blue' },
-          { from: 'AES', to: 'CT',  hl: true, color: 'yellow' }
-        ]
-      },
-      {
-        caption: 'Step 2 — Integrity so far: a hash gives a fingerprint anyone can compute; add a shared key and it becomes a MAC that an attacker cannot forge.',
-        nodes: [
-          { id: 'MSG', label: 'Message',                 x: 200, y: 55,  w: 130, h: 36, color: 'blue' },
-          { id: 'H',   label: 'SHA-256 /\nHMAC with K', x: 200, y: 140, w: 150, h: 42, color: 'default' },
-          { id: 'TAG', label: 'Digest / Tag',            x: 200, y: 225, w: 130, h: 36, color: 'green', hl: true }
-        ],
-        edges: [
-          { from: 'MSG', to: 'H',   hl: true, color: 'blue' },
-          { from: 'H',   to: 'TAG', hl: true, color: 'green' }
-        ]
-      },
-      {
-        caption: 'Step 3 — The catch: every tool so far needs a SHARED secret. Pairwise channels for n people need n(n−1)/2 keys — 1225 keys for just 50 users. This is the key distribution problem.',
-        nodes: [
-          { id: 'A', label: 'Alice', x: 110, y: 70,  w: 110, h: 36, color: 'blue' },
-          { id: 'B', label: 'Bob',   x: 290, y: 70,  w: 110, h: 36, color: 'blue' },
-          { id: 'K', label: 'Shared key K —\nbut how to agree?', x: 200, y: 170, w: 180, h: 42, color: 'red', hl: true }
-        ],
-        edges: [
-          { from: 'A', to: 'K', hl: true, color: 'red' },
-          { from: 'B', to: 'K', hl: true, color: 'red' }
-        ]
-      },
-      {
-        caption: 'Step 4 — The answer ahead: key pairs. Anyone may know the public key; only the owner holds the private key. The next modules build RSA, Diffie–Hellman and ECC on this single idea.',
-        nodes: [
-          { id: 'PUB', label: 'Public key\n(share freely)', x: 110, y: 70,  w: 140, h: 42, color: 'blue' },
-          { id: 'PRV', label: 'Private key\n(keep secret)', x: 290, y: 70,  w: 140, h: 42, color: 'purple' },
-          { id: 'SOL', label: 'Key pairs solve\ndistribution', x: 200, y: 170, w: 170, h: 42, color: 'green', hl: true }
-        ],
-        edges: [
-          { from: 'PUB', to: 'SOL', hl: true, color: 'blue' },
-          { from: 'PRV', to: 'SOL', hl: true, color: 'purple' }
-        ]
-      }
-    ]
-  },
-  {
-    id: 'chain_of_trust', icon: '⛓️', name: 'PKI Chain of Trust',
-    desc: '4-step interactive: trust anchor, delegation to intermediates, leaf validation, and revocation checking',
-    audioDesc: 'This diagram builds the P. K. I. chain of trust: a self-signed root in your trust store signs an intermediate authority, which signs the website certificate, with revocation checks guarding the result',
-    modules: [8], type: 'interactive',
-    steps: [
-      {
-        caption: 'Step 1 — The trust anchor: a root CA certificate is self-signed and pre-installed in your OS and browser trust store. All certificate trust flows from here.',
-        nodes: [
-          { id: 'TS',   label: 'OS / browser\ntrust store',  x: 200, y: 65,  w: 160, h: 42, color: 'default' },
-          { id: 'ROOT', label: 'Root CA cert\n(self-signed)', x: 200, y: 165, w: 160, h: 42, color: 'dark', hl: true }
-        ],
-        edges: [
-          { from: 'TS', to: 'ROOT', hl: true, color: 'dark' }
-        ]
-      },
-      {
-        caption: 'Step 2 — Delegation: the root signs an intermediate CA certificate. Root keys stay offline in vaults; intermediates do the day-to-day issuing, limiting the damage if one is compromised.',
-        nodes: [
-          { id: 'ROOT', label: 'Root CA',         x: 200, y: 60,  w: 150, h: 38, color: 'dark' },
-          { id: 'INT',  label: 'Intermediate CA', x: 200, y: 160, w: 150, h: 38, color: 'blue', hl: true }
-        ],
-        edges: [
-          { from: 'ROOT', to: 'INT', hl: true, color: 'blue' }
-        ]
-      },
-      {
-        caption: 'Step 3 — Issuance and validation: the intermediate signs the website leaf certificate. Your browser validates the chain signature-by-signature until it reaches a root it already trusts.',
-        nodes: [
-          { id: 'ROOT', label: 'Root CA',                x: 200, y: 50,  w: 150, h: 36, color: 'dark' },
-          { id: 'INT',  label: 'Intermediate CA',        x: 200, y: 135, w: 150, h: 36, color: 'blue' },
-          { id: 'LEAF', label: 'Leaf:\nwww.example.com', x: 200, y: 222, w: 170, h: 42, color: 'green', hl: true }
-        ],
-        edges: [
-          { from: 'ROOT', to: 'INT',  hl: true, color: 'blue' },
-          { from: 'INT',  to: 'LEAF', hl: true, color: 'green' }
-        ]
-      },
-      {
-        caption: 'Step 4 — Trust can be withdrawn: before accepting a leaf, the CA also publishes revocation data; clients check the leaf against CRL or OCSP and reject expired certificates. A valid signature chain is necessary but not sufficient.',
-        nodes: [
-          { id: 'ROOT', label: 'Root CA',                x: 150, y: 50,  w: 140, h: 36, color: 'dark' },
-          { id: 'INT',  label: 'Intermediate CA',        x: 150, y: 135, w: 140, h: 36, color: 'blue' },
-          { id: 'CRL',  label: 'CRL / OCSP\npublished by CA', x: 360, y: 222, w: 150, h: 42, color: 'red', hl: true },
-          { id: 'LEAF', label: 'Leaf:\nwww.example.com', x: 150, y: 222, w: 170, h: 42, color: 'green' }
-        ],
-        edges: [
-          { from: 'ROOT', to: 'INT',  hl: false, color: 'blue' },
-          { from: 'INT',  to: 'LEAF', hl: false, color: 'green' },
-          { from: 'INT',  to: 'CRL',  hl: true,  color: 'red' }
-        ]
-      }
-    ]
-  },
-  {
-    id: 'challenge_response_flow', icon: '📡', name: 'Challenge–Response Protocol',
-    desc: '4-step interactive: claim, fresh-nonce challenge, hashed response, and why replay attacks fail',
-    audioDesc: 'This diagram plays out challenge response authentication: a claim, a fresh random nonce, a hashed response the verifier recomputes, and a replayed old answer being rejected',
-    modules: [9], type: 'interactive',
-    steps: [
-      {
-        caption: 'Step 1 — The claim: a claimant announces an identity. Anyone can say they are Alice — the verifier needs proof tied to a shared secret.',
-        nodes: [
-          { id: 'CL', label: 'Claimant',           x: 200, y: 55,  w: 130, h: 36, color: 'blue' },
-          { id: 'MS', label: 'Claim:\nI am Alice', x: 200, y: 140, w: 140, h: 42, color: 'yellow', hl: true },
-          { id: 'VF', label: 'Verifier',            x: 200, y: 225, w: 130, h: 36, color: 'dark' }
-        ],
-        edges: [
-          { from: 'CL', to: 'MS', hl: true, color: 'yellow' },
-          { from: 'MS', to: 'VF', hl: true, color: 'yellow' }
-        ]
-      },
-      {
-        caption: 'Step 2 — The challenge: the verifier replies with a fresh random nonce r. Because r is new every time, captured answers from old sessions become useless.',
-        nodes: [
-          { id: 'VF', label: 'Verifier',                 x: 200, y: 55,  w: 130, h: 36, color: 'dark' },
-          { id: 'CH', label: 'Challenge r\n(fresh nonce)', x: 200, y: 140, w: 150, h: 42, color: 'yellow', hl: true },
-          { id: 'CL', label: 'Claimant',                  x: 200, y: 225, w: 130, h: 36, color: 'blue' }
-        ],
-        edges: [
-          { from: 'VF', to: 'CH', hl: true, color: 'yellow' },
-          { from: 'CH', to: 'CL', hl: true, color: 'yellow' }
-        ]
-      },
-      {
-        caption: 'Step 3 — The response: the claimant returns h(M ‖ r). The verifier recomputes and compares — a match proves the secret was used AFTER r was issued. You built exactly this in the lab.',
-        nodes: [
-          { id: 'CL', label: 'Claimant',                       x: 200, y: 55,  w: 130, h: 36, color: 'blue' },
-          { id: 'RS', label: 'Response\nh(M ‖ r)',             x: 200, y: 140, w: 150, h: 42, color: 'green', hl: true },
-          { id: 'VF', label: 'Verifier:\nrecompute + compare', x: 200, y: 225, w: 180, h: 42, color: 'dark' }
-        ],
-        edges: [
-          { from: 'CL', to: 'RS', hl: true, color: 'green' },
-          { from: 'RS', to: 'VF', hl: true, color: 'green' }
-        ]
-      },
-      {
-        caption: 'Step 4 — Replay defeated: an eavesdropper replays an old response, but the verifier has issued a NEW nonce — the recomputed hash cannot match, and the impostor is rejected.',
-        nodes: [
-          { id: 'AT', label: 'Attacker replays\nold h(M ‖ r)',  x: 200, y: 55,  w: 170, h: 42, color: 'red' },
-          { id: 'CK', label: 'Verifier checks vs\nfresh nonce', x: 200, y: 140, w: 170, h: 42, color: 'default' },
-          { id: 'RJ', label: 'REJECTED',                          x: 200, y: 225, w: 130, h: 36, color: 'red', hl: true }
-        ],
-        edges: [
-          { from: 'AT', to: 'CK', hl: true, color: 'red' },
-          { from: 'CK', to: 'RJ', hl: true, color: 'red' }
-        ]
-      }
-    ]
-  },
-  {
-    id: 'schnorr_rounds', icon: '🕵️', name: 'Schnorr Identification Rounds',
-    desc: '4-step interactive: commit, challenge, response-and-check, and why a cheater is caught half the time',
-    audioDesc: 'This diagram steps through one Schnorr identification round, commitment, coin-flip challenge, response and check, then shows why a cheating prover is caught half the time',
-    modules: [10], type: 'interactive',
-    steps: [
-      {
-        caption: 'Step 1 — Commitment: Peggy picks a random k and sends t = g^k mod p. The randomness of k is exactly what will keep her secret x hidden later.',
-        nodes: [
-          { id: 'PG', label: 'Peggy\n(knows x)',  x: 200, y: 55,  w: 140, h: 42, color: 'purple' },
-          { id: 'CM', label: 't = g^k mod p',      x: 200, y: 140, w: 150, h: 38, color: 'blue', hl: true },
-          { id: 'VC', label: 'Victor',              x: 200, y: 225, w: 130, h: 36, color: 'default' }
-        ],
-        edges: [
-          { from: 'PG', to: 'CM', hl: true, color: 'blue' },
-          { from: 'CM', to: 'VC', hl: true, color: 'blue' }
-        ]
-      },
-      {
-        caption: 'Step 2 — Challenge: Victor flips a coin and sends c ∈ {0, 1}. Peggy could not have predicted it when she committed — that is the whole point.',
-        nodes: [
-          { id: 'VC', label: 'Victor',      x: 200, y: 55,  w: 130, h: 36, color: 'default' },
-          { id: 'CH', label: 'c ∈ {0, 1}', x: 200, y: 140, w: 130, h: 38, color: 'yellow', hl: true },
-          { id: 'PG', label: 'Peggy',       x: 200, y: 225, w: 130, h: 36, color: 'purple' }
-        ],
-        edges: [
-          { from: 'VC', to: 'CH', hl: true, color: 'yellow' },
-          { from: 'CH', to: 'PG', hl: true, color: 'yellow' }
-        ]
-      },
-      {
-        caption: 'Step 3 — Response and check: Peggy sends s = k + c·x mod (p−1); Victor accepts iff g^s = t·y^c. Knowing x makes BOTH possible challenges answerable from the same commitment.',
-        nodes: [
-          { id: 'PG', label: 'Peggy',                      x: 200, y: 55,  w: 130, h: 36, color: 'purple' },
-          { id: 'RS', label: 's = k + c·x',                x: 200, y: 140, w: 140, h: 38, color: 'green', hl: true },
-          { id: 'VC', label: 'Victor checks\ng^s = t · y^c', x: 200, y: 225, w: 160, h: 42, color: 'default' }
-        ],
-        edges: [
-          { from: 'PG', to: 'RS', hl: true, color: 'green' },
-          { from: 'RS', to: 'VC', hl: true, color: 'green' }
-        ]
-      },
-      {
-        caption: 'Step 4 — Soundness: a cheater must guess c while committing. A wrong guess means she cannot answer — caught. Each round halves her odds: after n rounds, 2^−n. And the transcript reveals nothing about x: zero-knowledge.',
-        nodes: [
-          { id: 'GS', label: 'Cheater guesses c\nbefore committing', x: 200, y: 55,  w: 180, h: 42, color: 'red' },
-          { id: 'CT', label: 'Wrong guess:\ncaught (50%)',           x: 200, y: 140, w: 150, h: 42, color: 'red', hl: true },
-          { id: 'NR', label: 'n rounds →\ncheat odds 2^−n',          x: 200, y: 225, w: 160, h: 42, color: 'green', hl: true }
-        ],
-        edges: [
-          { from: 'GS', to: 'CT', hl: true, color: 'red' },
-          { from: 'CT', to: 'NR', hl: true, color: 'green' }
-        ]
-      }
-    ]
-  },
-  {
-    id: 'tls13_handshake', icon: '🔒', name: 'TLS 1.3 Handshake',
-    desc: '4-step interactive: ClientHello with key share, authenticated server flight, 1-RTT key derivation, and where a MITM fails',
-    audioDesc: 'This diagram follows the T. L. S. 1.3 handshake: a ClientHello with a key share, the authenticated server flight, traffic keys after one round trip, and the point where a key-swapping attacker is stopped',
-    modules: [11], type: 'interactive',
-    steps: [
-      {
-        caption: 'Step 1 — ClientHello: the client opens with its ciphersuites AND an ephemeral ECDHE key share. TLS 1.3 commits to forward secrecy from the very first flight.',
-        nodes: [
-          { id: 'CLI', label: 'Client',                          x: 200, y: 55,  w: 130, h: 36, color: 'blue' },
-          { id: 'CH',  label: 'ClientHello +\nECDHE key share',  x: 200, y: 140, w: 170, h: 42, color: 'yellow', hl: true },
-          { id: 'SRV', label: 'Server',                           x: 200, y: 225, w: 130, h: 36, color: 'default' }
-        ],
-        edges: [
-          { from: 'CLI', to: 'CH',  hl: true, color: 'yellow' },
-          { from: 'CH',  to: 'SRV', hl: true, color: 'yellow' }
-        ]
-      },
-      {
-        caption: 'Step 2 — Server flight: ServerHello carries the server key share, its certificate chain, and CertificateVerify — a signature over the handshake transcript binding the exchange to its identity.',
-        nodes: [
-          { id: 'SRV', label: 'Server',                                       x: 200, y: 55,  w: 130, h: 36, color: 'default' },
-          { id: 'SH',  label: 'ServerHello + key share\nCertificate + CertVerify', x: 200, y: 140, w: 210, h: 42, color: 'blue', hl: true },
-          { id: 'CLI', label: 'Client',                                        x: 200, y: 225, w: 130, h: 36, color: 'blue' }
-        ],
-        edges: [
-          { from: 'SRV', to: 'SH',  hl: true, color: 'blue' },
-          { from: 'SH',  to: 'CLI', hl: true, color: 'blue' }
-        ]
-      },
-      {
-        caption: 'Step 3 — One round trip: both sides feed the ECDHE secret through the HKDF key schedule and derive the traffic keys. Application data flows after just 1-RTT.',
-        nodes: [
-          { id: 'SS',  label: 'ECDHE\nshared secret',   x: 200, y: 55,  w: 160, h: 42, color: 'green' },
-          { id: 'KDF', label: 'HKDF key schedule',        x: 200, y: 140, w: 160, h: 38, color: 'default' },
-          { id: 'TK',  label: 'Traffic keys\n(both sides)', x: 200, y: 225, w: 150, h: 42, color: 'green', hl: true }
-        ],
-        edges: [
-          { from: 'SS',  to: 'KDF', hl: true, color: 'green' },
-          { from: 'KDF', to: 'TK',  hl: true, color: 'green' }
-        ]
-      },
-      {
-        caption: 'Step 4 — Where Mallory loses: she can substitute key shares, but she cannot forge CertificateVerify over a transcript containing her keys — exactly the failed attack you ran in the lab.',
-        nodes: [
-          { id: 'MAL', label: 'Mallory swaps\nkey shares',        x: 200, y: 55,  w: 160, h: 42, color: 'red' },
-          { id: 'CV',  label: 'CertVerify checked\nover transcript', x: 200, y: 140, w: 180, h: 42, color: 'default' },
-          { id: 'AB',  label: 'Handshake\nABORTED',                x: 200, y: 225, w: 140, h: 42, color: 'red', hl: true }
-        ],
-        edges: [
-          { from: 'MAL', to: 'CV', hl: true, color: 'red' },
-          { from: 'CV',  to: 'AB', hl: true, color: 'red' }
-        ]
-      }
-    ]
+   "caption": "مبدأ كيرشوف (Kerckhoffs): انشر الخوارزمية واحصر السرّ في المفتاح k وحده — سرٌّ صغير يسهل حفظه وتبديله عند الحاجة. وكما قال شانون: «العدوّ يعرف النظام».",
+   "w": 560,
+   "h": 240,
+   "guides": [
+    {
+     "x": 284,
+     "y1": 48,
+     "y2": 222
+    }
+   ],
+   "nodes": [
+    {
+     "id": "TQ",
+     "shape": "text",
+     "label": "الأمن بالغموض",
+     "x": 96,
+     "y": 60,
+     "fs": 11,
+     "fw": 700,
+     "color": "mallory"
+    },
+    {
+     "id": "TK",
+     "shape": "text",
+     "label": "مبدأ كيرشوف",
+     "x": 452,
+     "y": 60,
+     "fs": 11,
+     "fw": 700,
+     "color": "teal"
+    },
+    {
+     "id": "A1",
+     "label": "الخوارزمية سرّية\nSecurity by Obscurity",
+     "x": 140,
+     "y": 110,
+     "w": 168,
+     "h": 46,
+     "color": "cream"
+    },
+    {
+     "id": "A2",
+     "label": "أمنٌ هشّ: يسقط بالتسريب",
+     "x": 140,
+     "y": 185,
+     "w": 168,
+     "h": 36,
+     "color": "default"
+    },
+    {
+     "id": "B1",
+     "label": "الخوارزمية معلَنة\nOpen Design",
+     "x": 428,
+     "y": 110,
+     "w": 158,
+     "h": 46,
+     "color": "teal",
+     "hl": true
+    },
+    {
+     "id": "B2",
+     "label": "الأمن كلّه في المفتاح k",
+     "x": 428,
+     "y": 185,
+     "w": 168,
+     "h": 36,
+     "color": "amber",
+     "hl": true
+    },
+    {
+     "id": "KM",
+     "shape": "text",
+     "label": "k",
+     "x": 528,
+     "y": 110,
+     "fs": 13,
+     "fw": 700,
+     "color": "amber"
+    },
+    {
+     "id": "MAL",
+     "shape": "actor",
+     "letter": "M",
+     "label": "مالوري",
+     "sub": "Mallory",
+     "x": 252,
+     "y": 110,
+     "r": 16,
+     "color": "mallory"
+    },
+    {
+     "id": "XX",
+     "shape": "text",
+     "label": "✗",
+     "x": 140,
+     "y": 148,
+     "fs": 20,
+     "fw": 700,
+     "color": "mallory"
+    }
+   ],
+   "edges": [
+    {
+     "from": "A1",
+     "to": "A2",
+     "color": "default"
+    },
+    {
+     "from": "B1",
+     "to": "B2",
+     "color": "teal",
+     "hl": true
+    },
+    {
+     "from": "KM",
+     "to": "B2",
+     "color": "amber",
+     "hl": true
+    },
+    {
+     "from": "MAL",
+     "to": "A1",
+     "color": "mallory",
+     "dash": true
+    }
+   ]
   }
+ ]
+},
+{
+ "id": "block_modes_m3",
+ "name": "Block Cipher Modes — ECB vs CBC",
+ "icon": "🐧",
+ "desc": "Book-twin (LTR) of ecb.png/cbc.png: independent blocks leak patterns; CBC chains them",
+ "audioDesc": "يطابق شكلَي الكتاب لنمطَي ECB وCBC: في ECB تُشفَّر كلّ كتلة مستقلّةً فتتطابق مخرجات الكتل المتطابقة ويظهر النمط، وفي CBC تُخلَط كلّ كتلة بسابقتها فينكسر النمط.",
+ "modules": [
+  3
+ ],
+ "type": "interactive",
+ "steps": [
+  {
+   "caption": "نمط ECB: تمرّ كلّ كتلةٍ في AES بالمفتاح k مستقلّةً عن سواها — بسيطٌ وقابلٌ للتوازي، لكن لاحظ الكتلتين المتطابقتين.",
+   "w": 560,
+   "h": 240,
+   "nodes": [
+    {
+     "id": "TE",
+     "shape": "text",
+     "label": "نمط ECB: كلّ كتلةٍ مستقلّة",
+     "x": 280,
+     "y": 46,
+     "fs": 11,
+     "fw": 700,
+     "color": "navy"
+    },
+    {
+     "id": "P1",
+     "label": "P₁",
+     "x": 90,
+     "y": 100,
+     "w": 58,
+     "h": 30,
+     "color": "cream"
+    },
+    {
+     "id": "E1",
+     "label": "AESₖ",
+     "x": 220,
+     "y": 100,
+     "w": 70,
+     "h": 34,
+     "color": "navy",
+     "hl": true
+    },
+    {
+     "id": "C1",
+     "label": "C₁",
+     "x": 350,
+     "y": 100,
+     "w": 58,
+     "h": 30,
+     "color": "teal"
+    },
+    {
+     "id": "P2",
+     "label": "P₂ = P₁",
+     "x": 90,
+     "y": 165,
+     "w": 76,
+     "h": 30,
+     "color": "cream"
+    },
+    {
+     "id": "E2",
+     "label": "AESₖ",
+     "x": 220,
+     "y": 165,
+     "w": 70,
+     "h": 34,
+     "color": "navy",
+     "hl": true
+    },
+    {
+     "id": "C2",
+     "label": "C₂ = C₁!",
+     "x": 350,
+     "y": 165,
+     "w": 82,
+     "h": 30,
+     "color": "mallory"
+    }
+   ],
+   "edges": [
+    {
+     "from": "P1",
+     "to": "E1",
+     "color": "navy"
+    },
+    {
+     "from": "E1",
+     "to": "C1",
+     "color": "teal"
+    },
+    {
+     "from": "P2",
+     "to": "E2",
+     "color": "navy"
+    },
+    {
+     "from": "E2",
+     "to": "C2",
+     "color": "mallory"
+    }
+   ]
+  },
+  {
+   "caption": "الانكشاف: بما أنّ المدخلات المتطابقة تعطي مخرجاتٍ متطابقة، تنتقل أنماط الصورة إلى النصّ المشفّر — وهذا سرّ «بطريق ECB» الشهير 🐧.",
+   "w": 560,
+   "h": 240,
+   "nodes": [
+    {
+     "id": "TE",
+     "shape": "text",
+     "label": "نمط ECB: كلّ كتلةٍ مستقلّة",
+     "x": 280,
+     "y": 46,
+     "fs": 11,
+     "fw": 700,
+     "color": "navy"
+    },
+    {
+     "id": "P1",
+     "label": "P₁",
+     "x": 90,
+     "y": 100,
+     "w": 58,
+     "h": 30,
+     "color": "cream"
+    },
+    {
+     "id": "E1",
+     "label": "AESₖ",
+     "x": 220,
+     "y": 100,
+     "w": 70,
+     "h": 34,
+     "color": "navy"
+    },
+    {
+     "id": "C1",
+     "label": "C₁",
+     "x": 350,
+     "y": 100,
+     "w": 58,
+     "h": 30,
+     "color": "teal",
+     "hl": true
+    },
+    {
+     "id": "P2",
+     "label": "P₂ = P₁",
+     "x": 90,
+     "y": 165,
+     "w": 76,
+     "h": 30,
+     "color": "cream"
+    },
+    {
+     "id": "E2",
+     "label": "AESₖ",
+     "x": 220,
+     "y": 165,
+     "w": 70,
+     "h": 34,
+     "color": "navy"
+    },
+    {
+     "id": "C2",
+     "label": "C₂ = C₁!",
+     "x": 350,
+     "y": 165,
+     "w": 82,
+     "h": 30,
+     "color": "mallory",
+     "hl": true
+    },
+    {
+     "id": "LK",
+     "shape": "text",
+     "label": "نمطٌ مكشوف: كتلٌ متطابقة ⇒ مخرجاتٌ متطابقة",
+     "x": 280,
+     "y": 222,
+     "fs": 11,
+     "fw": 700,
+     "color": "mallory"
+    }
+   ],
+   "edges": [
+    {
+     "from": "P1",
+     "to": "E1",
+     "color": "navy"
+    },
+    {
+     "from": "E1",
+     "to": "C1",
+     "color": "teal",
+     "hl": true
+    },
+    {
+     "from": "P2",
+     "to": "E2",
+     "color": "navy"
+    },
+    {
+     "from": "E2",
+     "to": "C2",
+     "color": "mallory",
+     "hl": true
+    }
+   ]
+  },
+  {
+   "caption": "نمط CBC: تُخلَط كلّ كتلةٍ بنصٍّ مشفّرٍ سابق (والأولى بمتّجه تهيئة IV عشوائي) قبل التشفير، فتختلف المخرجات حتى لو تطابقت المدخلات.",
+   "w": 560,
+   "h": 240,
+   "nodes": [
+    {
+     "id": "TC",
+     "shape": "text",
+     "label": "نمط CBC: تسلسلٌ يربط الكتل  Pᵢ ⊕ Cᵢ₋₁",
+     "x": 280,
+     "y": 46,
+     "fs": 11,
+     "fw": 700,
+     "color": "navy"
+    },
+    {
+     "id": "PP1",
+     "shape": "text",
+     "label": "P₁",
+     "x": 150,
+     "y": 78,
+     "fs": 12,
+     "fw": 700,
+     "color": "navy"
+    },
+    {
+     "id": "PP2",
+     "shape": "text",
+     "label": "P₂",
+     "x": 350,
+     "y": 78,
+     "fs": 12,
+     "fw": 700,
+     "color": "navy"
+    },
+    {
+     "id": "IV",
+     "label": "IV",
+     "x": 62,
+     "y": 130,
+     "w": 50,
+     "h": 30,
+     "color": "amber"
+    },
+    {
+     "id": "X1",
+     "label": "⊕",
+     "x": 150,
+     "y": 130,
+     "w": 30,
+     "h": 30,
+     "color": "navy",
+     "hl": true
+    },
+    {
+     "id": "EE1",
+     "label": "AESₖ",
+     "x": 240,
+     "y": 130,
+     "w": 66,
+     "h": 34,
+     "color": "navy"
+    },
+    {
+     "id": "CC1",
+     "label": "C₁",
+     "x": 300,
+     "y": 195,
+     "w": 54,
+     "h": 30,
+     "color": "teal"
+    },
+    {
+     "id": "X2",
+     "label": "⊕",
+     "x": 350,
+     "y": 130,
+     "w": 30,
+     "h": 30,
+     "color": "navy",
+     "hl": true
+    },
+    {
+     "id": "EE2",
+     "label": "AESₖ",
+     "x": 440,
+     "y": 130,
+     "w": 66,
+     "h": 34,
+     "color": "navy"
+    },
+    {
+     "id": "CC2",
+     "label": "C₂",
+     "x": 512,
+     "y": 130,
+     "w": 50,
+     "h": 30,
+     "color": "teal"
+    }
+   ],
+   "edges": [
+    {
+     "from": "IV",
+     "to": "X1",
+     "color": "amber"
+    },
+    {
+     "from": "PP1",
+     "to": "X1",
+     "color": "navy"
+    },
+    {
+     "from": "X1",
+     "to": "EE1",
+     "color": "navy"
+    },
+    {
+     "from": "EE1",
+     "to": "CC1",
+     "color": "teal"
+    },
+    {
+     "from": "CC1",
+     "to": "X2",
+     "color": "navy",
+     "label": "التسلسل",
+     "hl": true
+    },
+    {
+     "from": "PP2",
+     "to": "X2",
+     "color": "navy"
+    },
+    {
+     "from": "X2",
+     "to": "EE2",
+     "color": "navy"
+    },
+    {
+     "from": "EE2",
+     "to": "CC2",
+     "color": "teal"
+    }
+   ]
+  }
+ ]
+},
+{
+ "id": "rsa_trapdoor_m5",
+ "name": "RSA — From Primes to Trapdoor",
+ "icon": "🗝️",
+ "desc": "Book-twin (LTR) of rsa.png/pubkey.png: keygen, encrypt, decrypt, and the factoring trapdoor",
+ "audioDesc": "يطابق شكلَي RSA والمفتاح العام في الكتاب: ضرب الأوّليّين p وq سهلٌ ويعطي n، والتشفير بالعامّ متاحٌ للجميع، والفكّ بالخاصّ d وحده، أمّا عكس الاتجاه بتحليل n فعسيرٌ — وهذا هو الباب الخلفي.",
+ "modules": [
+  5
+ ],
+ "type": "interactive",
+ "steps": [
+  {
+   "caption": "توليد المفاتيح: أوّليّان كبيران p وq يُضربان بسهولة فيُنتجان المقياس n، ومنه يشتقّ الزوج: عامٌّ (n, e) يُنشَر، وخاصٌّ d يبقى عند أليس وحدها.",
+   "w": 560,
+   "h": 200,
+   "nodes": [
+    {
+     "id": "TG",
+     "shape": "text",
+     "label": "‹ توليد المفاتيح ›",
+     "x": 280,
+     "y": 46,
+     "fs": 11,
+     "fw": 700,
+     "color": "teal"
+    },
+    {
+     "id": "P",
+     "label": "p",
+     "x": 82,
+     "y": 95,
+     "w": 46,
+     "h": 30,
+     "color": "amber"
+    },
+    {
+     "id": "Q",
+     "label": "q",
+     "x": 82,
+     "y": 155,
+     "w": 46,
+     "h": 30,
+     "color": "amber"
+    },
+    {
+     "id": "MUL",
+     "label": "الضرب سهل\np · q",
+     "x": 210,
+     "y": 125,
+     "w": 104,
+     "h": 46,
+     "color": "teal",
+     "hl": true
+    },
+    {
+     "id": "NN",
+     "label": "n",
+     "x": 330,
+     "y": 125,
+     "w": 50,
+     "h": 32,
+     "color": "navy",
+     "hl": true
+    },
+    {
+     "id": "PUB",
+     "label": "المفتاح العام (n, e)",
+     "x": 468,
+     "y": 95,
+     "w": 150,
+     "h": 32,
+     "color": "blue"
+    },
+    {
+     "id": "PRV",
+     "label": "المفتاح الخاص (d) 🔒",
+     "x": 468,
+     "y": 158,
+     "w": 150,
+     "h": 32,
+     "color": "amber"
+    }
+   ],
+   "edges": [
+    {
+     "from": "P",
+     "to": "MUL",
+     "color": "amber",
+     "hl": true
+    },
+    {
+     "from": "Q",
+     "to": "MUL",
+     "color": "amber",
+     "hl": true
+    },
+    {
+     "from": "MUL",
+     "to": "NN",
+     "color": "teal",
+     "hl": true
+    },
+    {
+     "from": "NN",
+     "to": "PUB",
+     "color": "blue"
+    },
+    {
+     "from": "NN",
+     "to": "PRV",
+     "color": "amber"
+    }
+   ]
+  },
+  {
+   "caption": "التشفير: كلّ من يعرف مفتاح أليس العامّ (n, e) يستطيع إرسال c = mᵉ mod n إليها — لا حاجة لأيّ سرٍّ متبادلٍ مسبقاً.",
+   "w": 560,
+   "h": 200,
+   "nodes": [
+    {
+     "id": "TU",
+     "shape": "text",
+     "label": "‹ التشفير والفكّ ›",
+     "x": 280,
+     "y": 46,
+     "fs": 11,
+     "fw": 700,
+     "color": "teal"
+    },
+    {
+     "id": "KPUB",
+     "shape": "text",
+     "label": "(n, e) العامّ",
+     "x": 190,
+     "y": 66,
+     "fs": 10,
+     "fw": 700,
+     "color": "blue"
+    },
+    {
+     "id": "KPRV",
+     "shape": "text",
+     "label": "d الخاصّ 🔒",
+     "x": 396,
+     "y": 66,
+     "fs": 10,
+     "fw": 700,
+     "color": "amber"
+    },
+    {
+     "id": "M1",
+     "label": "m",
+     "x": 66,
+     "y": 130,
+     "w": 50,
+     "h": 30,
+     "color": "cream"
+    },
+    {
+     "id": "ENC",
+     "label": "التشفير\nc = mᵉ mod n",
+     "x": 190,
+     "y": 130,
+     "w": 122,
+     "h": 48,
+     "color": "blue",
+     "hl": true
+    },
+    {
+     "id": "CC",
+     "label": "c",
+     "x": 300,
+     "y": 130,
+     "w": 46,
+     "h": 30,
+     "color": "teal",
+     "hl": true
+    },
+    {
+     "id": "DEC",
+     "label": "الفكّ\nm = cᵈ mod n",
+     "x": 396,
+     "y": 130,
+     "w": 122,
+     "h": 48,
+     "color": "green"
+    },
+    {
+     "id": "M2",
+     "label": "m",
+     "x": 512,
+     "y": 130,
+     "w": 50,
+     "h": 30,
+     "color": "green"
+    }
+   ],
+   "edges": [
+    {
+     "from": "KPUB",
+     "to": "ENC",
+     "color": "blue",
+     "hl": true
+    },
+    {
+     "from": "M1",
+     "to": "ENC",
+     "color": "navy",
+     "hl": true
+    },
+    {
+     "from": "ENC",
+     "to": "CC",
+     "color": "navy",
+     "hl": true
+    },
+    {
+     "from": "KPRV",
+     "to": "DEC",
+     "color": "amber"
+    },
+    {
+     "from": "CC",
+     "to": "DEC",
+     "color": "navy"
+    },
+    {
+     "from": "DEC",
+     "to": "M2",
+     "color": "bob"
+    }
+   ]
+  },
+  {
+   "caption": "الفكّ: أليس وحدها تملك d، فهي وحدها من يحسب m = cᵈ mod n ويستعيد الرسالة.",
+   "w": 560,
+   "h": 200,
+   "nodes": [
+    {
+     "id": "TU",
+     "shape": "text",
+     "label": "‹ التشفير والفكّ ›",
+     "x": 280,
+     "y": 46,
+     "fs": 11,
+     "fw": 700,
+     "color": "teal"
+    },
+    {
+     "id": "KPUB",
+     "shape": "text",
+     "label": "(n, e) العامّ",
+     "x": 190,
+     "y": 66,
+     "fs": 10,
+     "fw": 700,
+     "color": "blue"
+    },
+    {
+     "id": "KPRV",
+     "shape": "text",
+     "label": "d الخاصّ 🔒",
+     "x": 396,
+     "y": 66,
+     "fs": 10,
+     "fw": 700,
+     "color": "amber"
+    },
+    {
+     "id": "M1",
+     "label": "m",
+     "x": 66,
+     "y": 130,
+     "w": 50,
+     "h": 30,
+     "color": "cream"
+    },
+    {
+     "id": "ENC",
+     "label": "التشفير\nc = mᵉ mod n",
+     "x": 190,
+     "y": 130,
+     "w": 122,
+     "h": 48,
+     "color": "blue"
+    },
+    {
+     "id": "CC",
+     "label": "c",
+     "x": 300,
+     "y": 130,
+     "w": 46,
+     "h": 30,
+     "color": "teal"
+    },
+    {
+     "id": "DEC",
+     "label": "الفكّ\nm = cᵈ mod n",
+     "x": 396,
+     "y": 130,
+     "w": 122,
+     "h": 48,
+     "color": "green",
+     "hl": true
+    },
+    {
+     "id": "M2",
+     "label": "m",
+     "x": 512,
+     "y": 130,
+     "w": 50,
+     "h": 30,
+     "color": "green",
+     "hl": true
+    }
+   ],
+   "edges": [
+    {
+     "from": "KPUB",
+     "to": "ENC",
+     "color": "blue"
+    },
+    {
+     "from": "M1",
+     "to": "ENC",
+     "color": "navy"
+    },
+    {
+     "from": "ENC",
+     "to": "CC",
+     "color": "navy"
+    },
+    {
+     "from": "KPRV",
+     "to": "DEC",
+     "color": "amber",
+     "hl": true
+    },
+    {
+     "from": "CC",
+     "to": "DEC",
+     "color": "navy",
+     "hl": true
+    },
+    {
+     "from": "DEC",
+     "to": "M2",
+     "color": "bob",
+     "hl": true
+    }
+   ]
+  },
+  {
+   "caption": "الباب الخلفي (Trapdoor): ترى إيف المفتاح العامّ والنصّ المشفّر، لكن الوصول إلى d يمرّ عبر تحليل n إلى عامليه — مسألةٌ عسيرة حسابياً للأعداد الكبيرة. سهلٌ في اتجاه، عسيرٌ في عكسه إلا بالسرّ.",
+   "w": 560,
+   "h": 270,
+   "nodes": [
+    {
+     "id": "TU",
+     "shape": "text",
+     "label": "‹ التشفير والفكّ ›",
+     "x": 280,
+     "y": 46,
+     "fs": 11,
+     "fw": 700,
+     "color": "teal"
+    },
+    {
+     "id": "KPUB",
+     "shape": "text",
+     "label": "(n, e) العامّ",
+     "x": 190,
+     "y": 66,
+     "fs": 10,
+     "fw": 700,
+     "color": "blue"
+    },
+    {
+     "id": "KPRV",
+     "shape": "text",
+     "label": "d الخاصّ 🔒",
+     "x": 396,
+     "y": 66,
+     "fs": 10,
+     "fw": 700,
+     "color": "amber"
+    },
+    {
+     "id": "M1",
+     "label": "m",
+     "x": 66,
+     "y": 130,
+     "w": 50,
+     "h": 30,
+     "color": "cream"
+    },
+    {
+     "id": "ENC",
+     "label": "التشفير\nc = mᵉ mod n",
+     "x": 190,
+     "y": 130,
+     "w": 122,
+     "h": 48,
+     "color": "blue"
+    },
+    {
+     "id": "CC",
+     "label": "c",
+     "x": 300,
+     "y": 130,
+     "w": 46,
+     "h": 30,
+     "color": "teal"
+    },
+    {
+     "id": "DEC",
+     "label": "الفكّ\nm = cᵈ mod n",
+     "x": 396,
+     "y": 130,
+     "w": 122,
+     "h": 48,
+     "color": "green"
+    },
+    {
+     "id": "M2",
+     "label": "m",
+     "x": 512,
+     "y": 130,
+     "w": 50,
+     "h": 30,
+     "color": "green"
+    },
+    {
+     "id": "EV",
+     "shape": "actor",
+     "letter": "E",
+     "label": "إيف",
+     "sub": "Eve",
+     "x": 300,
+     "y": 212,
+     "r": 17,
+     "color": "eve",
+     "hl": true
+    },
+    {
+     "id": "TR",
+     "shape": "text",
+     "label": "بلا d: تحليل n إلى p·q عسيرٌ حسابياً ✗",
+     "x": 300,
+     "y": 250,
+     "fs": 11,
+     "fw": 700,
+     "color": "mallory"
+    }
+   ],
+   "edges": [
+    {
+     "from": "KPUB",
+     "to": "ENC",
+     "color": "blue"
+    },
+    {
+     "from": "M1",
+     "to": "ENC",
+     "color": "navy"
+    },
+    {
+     "from": "ENC",
+     "to": "CC",
+     "color": "navy"
+    },
+    {
+     "from": "KPRV",
+     "to": "DEC",
+     "color": "amber"
+    },
+    {
+     "from": "CC",
+     "to": "DEC",
+     "color": "navy"
+    },
+    {
+     "from": "DEC",
+     "to": "M2",
+     "color": "bob"
+    },
+    {
+     "fromPoint": {
+      "x": 300,
+      "y": 147
+     },
+     "to": "EV",
+     "color": "eve",
+     "hl": true,
+     "dash": true
+    }
+   ]
+  }
+ ]
+},
+  {
+ "id": "stream_cipher",
+ "name": "Stream Cipher Flow",
+ "icon": "🔐",
+ "desc": "Book-twin (LTR) of stream.png + otp_reuse.png: PRG keystream, XOR, and the reuse attack",
+ "audioDesc": "يطابق شكل الشفرة الانسيابية في الكتاب: بذرةٌ قصيرة تُمدَّد بمولّدٍ شبه عشوائي إلى تدفّق مفاتيح يُخلَط بالنصّ عبر XOR، والفكّ بالتدفّق نفسه، وإعادة استعمال التدفّق تُلغيه وتكشف m₁ ⊕ m₂.",
+ "modules": [
+  2
+ ],
+ "type": "interactive",
+ "steps": [
+  {
+   "caption": "تمديد المفتاح: بذرةٌ قصيرة (المفتاح) تغذّي مولّداً شبه عشوائي PRG فيُخرج تدفّق مفاتيح بطول الرسالة — محاكاةٌ عملية لدفتر المرّة الواحدة.",
+   "w": 560,
+   "h": 215,
+   "nodes": [
+    {
+     "id": "K",
+     "label": "البذرة (seed/key)",
+     "x": 84,
+     "y": 92,
+     "w": 128,
+     "h": 36,
+     "color": "blue",
+     "hl": true
+    },
+    {
+     "id": "PRG",
+     "label": "مولّد شبه عشوائي\nPRG",
+     "x": 262,
+     "y": 92,
+     "w": 128,
+     "h": 48,
+     "color": "teal",
+     "hl": true
+    },
+    {
+     "id": "KS",
+     "shape": "text",
+     "label": "تدفّق المفتاح (keystream)",
+     "x": 420,
+     "y": 74,
+     "fs": 10,
+     "fw": 700,
+     "color": "navy"
+    },
+    {
+     "id": "M",
+     "shape": "text",
+     "label": "النصّ العادي m",
+     "x": 420,
+     "y": 120,
+     "fs": 10.5,
+     "fw": 700,
+     "color": "navy"
+    },
+    {
+     "id": "X",
+     "label": "⊕",
+     "x": 420,
+     "y": 168,
+     "w": 30,
+     "h": 30,
+     "color": "navy"
+    },
+    {
+     "id": "C",
+     "label": "c",
+     "x": 512,
+     "y": 168,
+     "w": 46,
+     "h": 30,
+     "color": "green"
+    }
+   ],
+   "edges": [
+    {
+     "from": "K",
+     "to": "PRG",
+     "color": "navy",
+     "hl": true
+    },
+    {
+     "from": "PRG",
+     "to": "X",
+     "color": "teal",
+     "label": "keystream"
+    },
+    {
+     "from": "M",
+     "to": "X",
+     "color": "navy"
+    },
+    {
+     "from": "X",
+     "to": "C",
+     "color": "bob"
+    }
+   ]
+  },
+  {
+   "caption": "التشفير: كلّ بتّ من النصّ العادي يُخلَط بالبتّ المقابل من التدفّق: c = m ⊕ s — عمليةٌ خفيفة وسريعة تصلح للبثّ المستمرّ.",
+   "w": 560,
+   "h": 215,
+   "nodes": [
+    {
+     "id": "K",
+     "label": "البذرة (seed/key)",
+     "x": 84,
+     "y": 92,
+     "w": 128,
+     "h": 36,
+     "color": "blue"
+    },
+    {
+     "id": "PRG",
+     "label": "مولّد شبه عشوائي\nPRG",
+     "x": 262,
+     "y": 92,
+     "w": 128,
+     "h": 48,
+     "color": "teal"
+    },
+    {
+     "id": "KS",
+     "shape": "text",
+     "label": "تدفّق المفتاح (keystream)",
+     "x": 420,
+     "y": 74,
+     "fs": 10,
+     "fw": 700,
+     "color": "navy"
+    },
+    {
+     "id": "M",
+     "shape": "text",
+     "label": "النصّ العادي m",
+     "x": 420,
+     "y": 120,
+     "fs": 10.5,
+     "fw": 700,
+     "color": "navy"
+    },
+    {
+     "id": "X",
+     "label": "⊕",
+     "x": 420,
+     "y": 168,
+     "w": 30,
+     "h": 30,
+     "color": "navy",
+     "hl": true
+    },
+    {
+     "id": "C",
+     "label": "c",
+     "x": 512,
+     "y": 168,
+     "w": 46,
+     "h": 30,
+     "color": "green",
+     "hl": true
+    }
+   ],
+   "edges": [
+    {
+     "from": "K",
+     "to": "PRG",
+     "color": "navy"
+    },
+    {
+     "from": "PRG",
+     "to": "X",
+     "color": "teal",
+     "label": "keystream",
+     "hl": true
+    },
+    {
+     "from": "M",
+     "to": "X",
+     "color": "navy",
+     "hl": true
+    },
+    {
+     "from": "X",
+     "to": "C",
+     "color": "bob",
+     "hl": true
+    }
+   ]
+  },
+  {
+   "caption": "الفكّ: يولّد المستقبِل التدفّق s نفسه من البذرة نفسها، وبما أنّ s ⊕ s = 0 فإنّ c ⊕ s تعيد m كما هي.",
+   "w": 560,
+   "h": 215,
+   "nodes": [
+    {
+     "id": "K",
+     "label": "البذرة (seed/key)",
+     "x": 84,
+     "y": 92,
+     "w": 128,
+     "h": 36,
+     "color": "blue"
+    },
+    {
+     "id": "PRG",
+     "label": "مولّد شبه عشوائي\nPRG",
+     "x": 262,
+     "y": 92,
+     "w": 128,
+     "h": 48,
+     "color": "teal",
+     "hl": true
+    },
+    {
+     "id": "KS",
+     "shape": "text",
+     "label": "تدفّق المفتاح (keystream)",
+     "x": 420,
+     "y": 74,
+     "fs": 10,
+     "fw": 700,
+     "color": "navy"
+    },
+    {
+     "id": "M",
+     "shape": "text",
+     "label": "النصّ العادي m",
+     "x": 420,
+     "y": 120,
+     "fs": 10.5,
+     "fw": 700,
+     "color": "navy"
+    },
+    {
+     "id": "X",
+     "label": "⊕",
+     "x": 420,
+     "y": 168,
+     "w": 30,
+     "h": 30,
+     "color": "navy"
+    },
+    {
+     "id": "C",
+     "label": "c",
+     "x": 512,
+     "y": 168,
+     "w": 46,
+     "h": 30,
+     "color": "green"
+    }
+   ],
+   "edges": [
+    {
+     "from": "K",
+     "to": "PRG",
+     "color": "navy"
+    },
+    {
+     "from": "PRG",
+     "to": "X",
+     "color": "teal",
+     "label": "keystream",
+     "hl": true
+    },
+    {
+     "from": "M",
+     "to": "X",
+     "color": "navy"
+    },
+    {
+     "from": "X",
+     "to": "C",
+     "color": "bob"
+    }
+   ]
+  },
+  {
+   "caption": "هجوم إعادة الاستعمال: إن شُفّرت رسالتان بالتدفّق نفسه، فإنّ c₁ ⊕ c₂ تُلغي s كلّياً وتكشف m₁ ⊕ m₂ — ولهذا لا يُستعمل التدفّق مرّتين أبداً.",
+   "w": 560,
+   "h": 200,
+   "nodes": [
+    {
+     "id": "TR",
+     "shape": "text",
+     "label": "خطر إعادة استعمال المفتاح",
+     "x": 280,
+     "y": 50,
+     "fs": 11,
+     "fw": 700,
+     "color": "mallory"
+    },
+    {
+     "id": "R1",
+     "label": "c₁ = m₁ ⊕ s",
+     "x": 120,
+     "y": 105,
+     "w": 118,
+     "h": 32,
+     "color": "teal"
+    },
+    {
+     "id": "R2",
+     "label": "c₂ = m₂ ⊕ s",
+     "x": 120,
+     "y": 165,
+     "w": 118,
+     "h": 32,
+     "color": "teal"
+    },
+    {
+     "id": "RX",
+     "label": "⊕",
+     "x": 250,
+     "y": 135,
+     "w": 30,
+     "h": 30,
+     "color": "navy"
+    },
+    {
+     "id": "RO",
+     "label": "c₁ ⊕ c₂ = m₁ ⊕ m₂ — السلسلة s تُلغى!",
+     "x": 425,
+     "y": 135,
+     "w": 240,
+     "h": 40,
+     "color": "mallory",
+     "hl": true
+    }
+   ],
+   "edges": [
+    {
+     "from": "R1",
+     "to": "RX",
+     "color": "teal",
+     "hl": true
+    },
+    {
+     "from": "R2",
+     "to": "RX",
+     "color": "teal",
+     "hl": true
+    },
+    {
+     "from": "RX",
+     "to": "RO",
+     "color": "mallory",
+     "hl": true
+    }
+   ]
+  }
+ ]
+},
+  {
+ "id": "sym_enc_overview",
+ "name": "Symmetric Encryption Overview",
+ "icon": "🔒",
+ "desc": "Book-twin (LTR) of model.png: shared key, ciphertext over the channel, Eve listening",
+ "audioDesc": "يطابق شكل «نموذج المراسلة مع وجود طرف ثالث» في الكتاب: أليس وبوب يتشاركان المفتاح k مسبقاً، والرسالة تعبر القناة مشفّرةً، وإيف المتنصّتة لا ترى إلا النصّ المشفّر.",
+ "modules": [
+  2,
+  3
+ ],
+ "type": "interactive",
+ "steps": [
+  {
+   "caption": "السرّ المتبادَل: قبل أيّ مراسلة، يتشارك أليس وبوب المفتاح k عبر قناةٍ آمنة — وهذا جوهر «التماثل»: المفتاح نفسه عند الطرفين.",
+   "w": 560,
+   "h": 250,
+   "nodes": [
+    {
+     "id": "AL",
+     "shape": "actor",
+     "letter": "A",
+     "label": "أليس",
+     "sub": "Alice",
+     "x": 66,
+     "y": 118,
+     "r": 21,
+     "color": "alice"
+    },
+    {
+     "id": "BO",
+     "shape": "actor",
+     "letter": "B",
+     "label": "بوب",
+     "sub": "Bob",
+     "x": 494,
+     "y": 118,
+     "r": 21,
+     "color": "bob"
+    },
+    {
+     "id": "EV",
+     "shape": "actor",
+     "letter": "E",
+     "label": "إيف",
+     "sub": "Eve",
+     "x": 280,
+     "y": 200,
+     "r": 19,
+     "color": "eve"
+    },
+    {
+     "id": "KA",
+     "shape": "text",
+     "label": "k",
+     "x": 66,
+     "y": 58,
+     "fs": 13,
+     "fw": 700,
+     "color": "amber",
+     "hl": true
+    },
+    {
+     "id": "KB",
+     "shape": "text",
+     "label": "k",
+     "x": 494,
+     "y": 58,
+     "fs": 13,
+     "fw": 700,
+     "color": "amber",
+     "hl": true
+    }
+   ],
+   "edges": [
+    {
+     "from": "KA",
+     "to": "KB",
+     "color": "amber",
+     "dash": true,
+     "label": "سرٌّ متبادَل مسبقاً",
+     "hl": true
+    },
+    {
+     "from": "AL",
+     "to": "BO",
+     "color": "navy",
+     "label": "الرسالة المشفّرة"
+    },
+    {
+     "fromPoint": {
+      "x": 280,
+      "y": 122
+     },
+     "to": "EV",
+     "color": "eve",
+     "dash": true
+    }
+   ]
+  },
+  {
+   "caption": "التشفير والإرسال: تشفّر أليس رسالتها بالمفتاح k وترسل النصّ المشفّر عبر القناة العامة إلى بوب، فيفكّه بالمفتاح نفسه.",
+   "w": 560,
+   "h": 250,
+   "nodes": [
+    {
+     "id": "AL",
+     "shape": "actor",
+     "letter": "A",
+     "label": "أليس",
+     "sub": "Alice",
+     "x": 66,
+     "y": 118,
+     "r": 21,
+     "color": "alice",
+     "hl": true
+    },
+    {
+     "id": "BO",
+     "shape": "actor",
+     "letter": "B",
+     "label": "بوب",
+     "sub": "Bob",
+     "x": 494,
+     "y": 118,
+     "r": 21,
+     "color": "bob",
+     "hl": true
+    },
+    {
+     "id": "EV",
+     "shape": "actor",
+     "letter": "E",
+     "label": "إيف",
+     "sub": "Eve",
+     "x": 280,
+     "y": 200,
+     "r": 19,
+     "color": "eve"
+    },
+    {
+     "id": "KA",
+     "shape": "text",
+     "label": "k",
+     "x": 66,
+     "y": 58,
+     "fs": 13,
+     "fw": 700,
+     "color": "amber"
+    },
+    {
+     "id": "KB",
+     "shape": "text",
+     "label": "k",
+     "x": 494,
+     "y": 58,
+     "fs": 13,
+     "fw": 700,
+     "color": "amber"
+    }
+   ],
+   "edges": [
+    {
+     "from": "KA",
+     "to": "KB",
+     "color": "amber",
+     "dash": true,
+     "label": "سرٌّ متبادَل مسبقاً"
+    },
+    {
+     "from": "AL",
+     "to": "BO",
+     "color": "navy",
+     "label": "الرسالة المشفّرة",
+     "hl": true
+    },
+    {
+     "fromPoint": {
+      "x": 280,
+      "y": 122
+     },
+     "to": "EV",
+     "color": "eve",
+     "dash": true
+    }
+   ]
+  },
+  {
+   "caption": "المتنصّتة: إيف تراقب القناة العامة كلّها، لكنّ كلّ ما يصلها هو النصّ المشفّر — وبلا k يبقى بلا معنى. أمن الرسالة صار أمن المفتاح.",
+   "w": 560,
+   "h": 250,
+   "nodes": [
+    {
+     "id": "AL",
+     "shape": "actor",
+     "letter": "A",
+     "label": "أليس",
+     "sub": "Alice",
+     "x": 66,
+     "y": 118,
+     "r": 21,
+     "color": "alice"
+    },
+    {
+     "id": "BO",
+     "shape": "actor",
+     "letter": "B",
+     "label": "بوب",
+     "sub": "Bob",
+     "x": 494,
+     "y": 118,
+     "r": 21,
+     "color": "bob"
+    },
+    {
+     "id": "EV",
+     "shape": "actor",
+     "letter": "E",
+     "label": "إيف",
+     "sub": "Eve",
+     "x": 280,
+     "y": 200,
+     "r": 19,
+     "color": "eve",
+     "hl": true
+    },
+    {
+     "id": "KA",
+     "shape": "text",
+     "label": "k",
+     "x": 66,
+     "y": 58,
+     "fs": 13,
+     "fw": 700,
+     "color": "amber"
+    },
+    {
+     "id": "KB",
+     "shape": "text",
+     "label": "k",
+     "x": 494,
+     "y": 58,
+     "fs": 13,
+     "fw": 700,
+     "color": "amber"
+    }
+   ],
+   "edges": [
+    {
+     "from": "KA",
+     "to": "KB",
+     "color": "amber",
+     "dash": true,
+     "label": "سرٌّ متبادَل مسبقاً"
+    },
+    {
+     "from": "AL",
+     "to": "BO",
+     "color": "navy",
+     "label": "الرسالة المشفّرة"
+    },
+    {
+     "fromPoint": {
+      "x": 280,
+      "y": 122
+     },
+     "to": "EV",
+     "color": "eve",
+     "dash": true,
+     "hl": true
+    }
+   ]
+  }
+ ]
+},
+  {
+ "id": "sym_enc_system",
+ "name": "The Standard Cryptographic Process",
+ "icon": "🔐",
+ "desc": "3 stages mirroring the book figure «مراحل المراسلة المشفّرة بين الطرفين» (LTR: Alice left → Bob right): encryption, transmission (Eve eavesdrops), decryption",
+ "audioDesc": "يطابق هذا المخطّط شكل الكتاب «مراحل المراسلة المشفّرة بين الطرفين»، والمسار من اليسار إلى اليمين: في مرحلة التشفير تحوّل أليس النصّ الصريح x بالمفتاح k إلى النصّ المشفّر Y، وفي مرحلة الإرسال يعبر Y القناة العامة حيث لا ترى المتنصّتة إيف سواه، وفي مرحلة فكّ التشفير يستعيد بوب النصّ الصريح بالمفتاح k نفسه.",
+ "modules": [
+  0,
+  2,
+  3
+ ],
+ "type": "interactive",
+ "steps": [
+  {
+   "caption": "المرحلة الأولى — التشفير: تُدخِل أليس النصّ الصريح x مع المفتاح السرّي k إلى خوارزمية التشفير، فتُخرج النصّ المشفّر Y وفق Enc(x, k) ⇒ Y.",
+   "w": 560,
+   "h": 305,
+   "guides": [
+    {
+     "x": 192,
+     "y1": 60,
+     "y2": 284
+    },
+    {
+     "x": 368,
+     "y1": 60,
+     "y2": 284
+    }
+   ],
+   "nodes": [
+    {
+     "id": "T1",
+     "shape": "text",
+     "label": "مرحلة التشفير",
+     "x": 96,
+     "y": 76,
+     "fs": 11.5,
+     "color": "teal"
+    },
+    {
+     "id": "T2",
+     "shape": "text",
+     "label": "مرحلة الإرسال",
+     "x": 280,
+     "y": 76,
+     "fs": 11.5,
+     "color": "teal"
+    },
+    {
+     "id": "T3",
+     "shape": "text",
+     "label": "مرحلة فكّ التشفير",
+     "x": 464,
+     "y": 76,
+     "fs": 11.5,
+     "color": "teal"
+    },
+    {
+     "id": "ENC",
+     "label": "خوارزمية التشفير\nEnc(x, k) ⇒ Y",
+     "x": 152,
+     "y": 160,
+     "w": 110,
+     "h": 58,
+     "color": "blue",
+     "hl": true
+    },
+    {
+     "id": "DEC",
+     "label": "خوارزمية فكّ التشفير\nDec(Y, k) ⇒ x",
+     "x": 408,
+     "y": 160,
+     "w": 110,
+     "h": 58,
+     "color": "green"
+    },
+    {
+     "id": "KE",
+     "shape": "text",
+     "label": "k",
+     "x": 152,
+     "y": 238,
+     "fs": 13,
+     "color": "amber"
+    },
+    {
+     "id": "KD",
+     "shape": "text",
+     "label": "k",
+     "x": 408,
+     "y": 238,
+     "fs": 13,
+     "color": "amber"
+    },
+    {
+     "id": "XA",
+     "shape": "text",
+     "label": "x",
+     "x": 52,
+     "y": 126,
+     "fs": 13,
+     "color": "green"
+    },
+    {
+     "id": "XB",
+     "shape": "text",
+     "label": "x",
+     "x": 508,
+     "y": 126,
+     "fs": 13,
+     "color": "green"
+    },
+    {
+     "id": "Y",
+     "shape": "text",
+     "label": "Y",
+     "x": 260,
+     "y": 146,
+     "fs": 13,
+     "color": "navy"
+    },
+    {
+     "id": "ALICE",
+     "shape": "actor",
+     "letter": "A",
+     "label": "أليس",
+     "sub": "Alice",
+     "x": 52,
+     "y": 160,
+     "r": 21,
+     "color": "alice",
+     "hl": true
+    },
+    {
+     "id": "BOB",
+     "shape": "actor",
+     "letter": "B",
+     "label": "بوب",
+     "sub": "Bob",
+     "x": 508,
+     "y": 160,
+     "r": 21,
+     "color": "bob"
+    },
+    {
+     "id": "EVE",
+     "shape": "actor",
+     "letter": "E",
+     "label": "إيف",
+     "sub": "Eve",
+     "x": 280,
+     "y": 240,
+     "r": 21,
+     "color": "eve"
+    }
+   ],
+   "edges": [
+    {
+     "from": "ALICE",
+     "to": "ENC",
+     "color": "alice",
+     "hl": true
+    },
+    {
+     "from": "KE",
+     "to": "ENC",
+     "color": "amber",
+     "hl": true
+    },
+    {
+     "from": "ENC",
+     "to": "DEC",
+     "color": "navy"
+    },
+    {
+     "fromPoint": {
+      "x": 280,
+      "y": 164
+     },
+     "to": "EVE",
+     "color": "eve",
+     "dash": true
+    },
+    {
+     "from": "KD",
+     "to": "DEC",
+     "color": "amber"
+    },
+    {
+     "from": "DEC",
+     "to": "BOB",
+     "color": "bob"
+    }
+   ]
+  },
+  {
+   "caption": "المرحلة الثانية — الإرسال: يعبر النصّ المشفّر Y القناة العامة من أليس إلى بوب. إيف تتنصّت على القناة، لكنّ كلّ ما تراه هو Y المشفّر لا النصّ الصريح.",
+   "w": 560,
+   "h": 305,
+   "guides": [
+    {
+     "x": 192,
+     "y1": 60,
+     "y2": 284
+    },
+    {
+     "x": 368,
+     "y1": 60,
+     "y2": 284
+    }
+   ],
+   "nodes": [
+    {
+     "id": "T1",
+     "shape": "text",
+     "label": "مرحلة التشفير",
+     "x": 96,
+     "y": 76,
+     "fs": 11.5,
+     "color": "teal"
+    },
+    {
+     "id": "T2",
+     "shape": "text",
+     "label": "مرحلة الإرسال",
+     "x": 280,
+     "y": 76,
+     "fs": 11.5,
+     "color": "teal"
+    },
+    {
+     "id": "T3",
+     "shape": "text",
+     "label": "مرحلة فكّ التشفير",
+     "x": 464,
+     "y": 76,
+     "fs": 11.5,
+     "color": "teal"
+    },
+    {
+     "id": "ENC",
+     "label": "خوارزمية التشفير\nEnc(x, k) ⇒ Y",
+     "x": 152,
+     "y": 160,
+     "w": 110,
+     "h": 58,
+     "color": "blue"
+    },
+    {
+     "id": "DEC",
+     "label": "خوارزمية فكّ التشفير\nDec(Y, k) ⇒ x",
+     "x": 408,
+     "y": 160,
+     "w": 110,
+     "h": 58,
+     "color": "green"
+    },
+    {
+     "id": "KE",
+     "shape": "text",
+     "label": "k",
+     "x": 152,
+     "y": 238,
+     "fs": 13,
+     "color": "amber"
+    },
+    {
+     "id": "KD",
+     "shape": "text",
+     "label": "k",
+     "x": 408,
+     "y": 238,
+     "fs": 13,
+     "color": "amber"
+    },
+    {
+     "id": "XA",
+     "shape": "text",
+     "label": "x",
+     "x": 52,
+     "y": 126,
+     "fs": 13,
+     "color": "green"
+    },
+    {
+     "id": "XB",
+     "shape": "text",
+     "label": "x",
+     "x": 508,
+     "y": 126,
+     "fs": 13,
+     "color": "green"
+    },
+    {
+     "id": "Y",
+     "shape": "text",
+     "label": "Y",
+     "x": 260,
+     "y": 146,
+     "fs": 13,
+     "color": "navy"
+    },
+    {
+     "id": "ALICE",
+     "shape": "actor",
+     "letter": "A",
+     "label": "أليس",
+     "sub": "Alice",
+     "x": 52,
+     "y": 160,
+     "r": 21,
+     "color": "alice"
+    },
+    {
+     "id": "BOB",
+     "shape": "actor",
+     "letter": "B",
+     "label": "بوب",
+     "sub": "Bob",
+     "x": 508,
+     "y": 160,
+     "r": 21,
+     "color": "bob"
+    },
+    {
+     "id": "EVE",
+     "shape": "actor",
+     "letter": "E",
+     "label": "إيف",
+     "sub": "Eve",
+     "x": 280,
+     "y": 240,
+     "r": 21,
+     "color": "eve",
+     "hl": true
+    }
+   ],
+   "edges": [
+    {
+     "from": "ALICE",
+     "to": "ENC",
+     "color": "alice"
+    },
+    {
+     "from": "KE",
+     "to": "ENC",
+     "color": "amber"
+    },
+    {
+     "from": "ENC",
+     "to": "DEC",
+     "color": "navy",
+     "hl": true
+    },
+    {
+     "fromPoint": {
+      "x": 280,
+      "y": 164
+     },
+     "to": "EVE",
+     "color": "eve",
+     "dash": true,
+     "hl": true
+    },
+    {
+     "from": "KD",
+     "to": "DEC",
+     "color": "amber"
+    },
+    {
+     "from": "DEC",
+     "to": "BOB",
+     "color": "bob"
+    }
+   ]
+  },
+  {
+   "caption": "المرحلة الثالثة — فكّ التشفير: يُدخِل بوب النصّ المشفّر Y مع المفتاح k نفسه إلى خوارزمية فكّ التشفير فيستعيد النصّ الصريح x وفق Dec(Y, k) ⇒ x. المفتاح واحد في الطرفين — ولهذا يُسمّى التشفير متماثلاً.",
+   "w": 560,
+   "h": 305,
+   "guides": [
+    {
+     "x": 192,
+     "y1": 60,
+     "y2": 284
+    },
+    {
+     "x": 368,
+     "y1": 60,
+     "y2": 284
+    }
+   ],
+   "nodes": [
+    {
+     "id": "T1",
+     "shape": "text",
+     "label": "مرحلة التشفير",
+     "x": 96,
+     "y": 76,
+     "fs": 11.5,
+     "color": "teal"
+    },
+    {
+     "id": "T2",
+     "shape": "text",
+     "label": "مرحلة الإرسال",
+     "x": 280,
+     "y": 76,
+     "fs": 11.5,
+     "color": "teal"
+    },
+    {
+     "id": "T3",
+     "shape": "text",
+     "label": "مرحلة فكّ التشفير",
+     "x": 464,
+     "y": 76,
+     "fs": 11.5,
+     "color": "teal"
+    },
+    {
+     "id": "ENC",
+     "label": "خوارزمية التشفير\nEnc(x, k) ⇒ Y",
+     "x": 152,
+     "y": 160,
+     "w": 110,
+     "h": 58,
+     "color": "blue"
+    },
+    {
+     "id": "DEC",
+     "label": "خوارزمية فكّ التشفير\nDec(Y, k) ⇒ x",
+     "x": 408,
+     "y": 160,
+     "w": 110,
+     "h": 58,
+     "color": "green",
+     "hl": true
+    },
+    {
+     "id": "KE",
+     "shape": "text",
+     "label": "k",
+     "x": 152,
+     "y": 238,
+     "fs": 13,
+     "color": "amber"
+    },
+    {
+     "id": "KD",
+     "shape": "text",
+     "label": "k",
+     "x": 408,
+     "y": 238,
+     "fs": 13,
+     "color": "amber"
+    },
+    {
+     "id": "XA",
+     "shape": "text",
+     "label": "x",
+     "x": 52,
+     "y": 126,
+     "fs": 13,
+     "color": "green"
+    },
+    {
+     "id": "XB",
+     "shape": "text",
+     "label": "x",
+     "x": 508,
+     "y": 126,
+     "fs": 13,
+     "color": "green"
+    },
+    {
+     "id": "Y",
+     "shape": "text",
+     "label": "Y",
+     "x": 260,
+     "y": 146,
+     "fs": 13,
+     "color": "navy"
+    },
+    {
+     "id": "ALICE",
+     "shape": "actor",
+     "letter": "A",
+     "label": "أليس",
+     "sub": "Alice",
+     "x": 52,
+     "y": 160,
+     "r": 21,
+     "color": "alice"
+    },
+    {
+     "id": "BOB",
+     "shape": "actor",
+     "letter": "B",
+     "label": "بوب",
+     "sub": "Bob",
+     "x": 508,
+     "y": 160,
+     "r": 21,
+     "color": "bob",
+     "hl": true
+    },
+    {
+     "id": "EVE",
+     "shape": "actor",
+     "letter": "E",
+     "label": "إيف",
+     "sub": "Eve",
+     "x": 280,
+     "y": 240,
+     "r": 21,
+     "color": "eve"
+    }
+   ],
+   "edges": [
+    {
+     "from": "ALICE",
+     "to": "ENC",
+     "color": "alice"
+    },
+    {
+     "from": "KE",
+     "to": "ENC",
+     "color": "amber"
+    },
+    {
+     "from": "ENC",
+     "to": "DEC",
+     "color": "navy"
+    },
+    {
+     "fromPoint": {
+      "x": 280,
+      "y": 164
+     },
+     "to": "EVE",
+     "color": "eve",
+     "dash": true
+    },
+    {
+     "from": "KD",
+     "to": "DEC",
+     "color": "amber",
+     "hl": true
+    },
+    {
+     "from": "DEC",
+     "to": "BOB",
+     "color": "bob",
+     "hl": true
+    }
+   ]
+  }
+ ]
+},
+  {
+ "id": "security_services",
+ "name": "Threats, Services & Mechanisms",
+ "icon": "🛡️",
+ "desc": "Book-twin (LTR) of guarantees.png: threat → service → mechanism, row by row",
+ "audioDesc": "يطابق جدول الضمانات في الفصل الأوّل: لكلّ تهديدٍ خدمةُ أمنٍ تقابله وآليةٌ تشفيرية تحقّقها — التنصّت تقابله السرّية بالتشفير، والتلاعب تقابله السلامة بالهاش، وهكذا.",
+ "modules": [
+  0
+ ],
+ "type": "interactive",
+ "steps": [
+  {
+   "caption": "أربعة تهديداتٍ كلاسيكية: مهاجمٌ قد يقرأ ما لا يخصّه، أو يعدّل الرسائل، أو ينتحل هويةً، أو ينكر لاحقاً ما أرسله.",
+   "w": 560,
+   "h": 290,
+   "nodes": [
+    {
+     "id": "H1",
+     "shape": "text",
+     "label": "التهديد",
+     "x": 92,
+     "y": 48,
+     "fs": 11,
+     "fw": 700,
+     "color": "mallory"
+    },
+    {
+     "id": "H2",
+     "shape": "text",
+     "label": "الخدمة",
+     "x": 280,
+     "y": 48,
+     "fs": 11,
+     "fw": 700,
+     "color": "teal"
+    },
+    {
+     "id": "H3",
+     "shape": "text",
+     "label": "الآلية",
+     "x": 468,
+     "y": 48,
+     "fs": 11,
+     "fw": 700,
+     "color": "navy"
+    },
+    {
+     "id": "T0",
+     "label": "التنصّت",
+     "x": 92,
+     "y": 88,
+     "w": 120,
+     "h": 32,
+     "color": "mallory",
+     "hl": true
+    },
+    {
+     "id": "S0",
+     "label": "السرّية\nConfidentiality",
+     "x": 280,
+     "y": 88,
+     "w": 150,
+     "h": 40,
+     "color": "teal"
+    },
+    {
+     "id": "M0",
+     "label": "التشفير",
+     "x": 468,
+     "y": 88,
+     "w": 140,
+     "h": 32,
+     "color": "navy"
+    },
+    {
+     "id": "T1",
+     "label": "التلاعب",
+     "x": 92,
+     "y": 143,
+     "w": 120,
+     "h": 32,
+     "color": "mallory",
+     "hl": true
+    },
+    {
+     "id": "S1",
+     "label": "السلامة\nIntegrity",
+     "x": 280,
+     "y": 143,
+     "w": 150,
+     "h": 40,
+     "color": "teal"
+    },
+    {
+     "id": "M1",
+     "label": "الهاش / MAC",
+     "x": 468,
+     "y": 143,
+     "w": 140,
+     "h": 32,
+     "color": "navy"
+    },
+    {
+     "id": "T2",
+     "label": "الانتحال",
+     "x": 92,
+     "y": 198,
+     "w": 120,
+     "h": 32,
+     "color": "mallory",
+     "hl": true
+    },
+    {
+     "id": "S2",
+     "label": "الاستيثاق\nAuthentication",
+     "x": 280,
+     "y": 198,
+     "w": 150,
+     "h": 40,
+     "color": "teal"
+    },
+    {
+     "id": "M2",
+     "label": "كلمات السرّ والتحدّي",
+     "x": 468,
+     "y": 198,
+     "w": 140,
+     "h": 32,
+     "color": "navy"
+    },
+    {
+     "id": "T3",
+     "label": "الإنكار",
+     "x": 92,
+     "y": 253,
+     "w": 120,
+     "h": 32,
+     "color": "mallory",
+     "hl": true
+    },
+    {
+     "id": "S3",
+     "label": "عدم الإنكار\nNon-repudiation",
+     "x": 280,
+     "y": 253,
+     "w": 150,
+     "h": 40,
+     "color": "teal"
+    },
+    {
+     "id": "M3",
+     "label": "التوقيع الرقمي",
+     "x": 468,
+     "y": 253,
+     "w": 140,
+     "h": 32,
+     "color": "navy"
+    }
+   ],
+   "edges": [
+    {
+     "from": "T0",
+     "to": "S0",
+     "color": "mallory"
+    },
+    {
+     "from": "S0",
+     "to": "M0",
+     "color": "teal"
+    },
+    {
+     "from": "T1",
+     "to": "S1",
+     "color": "mallory"
+    },
+    {
+     "from": "S1",
+     "to": "M1",
+     "color": "teal"
+    },
+    {
+     "from": "T2",
+     "to": "S2",
+     "color": "mallory"
+    },
+    {
+     "from": "S2",
+     "to": "M2",
+     "color": "teal"
+    },
+    {
+     "from": "T3",
+     "to": "S3",
+     "color": "mallory"
+    },
+    {
+     "from": "S3",
+     "to": "M3",
+     "color": "teal"
+    }
+   ]
+  },
+  {
+   "caption": "لكلّ تهديدٍ خدمةُ أمنٍ تردّ عليه: السرّية للتنصّت، والسلامة للتلاعب، والاستيثاق للانتحال، وعدم الإنكار للإنكار.",
+   "w": 560,
+   "h": 290,
+   "nodes": [
+    {
+     "id": "H1",
+     "shape": "text",
+     "label": "التهديد",
+     "x": 92,
+     "y": 48,
+     "fs": 11,
+     "fw": 700,
+     "color": "mallory"
+    },
+    {
+     "id": "H2",
+     "shape": "text",
+     "label": "الخدمة",
+     "x": 280,
+     "y": 48,
+     "fs": 11,
+     "fw": 700,
+     "color": "teal"
+    },
+    {
+     "id": "H3",
+     "shape": "text",
+     "label": "الآلية",
+     "x": 468,
+     "y": 48,
+     "fs": 11,
+     "fw": 700,
+     "color": "navy"
+    },
+    {
+     "id": "T0",
+     "label": "التنصّت",
+     "x": 92,
+     "y": 88,
+     "w": 120,
+     "h": 32,
+     "color": "mallory"
+    },
+    {
+     "id": "S0",
+     "label": "السرّية\nConfidentiality",
+     "x": 280,
+     "y": 88,
+     "w": 150,
+     "h": 40,
+     "color": "teal",
+     "hl": true
+    },
+    {
+     "id": "M0",
+     "label": "التشفير",
+     "x": 468,
+     "y": 88,
+     "w": 140,
+     "h": 32,
+     "color": "navy"
+    },
+    {
+     "id": "T1",
+     "label": "التلاعب",
+     "x": 92,
+     "y": 143,
+     "w": 120,
+     "h": 32,
+     "color": "mallory"
+    },
+    {
+     "id": "S1",
+     "label": "السلامة\nIntegrity",
+     "x": 280,
+     "y": 143,
+     "w": 150,
+     "h": 40,
+     "color": "teal",
+     "hl": true
+    },
+    {
+     "id": "M1",
+     "label": "الهاش / MAC",
+     "x": 468,
+     "y": 143,
+     "w": 140,
+     "h": 32,
+     "color": "navy"
+    },
+    {
+     "id": "T2",
+     "label": "الانتحال",
+     "x": 92,
+     "y": 198,
+     "w": 120,
+     "h": 32,
+     "color": "mallory"
+    },
+    {
+     "id": "S2",
+     "label": "الاستيثاق\nAuthentication",
+     "x": 280,
+     "y": 198,
+     "w": 150,
+     "h": 40,
+     "color": "teal",
+     "hl": true
+    },
+    {
+     "id": "M2",
+     "label": "كلمات السرّ والتحدّي",
+     "x": 468,
+     "y": 198,
+     "w": 140,
+     "h": 32,
+     "color": "navy"
+    },
+    {
+     "id": "T3",
+     "label": "الإنكار",
+     "x": 92,
+     "y": 253,
+     "w": 120,
+     "h": 32,
+     "color": "mallory"
+    },
+    {
+     "id": "S3",
+     "label": "عدم الإنكار\nNon-repudiation",
+     "x": 280,
+     "y": 253,
+     "w": 150,
+     "h": 40,
+     "color": "teal",
+     "hl": true
+    },
+    {
+     "id": "M3",
+     "label": "التوقيع الرقمي",
+     "x": 468,
+     "y": 253,
+     "w": 140,
+     "h": 32,
+     "color": "navy"
+    }
+   ],
+   "edges": [
+    {
+     "from": "T0",
+     "to": "S0",
+     "color": "mallory",
+     "hl": true
+    },
+    {
+     "from": "S0",
+     "to": "M0",
+     "color": "teal"
+    },
+    {
+     "from": "T1",
+     "to": "S1",
+     "color": "mallory",
+     "hl": true
+    },
+    {
+     "from": "S1",
+     "to": "M1",
+     "color": "teal"
+    },
+    {
+     "from": "T2",
+     "to": "S2",
+     "color": "mallory",
+     "hl": true
+    },
+    {
+     "from": "S2",
+     "to": "M2",
+     "color": "teal"
+    },
+    {
+     "from": "T3",
+     "to": "S3",
+     "color": "mallory",
+     "hl": true
+    },
+    {
+     "from": "S3",
+     "to": "M3",
+     "color": "teal"
+    }
+   ]
+  },
+  {
+   "caption": "ولكلّ خدمةٍ آليةٌ تحقّقها: التشفير للسرّية، والهاش وأكواد MAC للسلامة، وبروتوكولات التحدّي للاستيثاق، والتوقيع الرقمي لعدم الإنكار.",
+   "w": 560,
+   "h": 290,
+   "nodes": [
+    {
+     "id": "H1",
+     "shape": "text",
+     "label": "التهديد",
+     "x": 92,
+     "y": 48,
+     "fs": 11,
+     "fw": 700,
+     "color": "mallory"
+    },
+    {
+     "id": "H2",
+     "shape": "text",
+     "label": "الخدمة",
+     "x": 280,
+     "y": 48,
+     "fs": 11,
+     "fw": 700,
+     "color": "teal"
+    },
+    {
+     "id": "H3",
+     "shape": "text",
+     "label": "الآلية",
+     "x": 468,
+     "y": 48,
+     "fs": 11,
+     "fw": 700,
+     "color": "navy"
+    },
+    {
+     "id": "T0",
+     "label": "التنصّت",
+     "x": 92,
+     "y": 88,
+     "w": 120,
+     "h": 32,
+     "color": "mallory"
+    },
+    {
+     "id": "S0",
+     "label": "السرّية\nConfidentiality",
+     "x": 280,
+     "y": 88,
+     "w": 150,
+     "h": 40,
+     "color": "teal"
+    },
+    {
+     "id": "M0",
+     "label": "التشفير",
+     "x": 468,
+     "y": 88,
+     "w": 140,
+     "h": 32,
+     "color": "navy",
+     "hl": true
+    },
+    {
+     "id": "T1",
+     "label": "التلاعب",
+     "x": 92,
+     "y": 143,
+     "w": 120,
+     "h": 32,
+     "color": "mallory"
+    },
+    {
+     "id": "S1",
+     "label": "السلامة\nIntegrity",
+     "x": 280,
+     "y": 143,
+     "w": 150,
+     "h": 40,
+     "color": "teal"
+    },
+    {
+     "id": "M1",
+     "label": "الهاش / MAC",
+     "x": 468,
+     "y": 143,
+     "w": 140,
+     "h": 32,
+     "color": "navy",
+     "hl": true
+    },
+    {
+     "id": "T2",
+     "label": "الانتحال",
+     "x": 92,
+     "y": 198,
+     "w": 120,
+     "h": 32,
+     "color": "mallory"
+    },
+    {
+     "id": "S2",
+     "label": "الاستيثاق\nAuthentication",
+     "x": 280,
+     "y": 198,
+     "w": 150,
+     "h": 40,
+     "color": "teal"
+    },
+    {
+     "id": "M2",
+     "label": "كلمات السرّ والتحدّي",
+     "x": 468,
+     "y": 198,
+     "w": 140,
+     "h": 32,
+     "color": "navy",
+     "hl": true
+    },
+    {
+     "id": "T3",
+     "label": "الإنكار",
+     "x": 92,
+     "y": 253,
+     "w": 120,
+     "h": 32,
+     "color": "mallory"
+    },
+    {
+     "id": "S3",
+     "label": "عدم الإنكار\nNon-repudiation",
+     "x": 280,
+     "y": 253,
+     "w": 150,
+     "h": 40,
+     "color": "teal"
+    },
+    {
+     "id": "M3",
+     "label": "التوقيع الرقمي",
+     "x": 468,
+     "y": 253,
+     "w": 140,
+     "h": 32,
+     "color": "navy",
+     "hl": true
+    }
+   ],
+   "edges": [
+    {
+     "from": "T0",
+     "to": "S0",
+     "color": "mallory"
+    },
+    {
+     "from": "S0",
+     "to": "M0",
+     "color": "teal",
+     "hl": true
+    },
+    {
+     "from": "T1",
+     "to": "S1",
+     "color": "mallory"
+    },
+    {
+     "from": "S1",
+     "to": "M1",
+     "color": "teal",
+     "hl": true
+    },
+    {
+     "from": "T2",
+     "to": "S2",
+     "color": "mallory"
+    },
+    {
+     "from": "S2",
+     "to": "M2",
+     "color": "teal",
+     "hl": true
+    },
+    {
+     "from": "T3",
+     "to": "S3",
+     "color": "mallory"
+    },
+    {
+     "from": "S3",
+     "to": "M3",
+     "color": "teal",
+     "hl": true
+    }
+   ]
+  },
+  {
+   "caption": "عقلية المصمّم: سمِّ التهديد، اختر الخدمة، ثمّ انشر الآلية — تتبّع مثلاً مسار: التلاعب ← السلامة ← MAC.",
+   "w": 560,
+   "h": 290,
+   "nodes": [
+    {
+     "id": "H1",
+     "shape": "text",
+     "label": "التهديد",
+     "x": 92,
+     "y": 48,
+     "fs": 11,
+     "fw": 700,
+     "color": "mallory"
+    },
+    {
+     "id": "H2",
+     "shape": "text",
+     "label": "الخدمة",
+     "x": 280,
+     "y": 48,
+     "fs": 11,
+     "fw": 700,
+     "color": "teal"
+    },
+    {
+     "id": "H3",
+     "shape": "text",
+     "label": "الآلية",
+     "x": 468,
+     "y": 48,
+     "fs": 11,
+     "fw": 700,
+     "color": "navy"
+    },
+    {
+     "id": "T0",
+     "label": "التنصّت",
+     "x": 92,
+     "y": 88,
+     "w": 120,
+     "h": 32,
+     "color": "mallory"
+    },
+    {
+     "id": "S0",
+     "label": "السرّية\nConfidentiality",
+     "x": 280,
+     "y": 88,
+     "w": 150,
+     "h": 40,
+     "color": "teal"
+    },
+    {
+     "id": "M0",
+     "label": "التشفير",
+     "x": 468,
+     "y": 88,
+     "w": 140,
+     "h": 32,
+     "color": "navy"
+    },
+    {
+     "id": "T1",
+     "label": "التلاعب",
+     "x": 92,
+     "y": 143,
+     "w": 120,
+     "h": 32,
+     "color": "mallory",
+     "hl": true
+    },
+    {
+     "id": "S1",
+     "label": "السلامة\nIntegrity",
+     "x": 280,
+     "y": 143,
+     "w": 150,
+     "h": 40,
+     "color": "teal",
+     "hl": true
+    },
+    {
+     "id": "M1",
+     "label": "الهاش / MAC",
+     "x": 468,
+     "y": 143,
+     "w": 140,
+     "h": 32,
+     "color": "navy",
+     "hl": true
+    },
+    {
+     "id": "T2",
+     "label": "الانتحال",
+     "x": 92,
+     "y": 198,
+     "w": 120,
+     "h": 32,
+     "color": "mallory"
+    },
+    {
+     "id": "S2",
+     "label": "الاستيثاق\nAuthentication",
+     "x": 280,
+     "y": 198,
+     "w": 150,
+     "h": 40,
+     "color": "teal"
+    },
+    {
+     "id": "M2",
+     "label": "كلمات السرّ والتحدّي",
+     "x": 468,
+     "y": 198,
+     "w": 140,
+     "h": 32,
+     "color": "navy"
+    },
+    {
+     "id": "T3",
+     "label": "الإنكار",
+     "x": 92,
+     "y": 253,
+     "w": 120,
+     "h": 32,
+     "color": "mallory"
+    },
+    {
+     "id": "S3",
+     "label": "عدم الإنكار\nNon-repudiation",
+     "x": 280,
+     "y": 253,
+     "w": 150,
+     "h": 40,
+     "color": "teal"
+    },
+    {
+     "id": "M3",
+     "label": "التوقيع الرقمي",
+     "x": 468,
+     "y": 253,
+     "w": 140,
+     "h": 32,
+     "color": "navy"
+    }
+   ],
+   "edges": [
+    {
+     "from": "T0",
+     "to": "S0",
+     "color": "mallory"
+    },
+    {
+     "from": "S0",
+     "to": "M0",
+     "color": "teal"
+    },
+    {
+     "from": "T1",
+     "to": "S1",
+     "color": "mallory",
+     "hl": true
+    },
+    {
+     "from": "S1",
+     "to": "M1",
+     "color": "teal",
+     "hl": true
+    },
+    {
+     "from": "T2",
+     "to": "S2",
+     "color": "mallory"
+    },
+    {
+     "from": "S2",
+     "to": "M2",
+     "color": "teal"
+    },
+    {
+     "from": "T3",
+     "to": "S3",
+     "color": "mallory"
+    },
+    {
+     "from": "S3",
+     "to": "M3",
+     "color": "teal"
+    }
+   ]
+  }
+ ]
+},
+  {
+ "id": "crypto_toolbox",
+ "name": "The Toolbox So Far",
+ "icon": "🧰",
+ "desc": "Book-twin (LTR) of the ch.6 bridge map: symmetric tools, the shared-secret catch, key pairs ahead",
+ "audioDesc": "يطابق خريطة منتصف الكتاب: التشفير المتماثل يمنح السرّية والهاش يمنح بصمة السلامة، لكن كلّ أداةٍ حتى الآن تفترض سرّاً متبادلاً — وعدد الأزواج ينفجر تربيعياً، والحلّ القادم هو زوج المفاتيح.",
+ "modules": [
+  6
+ ],
+ "type": "interactive",
+ "steps": [
+  {
+   "caption": "السرّية حتى الآن: مفتاحٌ متبادَل k يحوّل النصّ العادي إلى مشفّرٍ عبر AES — لا يقرأ الرسالة إلا من يملك k.",
+   "w": 560,
+   "h": 260,
+   "nodes": [
+    {
+     "id": "HT",
+     "shape": "text",
+     "label": "الأداة",
+     "x": 170,
+     "y": 48,
+     "fs": 11,
+     "fw": 700,
+     "color": "navy"
+    },
+    {
+     "id": "HG",
+     "shape": "text",
+     "label": "الضمانة",
+     "x": 452,
+     "y": 48,
+     "fs": 11,
+     "fw": 700,
+     "color": "teal"
+    },
+    {
+     "id": "KK",
+     "shape": "text",
+     "label": "k",
+     "x": 66,
+     "y": 88,
+     "fs": 13,
+     "fw": 700,
+     "color": "amber"
+    },
+    {
+     "id": "AES",
+     "label": "تشفير متماثل\nAES",
+     "x": 190,
+     "y": 88,
+     "w": 130,
+     "h": 44,
+     "color": "blue",
+     "hl": true
+    },
+    {
+     "id": "CF",
+     "label": "السرّية ✓",
+     "x": 452,
+     "y": 88,
+     "w": 120,
+     "h": 32,
+     "color": "teal",
+     "hl": true
+    },
+    {
+     "id": "HH",
+     "label": "دالة هاش\nH(m)",
+     "x": 190,
+     "y": 152,
+     "w": 130,
+     "h": 44,
+     "color": "navy"
+    },
+    {
+     "id": "IG",
+     "label": "بصمة السلامة ✓",
+     "x": 452,
+     "y": 152,
+     "w": 130,
+     "h": 32,
+     "color": "teal"
+    }
+   ],
+   "edges": [
+    {
+     "from": "KK",
+     "to": "AES",
+     "color": "amber",
+     "hl": true
+    },
+    {
+     "from": "AES",
+     "to": "CF",
+     "color": "teal",
+     "hl": true
+    },
+    {
+     "from": "HH",
+     "to": "IG",
+     "color": "teal"
+    }
+   ]
+  },
+  {
+   "caption": "السلامة حتى الآن: دالة الهاش تعطي بصمةً قصيرة لأيّ رسالة، وأيّ تعديلٍ يغيّرها — لكن أيّ أحدٍ يستطيع إعادة حسابها، فالربط بالهوية يحتاج سرّاً (MAC).",
+   "w": 560,
+   "h": 260,
+   "nodes": [
+    {
+     "id": "HT",
+     "shape": "text",
+     "label": "الأداة",
+     "x": 170,
+     "y": 48,
+     "fs": 11,
+     "fw": 700,
+     "color": "navy"
+    },
+    {
+     "id": "HG",
+     "shape": "text",
+     "label": "الضمانة",
+     "x": 452,
+     "y": 48,
+     "fs": 11,
+     "fw": 700,
+     "color": "teal"
+    },
+    {
+     "id": "KK",
+     "shape": "text",
+     "label": "k",
+     "x": 66,
+     "y": 88,
+     "fs": 13,
+     "fw": 700,
+     "color": "amber"
+    },
+    {
+     "id": "AES",
+     "label": "تشفير متماثل\nAES",
+     "x": 190,
+     "y": 88,
+     "w": 130,
+     "h": 44,
+     "color": "blue"
+    },
+    {
+     "id": "CF",
+     "label": "السرّية ✓",
+     "x": 452,
+     "y": 88,
+     "w": 120,
+     "h": 32,
+     "color": "teal"
+    },
+    {
+     "id": "HH",
+     "label": "دالة هاش\nH(m)",
+     "x": 190,
+     "y": 152,
+     "w": 130,
+     "h": 44,
+     "color": "navy",
+     "hl": true
+    },
+    {
+     "id": "IG",
+     "label": "بصمة السلامة ✓",
+     "x": 452,
+     "y": 152,
+     "w": 130,
+     "h": 32,
+     "color": "teal",
+     "hl": true
+    }
+   ],
+   "edges": [
+    {
+     "from": "KK",
+     "to": "AES",
+     "color": "amber"
+    },
+    {
+     "from": "AES",
+     "to": "CF",
+     "color": "teal"
+    },
+    {
+     "from": "HH",
+     "to": "IG",
+     "color": "teal",
+     "hl": true
+    }
+   ]
+  },
+  {
+   "caption": "العقدة: كلّ الأدوات تفترض سرّاً متبادلاً مسبقاً — ومع n أطراف يلزم n(n−1)/2 مفتاحاً ثنائياً؛ مئة مستخدمٍ تعني 4950 مفتاحاً!",
+   "w": 560,
+   "h": 260,
+   "nodes": [
+    {
+     "id": "HT",
+     "shape": "text",
+     "label": "الأداة",
+     "x": 170,
+     "y": 48,
+     "fs": 11,
+     "fw": 700,
+     "color": "navy"
+    },
+    {
+     "id": "HG",
+     "shape": "text",
+     "label": "الضمانة",
+     "x": 452,
+     "y": 48,
+     "fs": 11,
+     "fw": 700,
+     "color": "teal"
+    },
+    {
+     "id": "KK",
+     "shape": "text",
+     "label": "k",
+     "x": 66,
+     "y": 88,
+     "fs": 13,
+     "fw": 700,
+     "color": "amber"
+    },
+    {
+     "id": "AES",
+     "label": "تشفير متماثل\nAES",
+     "x": 190,
+     "y": 88,
+     "w": 130,
+     "h": 44,
+     "color": "blue"
+    },
+    {
+     "id": "CF",
+     "label": "السرّية ✓",
+     "x": 452,
+     "y": 88,
+     "w": 120,
+     "h": 32,
+     "color": "teal"
+    },
+    {
+     "id": "HH",
+     "label": "دالة هاش\nH(m)",
+     "x": 190,
+     "y": 152,
+     "w": 130,
+     "h": 44,
+     "color": "navy"
+    },
+    {
+     "id": "IG",
+     "label": "بصمة السلامة ✓",
+     "x": 452,
+     "y": 152,
+     "w": 130,
+     "h": 32,
+     "color": "teal"
+    },
+    {
+     "id": "CATCH",
+     "label": "المشكلة: كلّ أداةٍ تحتاج سرّاً متبادلاً — n أطراف ⇒ n(n−1)/2 مفتاحاً!",
+     "x": 280,
+     "y": 222,
+     "w": 340,
+     "h": 44,
+     "color": "cream",
+     "hl": true
+    }
+   ],
+   "edges": [
+    {
+     "from": "KK",
+     "to": "AES",
+     "color": "amber"
+    },
+    {
+     "from": "AES",
+     "to": "CF",
+     "color": "teal"
+    },
+    {
+     "from": "HH",
+     "to": "IG",
+     "color": "teal"
+    }
+   ]
+  },
+  {
+   "caption": "الجواب في الفصول القادمة: زوج مفاتيح — عامٌّ يعرفه الجميع، وخاصٌّ لا يملكه إلا صاحبه. لا حاجة بعد اليوم لسرٍّ متبادل لكلّ ثنائيّ.",
+   "w": 560,
+   "h": 260,
+   "nodes": [
+    {
+     "id": "HT",
+     "shape": "text",
+     "label": "الأداة",
+     "x": 170,
+     "y": 48,
+     "fs": 11,
+     "fw": 700,
+     "color": "navy"
+    },
+    {
+     "id": "HG",
+     "shape": "text",
+     "label": "الضمانة",
+     "x": 452,
+     "y": 48,
+     "fs": 11,
+     "fw": 700,
+     "color": "teal"
+    },
+    {
+     "id": "KK",
+     "shape": "text",
+     "label": "k",
+     "x": 66,
+     "y": 88,
+     "fs": 13,
+     "fw": 700,
+     "color": "amber"
+    },
+    {
+     "id": "AES",
+     "label": "تشفير متماثل\nAES",
+     "x": 190,
+     "y": 88,
+     "w": 130,
+     "h": 44,
+     "color": "blue"
+    },
+    {
+     "id": "CF",
+     "label": "السرّية ✓",
+     "x": 452,
+     "y": 88,
+     "w": 120,
+     "h": 32,
+     "color": "teal"
+    },
+    {
+     "id": "HH",
+     "label": "دالة هاش\nH(m)",
+     "x": 190,
+     "y": 152,
+     "w": 130,
+     "h": 44,
+     "color": "navy"
+    },
+    {
+     "id": "IG",
+     "label": "بصمة السلامة ✓",
+     "x": 452,
+     "y": 152,
+     "w": 130,
+     "h": 32,
+     "color": "teal"
+    },
+    {
+     "id": "PB",
+     "label": "مفتاح عامّ 🔓 يُنشَر",
+     "x": 170,
+     "y": 222,
+     "w": 150,
+     "h": 34,
+     "color": "blue",
+     "hl": true
+    },
+    {
+     "id": "PR",
+     "label": "مفتاح خاصّ 🔒 يُكتَم",
+     "x": 400,
+     "y": 222,
+     "w": 150,
+     "h": 34,
+     "color": "amber",
+     "hl": true
+    }
+   ],
+   "edges": [
+    {
+     "from": "KK",
+     "to": "AES",
+     "color": "amber"
+    },
+    {
+     "from": "AES",
+     "to": "CF",
+     "color": "teal"
+    },
+    {
+     "from": "HH",
+     "to": "IG",
+     "color": "teal"
+    }
+   ]
+  }
+ ]
+},
+  {
+ "id": "chain_of_trust",
+ "name": "PKI Chain of Trust",
+ "icon": "⛓️",
+ "desc": "Book-twin (LTR) of pki_chain.png: root → intermediate → leaf, plus revocation",
+ "audioDesc": "يطابق شكل سلسلة الثقة في الكتاب: جذرٌ موقَّعٌ ذاتياً ومثبَّتٌ مسبقاً يوقّع هيئةً وسيطة، والوسيطة توقّع شهادة الموقع، والتحقّق يصعد السلسلة حتى الجذر — مع قوائم الإبطال لسحب الثقة عند الحاجة.",
+ "modules": [
+  8
+ ],
+ "type": "interactive",
+ "steps": [
+  {
+   "caption": "مرساة الثقة: شهادة الجذر موقَّعةٌ ذاتياً ومثبَّتةٌ مسبقاً في المتصفّح ونظام التشغيل — كلّ الثقة اللاحقة تُشتقّ منها.",
+   "w": 560,
+   "h": 250,
+   "nodes": [
+    {
+     "id": "SS",
+     "shape": "text",
+     "label": "موقَّعة ذاتياً · مثبَّتة في المتصفّح",
+     "x": 96,
+     "y": 62,
+     "fs": 10,
+     "fw": 700,
+     "color": "navy"
+    },
+    {
+     "id": "ROOT",
+     "label": "شهادة الجذر\nRoot CA",
+     "x": 96,
+     "y": 112,
+     "w": 124,
+     "h": 50,
+     "color": "navy",
+     "hl": true
+    },
+    {
+     "id": "INT",
+     "label": "الهيئة الوسيطة\nIntermediate CA",
+     "x": 280,
+     "y": 112,
+     "w": 134,
+     "h": 50,
+     "color": "teal"
+    },
+    {
+     "id": "LEAF",
+     "label": "شهادة الموقع\nexample.com",
+     "x": 462,
+     "y": 112,
+     "w": 128,
+     "h": 50,
+     "color": "green"
+    },
+    {
+     "id": "CRL",
+     "label": "قائمة الإبطال CRL / OCSP",
+     "x": 280,
+     "y": 205,
+     "w": 190,
+     "h": 36,
+     "color": "cream"
+    }
+   ],
+   "edges": [
+    {
+     "from": "ROOT",
+     "to": "INT",
+     "color": "navy",
+     "label": "توقيع"
+    },
+    {
+     "from": "INT",
+     "to": "LEAF",
+     "color": "teal",
+     "label": "توقيع"
+    },
+    {
+     "from": "INT",
+     "to": "CRL",
+     "color": "amber",
+     "dash": true
+    }
+   ]
+  },
+  {
+   "caption": "التفويض: يوقّع الجذر شهادة هيئةٍ وسيطة ثم يبقى مفتاحه الخاصّ محفوظاً دون اتصال (offline) — الوسيطة هي من يتعامل مع الطلبات اليومية.",
+   "w": 560,
+   "h": 250,
+   "nodes": [
+    {
+     "id": "SS",
+     "shape": "text",
+     "label": "موقَّعة ذاتياً · مثبَّتة في المتصفّح",
+     "x": 96,
+     "y": 62,
+     "fs": 10,
+     "fw": 700,
+     "color": "navy"
+    },
+    {
+     "id": "ROOT",
+     "label": "شهادة الجذر\nRoot CA",
+     "x": 96,
+     "y": 112,
+     "w": 124,
+     "h": 50,
+     "color": "navy"
+    },
+    {
+     "id": "INT",
+     "label": "الهيئة الوسيطة\nIntermediate CA",
+     "x": 280,
+     "y": 112,
+     "w": 134,
+     "h": 50,
+     "color": "teal",
+     "hl": true
+    },
+    {
+     "id": "LEAF",
+     "label": "شهادة الموقع\nexample.com",
+     "x": 462,
+     "y": 112,
+     "w": 128,
+     "h": 50,
+     "color": "green"
+    },
+    {
+     "id": "CRL",
+     "label": "قائمة الإبطال CRL / OCSP",
+     "x": 280,
+     "y": 205,
+     "w": 190,
+     "h": 36,
+     "color": "cream"
+    }
+   ],
+   "edges": [
+    {
+     "from": "ROOT",
+     "to": "INT",
+     "color": "navy",
+     "label": "توقيع",
+     "hl": true
+    },
+    {
+     "from": "INT",
+     "to": "LEAF",
+     "color": "teal",
+     "label": "توقيع"
+    },
+    {
+     "from": "INT",
+     "to": "CRL",
+     "color": "amber",
+     "dash": true
+    }
+   ]
+  },
+  {
+   "caption": "الإصدار والتحقّق: توقّع الوسيطة شهادة الموقع، وعند الزيارة يتحقّق المتصفّح من كلّ توقيعٍ صعوداً حتى يبلغ جذراً يثق به.",
+   "w": 560,
+   "h": 250,
+   "nodes": [
+    {
+     "id": "SS",
+     "shape": "text",
+     "label": "موقَّعة ذاتياً · مثبَّتة في المتصفّح",
+     "x": 96,
+     "y": 62,
+     "fs": 10,
+     "fw": 700,
+     "color": "navy"
+    },
+    {
+     "id": "ROOT",
+     "label": "شهادة الجذر\nRoot CA",
+     "x": 96,
+     "y": 112,
+     "w": 124,
+     "h": 50,
+     "color": "navy"
+    },
+    {
+     "id": "INT",
+     "label": "الهيئة الوسيطة\nIntermediate CA",
+     "x": 280,
+     "y": 112,
+     "w": 134,
+     "h": 50,
+     "color": "teal"
+    },
+    {
+     "id": "LEAF",
+     "label": "شهادة الموقع\nexample.com",
+     "x": 462,
+     "y": 112,
+     "w": 128,
+     "h": 50,
+     "color": "green",
+     "hl": true
+    },
+    {
+     "id": "CRL",
+     "label": "قائمة الإبطال CRL / OCSP",
+     "x": 280,
+     "y": 205,
+     "w": 190,
+     "h": 36,
+     "color": "cream"
+    }
+   ],
+   "edges": [
+    {
+     "from": "ROOT",
+     "to": "INT",
+     "color": "navy",
+     "label": "توقيع"
+    },
+    {
+     "from": "INT",
+     "to": "LEAF",
+     "color": "teal",
+     "label": "توقيع",
+     "hl": true
+    },
+    {
+     "from": "INT",
+     "to": "CRL",
+     "color": "amber",
+     "dash": true
+    }
+   ]
+  },
+  {
+   "caption": "الثقة قابلة للسحب: قبل قبول الشهادة يُستشار سجلّ الإبطال CRL أو خدمة OCSP — فمفتاحٌ مسرّبٌ يعني شهادةً ملغاة ولو كانت تواقيعها سليمة.",
+   "w": 560,
+   "h": 250,
+   "nodes": [
+    {
+     "id": "SS",
+     "shape": "text",
+     "label": "موقَّعة ذاتياً · مثبَّتة في المتصفّح",
+     "x": 96,
+     "y": 62,
+     "fs": 10,
+     "fw": 700,
+     "color": "navy"
+    },
+    {
+     "id": "ROOT",
+     "label": "شهادة الجذر\nRoot CA",
+     "x": 96,
+     "y": 112,
+     "w": 124,
+     "h": 50,
+     "color": "navy"
+    },
+    {
+     "id": "INT",
+     "label": "الهيئة الوسيطة\nIntermediate CA",
+     "x": 280,
+     "y": 112,
+     "w": 134,
+     "h": 50,
+     "color": "teal"
+    },
+    {
+     "id": "LEAF",
+     "label": "شهادة الموقع\nexample.com",
+     "x": 462,
+     "y": 112,
+     "w": 128,
+     "h": 50,
+     "color": "green"
+    },
+    {
+     "id": "CRL",
+     "label": "قائمة الإبطال CRL / OCSP",
+     "x": 280,
+     "y": 205,
+     "w": 190,
+     "h": 36,
+     "color": "cream",
+     "hl": true
+    }
+   ],
+   "edges": [
+    {
+     "from": "ROOT",
+     "to": "INT",
+     "color": "navy",
+     "label": "توقيع"
+    },
+    {
+     "from": "INT",
+     "to": "LEAF",
+     "color": "teal",
+     "label": "توقيع"
+    },
+    {
+     "from": "INT",
+     "to": "CRL",
+     "color": "amber",
+     "dash": true,
+     "hl": true
+    }
+   ]
+  }
+ ]
+},
+  {
+ "id": "challenge_response_flow",
+ "name": "Challenge–Response Protocol",
+ "icon": "📡",
+ "desc": "Book-twin (LTR ladder) of the ch.9 authentication flow: claim, nonce, response, replay defeated",
+ "audioDesc": "يطابق بروتوكول التحدّي والاستجابة في الكتاب: أليس تدّعي هويّتها، وبوب يرسل عدداً عشوائياً جديداً، فتردّ أليس ببصمةٍ تجمع سرّها والتحدّي، ويعيد بوب الحساب — ومحاولة مالوري إعادة استجابةٍ قديمة تفشل لأنّ التحدّي يتجدّد.",
+ "modules": [
+  9
+ ],
+ "type": "interactive",
+ "steps": [
+  {
+   "caption": "الادّعاء: تعلن أليس هويّتها — وأيّ أحدٍ يستطيع قول ذلك، فالإعلان وحده لا يثبت شيئاً.",
+   "w": 560,
+   "h": 300,
+   "guides": [
+    {
+     "x": 110,
+     "y1": 76,
+     "y2": 280
+    },
+    {
+     "x": 450,
+     "y1": 76,
+     "y2": 280
+    }
+   ],
+   "nodes": [
+    {
+     "id": "AL",
+     "shape": "actor",
+     "letter": "A",
+     "label": "أليس (المدّعية)",
+     "sub": "Alice",
+     "x": 110,
+     "y": 52,
+     "r": 19,
+     "color": "alice",
+     "hl": true
+    },
+    {
+     "id": "BO",
+     "shape": "actor",
+     "letter": "B",
+     "label": "بوب (المُتحقِّق)",
+     "sub": "Bob",
+     "x": 450,
+     "y": 52,
+     "r": 19,
+     "color": "bob"
+    },
+    {
+     "id": "L1",
+     "shape": "text",
+     "label": "أنا أليس",
+     "x": 280,
+     "y": 106,
+     "fs": 10.5,
+     "fw": 700,
+     "color": "navy",
+     "hl": true
+    }
+   ],
+   "edges": [
+    {
+     "fromPoint": {
+      "x": 116,
+      "y": 118
+     },
+     "toPoint": {
+      "x": 444,
+      "y": 118
+     },
+     "color": "alice",
+     "hl": true
+    }
+   ]
+  },
+  {
+   "caption": "التحدّي: يردّ بوب بعددٍ عشوائيٍّ طازج r (يُسمّى nonce) لن يتكرّر — وهذا ما يجعل كلّ جلسةٍ فريدة.",
+   "w": 560,
+   "h": 300,
+   "guides": [
+    {
+     "x": 110,
+     "y1": 76,
+     "y2": 280
+    },
+    {
+     "x": 450,
+     "y1": 76,
+     "y2": 280
+    }
+   ],
+   "nodes": [
+    {
+     "id": "AL",
+     "shape": "actor",
+     "letter": "A",
+     "label": "أليس (المدّعية)",
+     "sub": "Alice",
+     "x": 110,
+     "y": 52,
+     "r": 19,
+     "color": "alice"
+    },
+    {
+     "id": "BO",
+     "shape": "actor",
+     "letter": "B",
+     "label": "بوب (المُتحقِّق)",
+     "sub": "Bob",
+     "x": 450,
+     "y": 52,
+     "r": 19,
+     "color": "bob",
+     "hl": true
+    },
+    {
+     "id": "L1",
+     "shape": "text",
+     "label": "أنا أليس",
+     "x": 280,
+     "y": 106,
+     "fs": 10.5,
+     "fw": 700,
+     "color": "navy"
+    },
+    {
+     "id": "L2",
+     "shape": "text",
+     "label": "التحدّي: عددٌ عشوائيّ r (nonce)",
+     "x": 280,
+     "y": 146,
+     "fs": 10.5,
+     "fw": 700,
+     "color": "amber",
+     "hl": true
+    }
+   ],
+   "edges": [
+    {
+     "fromPoint": {
+      "x": 116,
+      "y": 118
+     },
+     "toPoint": {
+      "x": 444,
+      "y": 118
+     },
+     "color": "alice"
+    },
+    {
+     "fromPoint": {
+      "x": 444,
+      "y": 158
+     },
+     "toPoint": {
+      "x": 116,
+      "y": 158
+     },
+     "color": "amber",
+     "hl": true
+    }
+   ]
+  },
+  {
+   "caption": "الاستجابة والتحقّق: تعيد أليس h(M ∥ r) حيث M سرّها المشترك، فيعيد بوب الحساب بنفسه — التطابق يثبت أنّ المرسِلة تملك السرّ الآن لا في الماضي.",
+   "w": 560,
+   "h": 300,
+   "guides": [
+    {
+     "x": 110,
+     "y1": 76,
+     "y2": 280
+    },
+    {
+     "x": 450,
+     "y1": 76,
+     "y2": 280
+    }
+   ],
+   "nodes": [
+    {
+     "id": "AL",
+     "shape": "actor",
+     "letter": "A",
+     "label": "أليس (المدّعية)",
+     "sub": "Alice",
+     "x": 110,
+     "y": 52,
+     "r": 19,
+     "color": "alice"
+    },
+    {
+     "id": "BO",
+     "shape": "actor",
+     "letter": "B",
+     "label": "بوب (المُتحقِّق)",
+     "sub": "Bob",
+     "x": 450,
+     "y": 52,
+     "r": 19,
+     "color": "bob"
+    },
+    {
+     "id": "L1",
+     "shape": "text",
+     "label": "أنا أليس",
+     "x": 280,
+     "y": 106,
+     "fs": 10.5,
+     "fw": 700,
+     "color": "navy"
+    },
+    {
+     "id": "L2",
+     "shape": "text",
+     "label": "التحدّي: عددٌ عشوائيّ r (nonce)",
+     "x": 280,
+     "y": 146,
+     "fs": 10.5,
+     "fw": 700,
+     "color": "amber"
+    },
+    {
+     "id": "L3",
+     "shape": "text",
+     "label": "الاستجابة: h(M ∥ r)",
+     "x": 280,
+     "y": 186,
+     "fs": 10.5,
+     "fw": 700,
+     "color": "navy",
+     "hl": true
+    },
+    {
+     "id": "VER",
+     "label": "يعيد بوب الحساب ⇒ تطابُق ✓",
+     "x": 280,
+     "y": 232,
+     "w": 210,
+     "h": 34,
+     "color": "green",
+     "hl": true
+    }
+   ],
+   "edges": [
+    {
+     "fromPoint": {
+      "x": 116,
+      "y": 118
+     },
+     "toPoint": {
+      "x": 444,
+      "y": 118
+     },
+     "color": "alice"
+    },
+    {
+     "fromPoint": {
+      "x": 444,
+      "y": 158
+     },
+     "toPoint": {
+      "x": 116,
+      "y": 158
+     },
+     "color": "amber"
+    },
+    {
+     "fromPoint": {
+      "x": 116,
+      "y": 198
+     },
+     "toPoint": {
+      "x": 444,
+      "y": 198
+     },
+     "color": "navy",
+     "hl": true
+    }
+   ]
+  },
+  {
+   "caption": "هزيمة الإعادة: تلتقط مالوري استجابةً قديمة وتعيد إرسالها، لكنّ بوب أصدر r جديداً — فالاستجابة القديمة لا تطابقه وتُرفَض.",
+   "w": 560,
+   "h": 300,
+   "guides": [
+    {
+     "x": 110,
+     "y1": 76,
+     "y2": 280
+    },
+    {
+     "x": 450,
+     "y1": 76,
+     "y2": 280
+    }
+   ],
+   "nodes": [
+    {
+     "id": "AL",
+     "shape": "actor",
+     "letter": "A",
+     "label": "أليس (المدّعية)",
+     "sub": "Alice",
+     "x": 110,
+     "y": 52,
+     "r": 19,
+     "color": "alice"
+    },
+    {
+     "id": "BO",
+     "shape": "actor",
+     "letter": "B",
+     "label": "بوب (المُتحقِّق)",
+     "sub": "Bob",
+     "x": 450,
+     "y": 52,
+     "r": 19,
+     "color": "bob"
+    },
+    {
+     "id": "L1",
+     "shape": "text",
+     "label": "أنا أليس",
+     "x": 280,
+     "y": 106,
+     "fs": 10.5,
+     "fw": 700,
+     "color": "navy"
+    },
+    {
+     "id": "L2",
+     "shape": "text",
+     "label": "التحدّي: عددٌ عشوائيّ r (nonce)",
+     "x": 280,
+     "y": 146,
+     "fs": 10.5,
+     "fw": 700,
+     "color": "amber"
+    },
+    {
+     "id": "L3",
+     "shape": "text",
+     "label": "الاستجابة: h(M ∥ r)",
+     "x": 280,
+     "y": 186,
+     "fs": 10.5,
+     "fw": 700,
+     "color": "navy"
+    },
+    {
+     "id": "MA",
+     "shape": "actor",
+     "letter": "M",
+     "label": "مالوري",
+     "sub": "Mallory",
+     "x": 280,
+     "y": 268,
+     "r": 15,
+     "color": "mallory",
+     "hl": true
+    },
+    {
+     "id": "LF",
+     "shape": "text",
+     "label": "إعادة إرسالٍ قديمة: r جديدٌ كلّ مرّة ⇒ فشل ✗",
+     "x": 280,
+     "y": 232,
+     "fs": 10.5,
+     "fw": 700,
+     "color": "mallory"
+    }
+   ],
+   "edges": [
+    {
+     "fromPoint": {
+      "x": 116,
+      "y": 118
+     },
+     "toPoint": {
+      "x": 444,
+      "y": 118
+     },
+     "color": "alice"
+    },
+    {
+     "fromPoint": {
+      "x": 444,
+      "y": 158
+     },
+     "toPoint": {
+      "x": 116,
+      "y": 158
+     },
+     "color": "amber"
+    },
+    {
+     "fromPoint": {
+      "x": 116,
+      "y": 198
+     },
+     "toPoint": {
+      "x": 444,
+      "y": 198
+     },
+     "color": "navy"
+    },
+    {
+     "from": "MA",
+     "to": "BO",
+     "color": "mallory",
+     "hl": true,
+     "dash": true
+    }
+   ]
+  }
+ ]
+},
+  {
+ "id": "schnorr_rounds",
+ "name": "Schnorr Identification Rounds",
+ "icon": "🕵️",
+ "desc": "Book-twin (LTR ladder) of schnorr.png: commit, challenge, response — zero-knowledge identification",
+ "audioDesc": "يطابق شكل شنور في الكتاب: التزامٌ ثمّ تحدٍّ ثمّ استجابة — تثبت أليس معرفتها بالسرّ x دون كشفه، ولا تنجو مخادِعةٌ إلا بتخمين التحدّي، فيتضاءل احتمال الغشّ أسّياً مع تكرار الجولات.",
+ "modules": [
+  10
+ ],
+ "type": "interactive",
+ "steps": [
+  {
+   "caption": "الالتزام: تختار أليس k عشوائياً وترسل t = gᵏ mod p — قيمةٌ تقيّدها دون أن تكشف شيئاً عن سرّها x.",
+   "w": 560,
+   "h": 300,
+   "guides": [
+    {
+     "x": 110,
+     "y1": 76,
+     "y2": 280
+    },
+    {
+     "x": 450,
+     "y1": 76,
+     "y2": 280
+    }
+   ],
+   "nodes": [
+    {
+     "id": "PE",
+     "shape": "actor",
+     "letter": "P",
+     "label": "أليس (المُثبِتة)",
+     "sub": "Prover",
+     "x": 110,
+     "y": 52,
+     "r": 19,
+     "color": "alice",
+     "hl": true
+    },
+    {
+     "id": "VI",
+     "shape": "actor",
+     "letter": "V",
+     "label": "بوب (المُتحقِّق)",
+     "sub": "Verifier",
+     "x": 450,
+     "y": 52,
+     "r": 19,
+     "color": "bob"
+    },
+    {
+     "id": "S1",
+     "shape": "text",
+     "label": "الالتزام: t = gᵏ mod p",
+     "x": 280,
+     "y": 106,
+     "fs": 10.5,
+     "fw": 700,
+     "color": "navy",
+     "hl": true
+    }
+   ],
+   "edges": [
+    {
+     "fromPoint": {
+      "x": 116,
+      "y": 118
+     },
+     "toPoint": {
+      "x": 444,
+      "y": 118
+     },
+     "color": "alice",
+     "hl": true
+    }
+   ]
+  },
+  {
+   "caption": "التحدّي: يقلب بوب عملةً ويرسل c من {0, 1} — أليس لا تعرف c وقت التزامها، وهنا مربط الفرس.",
+   "w": 560,
+   "h": 300,
+   "guides": [
+    {
+     "x": 110,
+     "y1": 76,
+     "y2": 280
+    },
+    {
+     "x": 450,
+     "y1": 76,
+     "y2": 280
+    }
+   ],
+   "nodes": [
+    {
+     "id": "PE",
+     "shape": "actor",
+     "letter": "P",
+     "label": "أليس (المُثبِتة)",
+     "sub": "Prover",
+     "x": 110,
+     "y": 52,
+     "r": 19,
+     "color": "alice"
+    },
+    {
+     "id": "VI",
+     "shape": "actor",
+     "letter": "V",
+     "label": "بوب (المُتحقِّق)",
+     "sub": "Verifier",
+     "x": 450,
+     "y": 52,
+     "r": 19,
+     "color": "bob",
+     "hl": true
+    },
+    {
+     "id": "S1",
+     "shape": "text",
+     "label": "الالتزام: t = gᵏ mod p",
+     "x": 280,
+     "y": 106,
+     "fs": 10.5,
+     "fw": 700,
+     "color": "navy"
+    },
+    {
+     "id": "S2",
+     "shape": "text",
+     "label": "التحدّي: c ∈ {0, 1}",
+     "x": 280,
+     "y": 146,
+     "fs": 10.5,
+     "fw": 700,
+     "color": "amber",
+     "hl": true
+    }
+   ],
+   "edges": [
+    {
+     "fromPoint": {
+      "x": 116,
+      "y": 118
+     },
+     "toPoint": {
+      "x": 444,
+      "y": 118
+     },
+     "color": "alice"
+    },
+    {
+     "fromPoint": {
+      "x": 444,
+      "y": 158
+     },
+     "toPoint": {
+      "x": 116,
+      "y": 158
+     },
+     "color": "amber",
+     "hl": true
+    }
+   ]
+  },
+  {
+   "caption": "الاستجابة والفحص: ترسل أليس s = k + c·x فيتحقّق بوب أنّ gˢ = t · yᶜ — يمرّ الفحص دون أن يتعلّم بوب شيئاً عن x: معرفةٌ صفرية.",
+   "w": 560,
+   "h": 300,
+   "guides": [
+    {
+     "x": 110,
+     "y1": 76,
+     "y2": 280
+    },
+    {
+     "x": 450,
+     "y1": 76,
+     "y2": 280
+    }
+   ],
+   "nodes": [
+    {
+     "id": "PE",
+     "shape": "actor",
+     "letter": "P",
+     "label": "أليس (المُثبِتة)",
+     "sub": "Prover",
+     "x": 110,
+     "y": 52,
+     "r": 19,
+     "color": "alice"
+    },
+    {
+     "id": "VI",
+     "shape": "actor",
+     "letter": "V",
+     "label": "بوب (المُتحقِّق)",
+     "sub": "Verifier",
+     "x": 450,
+     "y": 52,
+     "r": 19,
+     "color": "bob"
+    },
+    {
+     "id": "S1",
+     "shape": "text",
+     "label": "الالتزام: t = gᵏ mod p",
+     "x": 280,
+     "y": 106,
+     "fs": 10.5,
+     "fw": 700,
+     "color": "navy"
+    },
+    {
+     "id": "S2",
+     "shape": "text",
+     "label": "التحدّي: c ∈ {0, 1}",
+     "x": 280,
+     "y": 146,
+     "fs": 10.5,
+     "fw": 700,
+     "color": "amber"
+    },
+    {
+     "id": "S3",
+     "shape": "text",
+     "label": "الاستجابة: s = k + c·x",
+     "x": 280,
+     "y": 186,
+     "fs": 10.5,
+     "fw": 700,
+     "color": "navy",
+     "hl": true
+    },
+    {
+     "id": "CHK",
+     "label": "الفحص: gˢ ≟ t · yᶜ ✓",
+     "x": 280,
+     "y": 232,
+     "w": 190,
+     "h": 34,
+     "color": "green",
+     "hl": true
+    }
+   ],
+   "edges": [
+    {
+     "fromPoint": {
+      "x": 116,
+      "y": 118
+     },
+     "toPoint": {
+      "x": 444,
+      "y": 118
+     },
+     "color": "alice"
+    },
+    {
+     "fromPoint": {
+      "x": 444,
+      "y": 158
+     },
+     "toPoint": {
+      "x": 116,
+      "y": 158
+     },
+     "color": "amber"
+    },
+    {
+     "fromPoint": {
+      "x": 116,
+      "y": 198
+     },
+     "toPoint": {
+      "x": 444,
+      "y": 198
+     },
+     "color": "navy",
+     "hl": true
+    }
+   ]
+  },
+  {
+   "caption": "السلامة (Soundness): على المخادِعة الالتزام قبل معرفة c، فتخمينها صائبٌ بنصف الاحتمال فقط — وبعد 20 جولة يهبط احتمال الغشّ دون واحدٍ في المليون.",
+   "w": 560,
+   "h": 300,
+   "guides": [
+    {
+     "x": 110,
+     "y1": 76,
+     "y2": 280
+    },
+    {
+     "x": 450,
+     "y1": 76,
+     "y2": 280
+    }
+   ],
+   "nodes": [
+    {
+     "id": "PE",
+     "shape": "actor",
+     "letter": "P",
+     "label": "أليس (المُثبِتة)",
+     "sub": "Prover",
+     "x": 110,
+     "y": 52,
+     "r": 19,
+     "color": "alice"
+    },
+    {
+     "id": "VI",
+     "shape": "actor",
+     "letter": "V",
+     "label": "بوب (المُتحقِّق)",
+     "sub": "Verifier",
+     "x": 450,
+     "y": 52,
+     "r": 19,
+     "color": "bob"
+    },
+    {
+     "id": "S1",
+     "shape": "text",
+     "label": "الالتزام: t = gᵏ mod p",
+     "x": 280,
+     "y": 106,
+     "fs": 10.5,
+     "fw": 700,
+     "color": "navy"
+    },
+    {
+     "id": "S2",
+     "shape": "text",
+     "label": "التحدّي: c ∈ {0, 1}",
+     "x": 280,
+     "y": 146,
+     "fs": 10.5,
+     "fw": 700,
+     "color": "amber"
+    },
+    {
+     "id": "S3",
+     "shape": "text",
+     "label": "الاستجابة: s = k + c·x",
+     "x": 280,
+     "y": 186,
+     "fs": 10.5,
+     "fw": 700,
+     "color": "navy"
+    },
+    {
+     "id": "CHK",
+     "label": "الفحص: gˢ ≟ t · yᶜ ✓",
+     "x": 280,
+     "y": 232,
+     "w": 190,
+     "h": 34,
+     "color": "green"
+    },
+    {
+     "id": "SD",
+     "shape": "text",
+     "label": "مخادِعةٌ بلا x تنجو بتخمين c: احتمال ½ لكلّ جولة ⇒ (½)ⁿ بعد n جولة",
+     "x": 280,
+     "y": 268,
+     "fs": 10,
+     "fw": 700,
+     "color": "mallory"
+    }
+   ],
+   "edges": [
+    {
+     "fromPoint": {
+      "x": 116,
+      "y": 118
+     },
+     "toPoint": {
+      "x": 444,
+      "y": 118
+     },
+     "color": "alice"
+    },
+    {
+     "fromPoint": {
+      "x": 444,
+      "y": 158
+     },
+     "toPoint": {
+      "x": 116,
+      "y": 158
+     },
+     "color": "amber",
+     "hl": true
+    },
+    {
+     "fromPoint": {
+      "x": 116,
+      "y": 198
+     },
+     "toPoint": {
+      "x": 444,
+      "y": 198
+     },
+     "color": "navy"
+    }
+   ]
+  }
+ ]
+},
+  {
+ "id": "tls13_handshake",
+ "name": "TLS 1.3 Handshake",
+ "icon": "🔒",
+ "desc": "Book-twin (LTR ladder) of tls.png: one round trip to session keys, anchored by the certificate",
+ "audioDesc": "يطابق شكل مصافحة TLS في الكتاب: العميل يرسل حصّته مع الطلب الأوّل، والخادم يردّ بحصّته وشهادته، ويشتقّ الطرفان مفاتيح الجلسة عبر HKDF في ذهابٍ وإيابٍ واحد — ومالوري تعجز لأنّها لا تستطيع توقيع الشهادة.",
+ "modules": [
+  11
+ ],
+ "type": "interactive",
+ "steps": [
+  {
+   "caption": "ClientHello: يفتتح العميل بأطقم التشفير التي يدعمها ومعها — منذ الرسالة الأولى — حصّته من مفتاح ECDHE؛ توفيرٌ لذهابٍ وإيابٍ كامل.",
+   "w": 560,
+   "h": 310,
+   "guides": [
+    {
+     "x": 110,
+     "y1": 76,
+     "y2": 280
+    },
+    {
+     "x": 450,
+     "y1": 76,
+     "y2": 280
+    }
+   ],
+   "nodes": [
+    {
+     "id": "CL",
+     "shape": "actor",
+     "letter": "C",
+     "label": "العميل",
+     "sub": "Client",
+     "x": 110,
+     "y": 52,
+     "r": 19,
+     "color": "alice",
+     "hl": true
+    },
+    {
+     "id": "SV",
+     "shape": "actor",
+     "letter": "S",
+     "label": "الخادم",
+     "sub": "Server",
+     "x": 450,
+     "y": 52,
+     "r": 19,
+     "color": "bob"
+    },
+    {
+     "id": "T1",
+     "shape": "text",
+     "label": "ClientHello + حصّة مفتاح ECDHE",
+     "x": 280,
+     "y": 106,
+     "fs": 10,
+     "fw": 700,
+     "color": "navy",
+     "hl": true
+    }
+   ],
+   "edges": [
+    {
+     "fromPoint": {
+      "x": 116,
+      "y": 118
+     },
+     "toPoint": {
+      "x": 444,
+      "y": 118
+     },
+     "color": "alice",
+     "hl": true
+    }
+   ]
+  },
+  {
+   "caption": "رحلة الخادم: ServerHello تحمل حصّة الخادم وشهادته وتوقيعه وFinished — كلّ ما بعد الحصّتين مشفّرٌ أصلاً بمفاتيح المصافحة.",
+   "w": 560,
+   "h": 310,
+   "guides": [
+    {
+     "x": 110,
+     "y1": 76,
+     "y2": 280
+    },
+    {
+     "x": 450,
+     "y1": 76,
+     "y2": 280
+    }
+   ],
+   "nodes": [
+    {
+     "id": "CL",
+     "shape": "actor",
+     "letter": "C",
+     "label": "العميل",
+     "sub": "Client",
+     "x": 110,
+     "y": 52,
+     "r": 19,
+     "color": "alice"
+    },
+    {
+     "id": "SV",
+     "shape": "actor",
+     "letter": "S",
+     "label": "الخادم",
+     "sub": "Server",
+     "x": 450,
+     "y": 52,
+     "r": 19,
+     "color": "bob",
+     "hl": true
+    },
+    {
+     "id": "T1",
+     "shape": "text",
+     "label": "ClientHello + حصّة مفتاح ECDHE",
+     "x": 280,
+     "y": 106,
+     "fs": 10,
+     "fw": 700,
+     "color": "navy"
+    },
+    {
+     "id": "T2",
+     "shape": "text",
+     "label": "ServerHello + حصّة + شهادة + Finished",
+     "x": 280,
+     "y": 146,
+     "fs": 10,
+     "fw": 700,
+     "color": "navy",
+     "hl": true
+    }
+   ],
+   "edges": [
+    {
+     "fromPoint": {
+      "x": 116,
+      "y": 118
+     },
+     "toPoint": {
+      "x": 444,
+      "y": 118
+     },
+     "color": "alice"
+    },
+    {
+     "fromPoint": {
+      "x": 444,
+      "y": 158
+     },
+     "toPoint": {
+      "x": 116,
+      "y": 158
+     },
+     "color": "bob",
+     "hl": true
+    }
+   ]
+  },
+  {
+   "caption": "ذهابٌ وإيابٌ واحد: يمرّر الطرفان سرّ ECDHE عبر HKDF فتُشتقّ مفاتيح الجلسة — سرّية أمامية تامّة: مفاتيح اليوم لا تكشف جلسات الأمس.",
+   "w": 560,
+   "h": 310,
+   "guides": [
+    {
+     "x": 110,
+     "y1": 76,
+     "y2": 280
+    },
+    {
+     "x": 450,
+     "y1": 76,
+     "y2": 280
+    }
+   ],
+   "nodes": [
+    {
+     "id": "CL",
+     "shape": "actor",
+     "letter": "C",
+     "label": "العميل",
+     "sub": "Client",
+     "x": 110,
+     "y": 52,
+     "r": 19,
+     "color": "alice"
+    },
+    {
+     "id": "SV",
+     "shape": "actor",
+     "letter": "S",
+     "label": "الخادم",
+     "sub": "Server",
+     "x": 450,
+     "y": 52,
+     "r": 19,
+     "color": "bob"
+    },
+    {
+     "id": "T1",
+     "shape": "text",
+     "label": "ClientHello + حصّة مفتاح ECDHE",
+     "x": 280,
+     "y": 106,
+     "fs": 10,
+     "fw": 700,
+     "color": "navy"
+    },
+    {
+     "id": "T2",
+     "shape": "text",
+     "label": "ServerHello + حصّة + شهادة + Finished",
+     "x": 280,
+     "y": 146,
+     "fs": 10,
+     "fw": 700,
+     "color": "navy"
+    },
+    {
+     "id": "KDF",
+     "label": "HKDF ⇒ مفاتيح الجلسة",
+     "x": 280,
+     "y": 196,
+     "w": 180,
+     "h": 34,
+     "color": "amber",
+     "hl": true
+    }
+   ],
+   "edges": [
+    {
+     "fromPoint": {
+      "x": 116,
+      "y": 118
+     },
+     "toPoint": {
+      "x": 444,
+      "y": 118
+     },
+     "color": "alice"
+    },
+    {
+     "fromPoint": {
+      "x": 444,
+      "y": 158
+     },
+     "toPoint": {
+      "x": 116,
+      "y": 158
+     },
+     "color": "bob"
+    },
+    {
+     "from": "CL",
+     "to": "KDF",
+     "color": "teal",
+     "hl": true,
+     "dash": true
+    },
+    {
+     "from": "SV",
+     "to": "KDF",
+     "color": "teal",
+     "hl": true,
+     "dash": true
+    }
+   ]
+  },
+  {
+   "caption": "أين تخسر مالوري: بوسعها تبديل الحصص في الطريق، لكنّ توقيع الشهادة يربط حصّة الخادم بهويّته الموثّقة — تزويرٌ بلا مفتاح الهيئة مستحيل، فتنهار الهجمة الوسيطة.",
+   "w": 560,
+   "h": 310,
+   "guides": [
+    {
+     "x": 110,
+     "y1": 76,
+     "y2": 280
+    },
+    {
+     "x": 450,
+     "y1": 76,
+     "y2": 280
+    }
+   ],
+   "nodes": [
+    {
+     "id": "CL",
+     "shape": "actor",
+     "letter": "C",
+     "label": "العميل",
+     "sub": "Client",
+     "x": 110,
+     "y": 52,
+     "r": 19,
+     "color": "alice"
+    },
+    {
+     "id": "SV",
+     "shape": "actor",
+     "letter": "S",
+     "label": "الخادم",
+     "sub": "Server",
+     "x": 450,
+     "y": 52,
+     "r": 19,
+     "color": "bob"
+    },
+    {
+     "id": "T1",
+     "shape": "text",
+     "label": "ClientHello + حصّة مفتاح ECDHE",
+     "x": 280,
+     "y": 106,
+     "fs": 10,
+     "fw": 700,
+     "color": "navy"
+    },
+    {
+     "id": "T2",
+     "shape": "text",
+     "label": "ServerHello + حصّة + شهادة + Finished",
+     "x": 280,
+     "y": 146,
+     "fs": 10,
+     "fw": 700,
+     "color": "navy"
+    },
+    {
+     "id": "KDF",
+     "label": "HKDF ⇒ مفاتيح الجلسة",
+     "x": 280,
+     "y": 196,
+     "w": 180,
+     "h": 34,
+     "color": "amber"
+    },
+    {
+     "id": "T3",
+     "shape": "text",
+     "label": "بيانات التطبيق — مشفّرة",
+     "x": 280,
+     "y": 240,
+     "fs": 10.5,
+     "fw": 700,
+     "color": "teal"
+    },
+    {
+     "id": "TM",
+     "shape": "text",
+     "label": "مالوري تستطيع تبديل الحصص، لكنّها لا تستطيع توقيع شهادة الخادم ✗",
+     "x": 280,
+     "y": 288,
+     "fs": 9.5,
+     "fw": 700,
+     "color": "mallory"
+    }
+   ],
+   "edges": [
+    {
+     "fromPoint": {
+      "x": 116,
+      "y": 118
+     },
+     "toPoint": {
+      "x": 444,
+      "y": 118
+     },
+     "color": "alice"
+    },
+    {
+     "fromPoint": {
+      "x": 444,
+      "y": 158
+     },
+     "toPoint": {
+      "x": 116,
+      "y": 158
+     },
+     "color": "bob"
+    },
+    {
+     "fromPoint": {
+      "x": 116,
+      "y": 252
+     },
+     "toPoint": {
+      "x": 444,
+      "y": 252
+     },
+     "color": "teal",
+     "hl": true
+    },
+    {
+     "fromPoint": {
+      "x": 444,
+      "y": 262
+     },
+     "toPoint": {
+      "x": 116,
+      "y": 262
+     },
+     "color": "teal",
+     "hl": true
+    }
+   ]
+  }
+ ]
+}
 ];
 
 // ── Interactive Graph Templates ───────────────────────────────
@@ -30783,7 +34873,7 @@ function renderDiagramsInLesson(moduleId) {
         + '</div>'
         + '<div class="idag-dots diag-step-dots">' + dots + '</div>'
         + '<div class="idag-svg-wrap idag-wrap">' + _buildIDagSVG(d.steps[0], true) + '</div>'
-        + '<div class="idag-caption diag-step-caption" style="transition:opacity 0.15s ease">' + _escHtml(d.steps[0].caption || '') + '</div>'
+        + '<div class="idag-caption diag-step-caption" dir="auto" style="transition:opacity 0.15s ease">' + _escHtml(d.steps[0].caption || '') + '</div>'
         + _instructorNoteHTML(d)
         + '<div class="diag-step-nav">'
           + '<button class="diag-step-btn idag-prev" onclick="idiagNav(\'' + key + '\',-1)" disabled>' + t('prev_chevron') + '</button>'
@@ -30859,8 +34949,15 @@ function _naSpeak(rawText, btn, xapiName, onDone) {
   if (!window.speechSynthesis) { showToast(t('tts_unsupported_device')); return false; }
   var text = (typeof preprocessSpeechText === 'function') ? preprocessSpeechText(rawText) : rawText;
   var utt = new SpeechSynthesisUtterance(text);
-  var v = (typeof getBestVoice === 'function') ? getBestVoice() : null;
-  if (v) utt.voice = v; else utt.lang = 'en-GB';
+  if (/[\u0600-\u06FF]/.test(text)) {
+    // Arabic narration (book-twin diagrams): let the browser pick an Arabic voice
+    utt.lang = 'ar';
+    var vAr = (window.speechSynthesis.getVoices() || []).find(function(v0) { return /^ar/i.test(v0.lang); });
+    if (vAr) utt.voice = vAr;
+  } else {
+    var v = (typeof getBestVoice === 'function') ? getBestVoice() : null;
+    if (v) utt.voice = v; else utt.lang = 'en-GB';
+  }
   utt.rate = _naGetRate();
   utt.pitch = 0.97;
   utt.volume = 1;
@@ -30974,7 +35071,17 @@ var _IDAG_COLORS = {
   yellow:  { fill: '#FEF3C7', stroke: '#F59E0B', text: '#78350F' },
   purple:  { fill: '#EDE9FE', stroke: '#8B5CF6', text: '#4C1D95' },
   dark:    { fill: '#1E293B', stroke: '#0F172A', text: '#FFFFFF'  },
-  default: { fill: '#F8FAFC', stroke: '#94A3B8', text: '#334155' }
+  default: { fill: '#F8FAFC', stroke: '#94A3B8', text: '#334155' },
+  /* ── Book design-system twins (كتاب «أساسيّات علم التشفير») ── */
+  navy:    { fill: '#EAF2F9', stroke: '#1F4E79', text: '#1B3A5B' },
+  teal:    { fill: '#E4F1EE', stroke: '#0F766E', text: '#0B5A53' },
+  cream:   { fill: '#FBF1DE', stroke: '#C08A2E', text: '#92400E' },
+  amber:   { fill: '#FEF3C7', stroke: '#B45309', text: '#92400E' },
+  /* Character colors — identical to the book: Alice/Bob/Eve/Mallory */
+  alice:   { fill: '#DBEAFE', stroke: '#2563EB', text: '#1E40AF' },
+  bob:     { fill: '#D1FAE5', stroke: '#10B981', text: '#065F46' },
+  eve:     { fill: '#EDE4F5', stroke: '#3B0764', text: '#3B0764' },
+  mallory: { fill: '#F8E7E7', stroke: '#7F1D1D', text: '#7F1D1D' }
 };
 
 /** Build an SVG string from a step descriptor { nodes, edges }.
@@ -30989,12 +35096,34 @@ function _buildIDagSVG(step, animate) {
   var nodeMap = {};
   nodes.forEach(function(n) { nodeMap[n.id] = n; });
 
-  // Auto-size viewBox
+  // ── Font stacks: Arabic labels (book twin) vs Latin UI vs serif math ──
+  var F_AR   = "'Tajawal','Cairo','Outfit','Segoe UI','Tahoma',sans-serif";
+  var F_EN   = "Outfit,sans-serif";
+  var F_MATH = "Georgia,'DejaVu Serif','Times New Roman',serif";
+  var AR_RE  = /[\u0600-\u06FF]/;
+  function _lineFont(line, nodeHasArabic) {
+    if (AR_RE.test(line)) return F_AR;
+    return nodeHasArabic ? F_MATH : F_EN;   // Latin line inside a bilingual node → book-style serif
+  }
+
+  // ── Auto-size viewBox (rect / actor / text aware) + per-step override ──
   var vw = 320, vh = 260;
   nodes.forEach(function(n) {
-    vw = Math.max(vw, n.x + (n.w || 110) / 2 + 20);
-    vh = Math.max(vh, n.y + (n.h || 34)  / 2 + 24);
+    var shape = n.shape || 'rect';
+    if (shape === 'actor') {
+      var r = n.r || 21;
+      vw = Math.max(vw, n.x + r + 26);
+      vh = Math.max(vh, n.y + r + (n.sub ? 44 : (n.label ? 30 : 16)));
+    } else if (shape === 'text') {
+      vw = Math.max(vw, n.x + 40);
+      vh = Math.max(vh, n.y + 12);
+    } else {
+      vw = Math.max(vw, n.x + (n.w || 110) / 2 + 20);
+      vh = Math.max(vh, n.y + (n.h || 34)  / 2 + 24);
+    }
   });
+  if (step.w) vw = step.w;
+  if (step.h) vh = step.h;
 
   // ── Defs: arrowhead markers — one per palette colour ─────────
   // Naming: idag-arr-{colorKey}  (static) + idag-arr (grey fallback)
@@ -31005,7 +35134,15 @@ function _buildIDagSVG(step, animate) {
     red:     '#EF4444',
     yellow:  '#F59E0B',
     purple:  '#8B5CF6',
-    dark:    '#0F172A'
+    dark:    '#0F172A',
+    /* Book design-system twins */
+    navy:    '#1B3A5B',
+    teal:    '#0F766E',
+    amber:   '#B45309',
+    alice:   '#2563EB',
+    bob:     '#10B981',
+    eve:     '#3B0764',
+    mallory: '#7F1D1D'
   };
   var defs = '<defs>';
   Object.keys(arrowColors).forEach(function(k) {
@@ -31019,15 +35156,43 @@ function _buildIDagSVG(step, animate) {
         + '</marker>';
   defs += '</defs>';
 
+  // ── Stage guides (dashed vertical/horizontal separators, book-style) ──
+  var guidesHtml = '';
+  (step.guides || []).forEach(function(g) {
+    guidesHtml += '<line x1="' + (g.x1 != null ? g.x1 : g.x) + '" y1="' + (g.y1 != null ? g.y1 : g.y) + '"'
+                +      ' x2="' + (g.x2 != null ? g.x2 : g.x) + '" y2="' + (g.y2 != null ? g.y2 : g.y) + '"'
+                + ' stroke="#DCE4EC" stroke-width="1.5" stroke-dasharray="5 6"/>';
+  });
+
+  // ── Edge anchor: nearest side of a rect/text, or ring edge of an actor ──
+  function _anchor(n, towardX, towardY) {
+    var shape = n.shape || 'rect';
+    var dx = towardX - n.x, dy = towardY - n.y;
+    if (shape === 'actor') {
+      var r   = (n.r || 21) + 4;                    // outer ring radius
+      var len = Math.sqrt(dx * dx + dy * dy) || 1;
+      return { x: n.x + (dx / len) * r, y: n.y + (dy / len) * r };
+    }
+    var w = n.w || (shape === 'text' ? 14 : 110);
+    var h = n.h || (shape === 'text' ? 16 : 34);
+    if (Math.abs(dx) >= Math.abs(dy)) {
+      return { x: n.x + (dx >= 0 ? w / 2 : -w / 2), y: n.y };
+    }
+    return { x: n.x, y: n.y + (dy >= 0 ? h / 2 : -h / 2) };
+  }
+
   // ── Edges (drawn below nodes) ─────────────────────────────────
   var edgesHtml = '';
   edges.forEach(function(e, ei) {
-    var fn = nodeMap[e.from], tn = nodeMap[e.to];
-    if (!fn || !tn) return;
+    var fn = e.fromPoint ? null : nodeMap[e.from];
+    var tn = e.toPoint   ? null : nodeMap[e.to];
+    if ((!fn && !e.fromPoint) || (!tn && !e.toPoint)) return;
 
-    // Connection points: bottom-centre of source → top-centre of target
-    var x1 = fn.x, y1 = fn.y + (fn.h || 34) / 2;
-    var x2 = tn.x, y2 = tn.y - (tn.h || 34) / 2;
+    var fcx = fn ? fn.x : e.fromPoint.x, fcy = fn ? fn.y : e.fromPoint.y;
+    var tcx = tn ? tn.x : e.toPoint.x,   tcy = tn ? tn.y : e.toPoint.y;
+    var p1  = fn ? _anchor(fn, tcx, tcy) : e.fromPoint;
+    var p2  = tn ? _anchor(tn, fcx, fcy) : e.toPoint;
+    var x1 = p1.x, y1 = p1.y, x2 = p2.x, y2 = p2.y;
 
     // Shorten end so arrowhead sits neatly
     var dx = x2 - x1, dy = y2 - y1;
@@ -31053,11 +35218,31 @@ function _buildIDagSVG(step, animate) {
                 + ' style="animation:' + entryAnim + ',' + marchAnim + '"';
       groupAnim = '';
     } else {
-      // Static: draw-on entry animation
+      // Static: draw-on entry animation; e.dash → book-style dashed connector
       var delay     = animate ? (0.15 + ei * 0.08) + 's' : '0s';
       lineAttrs = ' class="idag-edge-line"'
-                + (animate ? ' style="animation:idagEdgeIn 0.4s ease-out ' + delay + ' both"' : '');
+                + (e.dash ? ' stroke-dasharray="7 7"' : '')
+                + (animate && !e.dash ? ' style="animation:idagEdgeIn 0.4s ease-out ' + delay + ' both"' : '')
+                + (animate &&  e.dash ? ' style="animation:idagFlowEdgeIn 0.4s ease-out ' + delay + ' both"' : '');
       groupAnim = '';
+    }
+
+    // Label: above the midpoint for horizontal-ish edges, beside it otherwise
+    var horizontal = Math.abs(x2 - x1) >= Math.abs(y2 - y1);
+    var lblFont    = AR_RE.test(e.label || '') ? F_AR : F_EN;
+    var lblHtml    = '';
+    if (e.label) {
+      if (horizontal) {
+        lblHtml = '<text x="' + ((x1 + x2) / 2) + '" y="' + ((y1 + y2) / 2 - 7) + '"'
+                + ' text-anchor="middle" font-size="10" fill="' + (isFlow ? stroke : '#64748B') + '"'
+                + ' font-weight="' + (isFlow ? '700' : '400') + '"'
+                + ' font-family="' + lblFont + '">' + _escHtml(e.label) + '</text>';
+      } else {
+        lblHtml = '<text x="' + ((x1 + x2) / 2 + 8) + '" y="' + ((y1 + y2) / 2) + '"'
+                + ' font-size="10" fill="' + (isFlow ? stroke : '#64748B') + '"'
+                + ' font-weight="' + (isFlow ? '700' : '400') + '"'
+                + ' font-family="' + lblFont + '">' + _escHtml(e.label) + '</text>';
+      }
     }
 
     edgesHtml += '<g class="idag-edge">'
@@ -31065,12 +35250,7 @@ function _buildIDagSVG(step, animate) {
         + ' x1="' + x1 + '" y1="' + y1 + '" x2="' + ex + '" y2="' + ey + '"'
         + ' stroke="' + stroke + '" stroke-width="' + sw + '"'
         + ' stroke-linecap="round" marker-end="url(#' + markerId + ')"/>'
-      + (e.label
-          ? '<text x="' + ((x1 + x2) / 2 + 8) + '" y="' + ((y1 + y2) / 2) + '"'
-              + ' font-size="10" fill="' + (isFlow ? stroke : '#64748B') + '"'
-              + ' font-weight="' + (isFlow ? '700' : '400') + '"'
-              + ' font-family="Outfit,sans-serif">' + _escHtml(e.label) + '</text>'
-          : '')
+      + lblHtml
     + '</g>';
   });
 
@@ -31078,27 +35258,76 @@ function _buildIDagSVG(step, animate) {
   var nodesHtml = '';
   nodes.forEach(function(n, ni) {
     var c  = _IDAG_COLORS[n.color || 'default'];
+    var shape     = n.shape || 'rect';
+    var isHL      = !!n.hl;
+    var delay     = animate ? (ni * 0.1) + 's' : '0s';
+    var animStyle = animate ? ' style="animation:idagNodeIn 0.4s ease-out ' + delay + ' both"' : '';
+
+    if (shape === 'actor') {
+      // ── Book-style character node: colored ring · white gap · colored disc · Latin letter ──
+      var r       = n.r || 21;
+      var ringCol = c.stroke;
+      var glow    = isHL ? ' style="filter:drop-shadow(0 0 5px ' + ringCol + '99)"' : '';
+      nodesHtml += '<g class="idag-node idag-actor"' + animStyle + '>'
+        + '<g' + glow + '>'
+        +   '<circle cx="' + n.x + '" cy="' + n.y + '" r="' + (r + 4)   + '" fill="' + ringCol + '"/>'
+        +   '<circle cx="' + n.x + '" cy="' + n.y + '" r="' + (r + 1.5) + '" fill="#FFFFFF"/>'
+        +   '<circle cx="' + n.x + '" cy="' + n.y + '" r="' + r          + '" fill="' + ringCol + '"/>'
+        + '</g>'
+        + '<text x="' + n.x + '" y="' + (n.y + r * 0.34) + '" text-anchor="middle"'
+          + ' font-size="' + Math.round(r * 0.95) + '" font-weight="700" fill="#FFFFFF"'
+          + ' font-family="' + F_MATH + '">' + _escHtml(n.letter || (n.label || '?').charAt(0)) + '</text>';
+      if (n.label) {
+        nodesHtml += '<text class="idag-node-text" x="' + n.x + '" y="' + (n.y + r + 16) + '" text-anchor="middle"'
+          + ' font-size="12" font-weight="700" fill="#27313B"'
+          + ' font-family="' + _lineFont(n.label, true) + '">' + _escHtml(n.label) + '</text>';
+      }
+      if (n.sub) {
+        nodesHtml += '<text x="' + n.x + '" y="' + (n.y + r + 29) + '" text-anchor="middle"'
+          + ' font-size="9.5" font-style="italic" fill="#5C6772"'
+          + ' font-family="' + F_MATH + '">' + _escHtml(n.sub) + '</text>';
+      }
+      nodesHtml += '</g>';
+      return;
+    }
+
+    if (shape === 'text') {
+      // ── Free label: stage titles (Arabic, Cairo-ish bold) or math symbols (serif) ──
+      var fill = (n.color && c) ? c.stroke : '#27313B';
+      var fs   = n.fs || 12;
+      var fw   = n.fw || 700;
+      var lines0 = (n.label || '').split('\n');
+      nodesHtml += '<g class="idag-node"' + animStyle + '>';
+      lines0.forEach(function(line, li) {
+        nodesHtml += '<text class="idag-node-text" x="' + n.x + '" y="' + (n.y + li * (fs + 3)) + '"'
+          + ' text-anchor="middle" dominant-baseline="middle"'
+          + ' font-size="' + fs + '" font-weight="' + fw + '" fill="' + fill + '"'
+          + ' font-family="' + _lineFont(line, AR_RE.test(n.label || '')) + '">' + _escHtml(line) + '</text>';
+      });
+      nodesHtml += '</g>';
+      return;
+    }
+
+    // ── Default rounded rect node (backward compatible) ──
     var w  = n.w || 110, h = n.h || 34;
     var rx = n.x - w / 2, ry = n.y - h / 2;
     var lines = (n.label || n.id).split('\n');
     var lineH = 15;
     var textY0 = n.y - ((lines.length - 1) * lineH) / 2;
-    var isHL   = !!n.hl;
-    var sw     = isHL ? '2' : '1.5';
+    var sw2      = isHL ? '2' : '1.5';
     var hlFilter = isHL ? 'filter:drop-shadow(0 0 5px ' + c.stroke + '99)' : '';
-    var delay    = animate ? (ni * 0.1) + 's' : '0s';
-    var animStyle = animate ? ' style="animation:idagNodeIn 0.4s ease-out ' + delay + ' both"' : '';
+    var nodeHasArabic = AR_RE.test(n.label || '');
 
     nodesHtml += '<g class="idag-node"' + animStyle + '>'
       + '<rect class="idag-node-rect" x="' + rx + '" y="' + ry + '" width="' + w + '" height="' + h + '" rx="8"'
-        + ' fill="' + c.fill + '" stroke="' + c.stroke + '" stroke-width="' + sw + '"'
+        + ' fill="' + c.fill + '" stroke="' + c.stroke + '" stroke-width="' + sw2 + '"'
         + (hlFilter ? ' style="' + hlFilter + '"' : '')
       + '/>';
     lines.forEach(function(line, li) {
       nodesHtml += '<text class="idag-node-text" x="' + n.x + '" y="' + (textY0 + li * lineH) + '"'
         + ' text-anchor="middle" dominant-baseline="middle"'
         + ' font-size="' + (lines.length > 1 ? '11' : '12') + '" font-weight="600"'
-        + ' fill="' + c.text + '" font-family="Outfit,sans-serif">'
+        + ' fill="' + c.text + '" font-family="' + _lineFont(line, nodeHasArabic) + '">'
         + _escHtml(line)
       + '</text>';
     });
@@ -31106,7 +35335,7 @@ function _buildIDagSVG(step, animate) {
   });
 
   return '<svg class="idag-svg" viewBox="0 0 ' + vw + ' ' + vh + '" width="100%" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">'
-    + defs + edgesHtml + nodesHtml
+    + defs + guidesHtml + edgesHtml + nodesHtml
   + '</svg>';
 }
 
