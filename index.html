@@ -2418,7 +2418,7 @@ body.high-contrast {
 // Bump on EVERY deploy; keep sw.js CACHE_NAME in lockstep.
 // MAJOR = breaking data/schema change · MINOR = feature batch · PATCH = fix
 // ============================================================
-const APP_VERSION = '1.3.0';
+const APP_VERSION = '1.4.0';
 const APP_VERSION_DATE = '2026-07-11';
 const WHATS_NEW = 'Pre-print alignment patch: UKS attack direction unified with the book (Mallory registers Alice\'s key as her own; Bob is the deceived party — lesson text and both quiz items updated), qr_xor deep link now opens the OTP/XOR tool (same destination as activity code 16), ECDH cross-link unit label corrected to Unit 12, and minor digit cleanup in the DDT lab. With the rewired labs (55–57), the app now covers every chapter of the book.';
 
@@ -8199,6 +8199,1574 @@ const INTERACTIVE_DIAGRAM_TEMPLATES = [
   }
  ],
  "audioDesc_en": "It matches the book's TLS handshake figure: the client sends its key share with the first message, the server answers with its share and certificate, and both derive session keys through HKDF in a single round trip — Mallory fails because she cannot sign the certificate."
+}
+,
+{
+ "id": "hash_md_hmac_m4",
+ "name": "Hashing: Merkle–Damgård, Avalanche & HMAC",
+ "icon": "#️⃣",
+ "desc": "Book-twin (LTR) of merkle.png/hmac.png: block-by-block compression, avalanche, and keyed hashing",
+ "audioDesc": "يطابق شكلَي ميركل–دامغارد وHMAC في الكتاب: الكتل تُضغَط تباعاً من حالةٍ ابتدائية حتى البصمة، وتغيّر بتٍّ واحد يقلب البصمة كلّها، ولأنّ الدالّة علنية فأيّ طرفٍ يعيد حسابها — فيأتي HMAC ليقيّد البصمة بمفتاحٍ سرّي بتجزئةٍ متداخلة.",
+ "audioDesc_en": "It matches the book's Merkle–Damgård and HMAC figures: blocks are compressed in sequence from an initial state to the digest, flipping one bit scrambles the whole digest, and since the function is public anyone can recompute it — so HMAC binds the digest to a secret key with nested hashing.",
+ "modules": [
+  4
+ ],
+ "type": "interactive",
+ "steps": [
+  {
+   "caption": "بناء ميركل–دامغارد: تُقسَّم الرسالة كتلاً، وتمزج دالّة الضغط f كلَّ كتلةٍ بالحالة السابقة بدءاً من IV — والحالة الأخيرة هي البصمة h.",
+   "caption_en": "Merkle–Damgård: the message is split into blocks, and the compression function f folds each block into the running state starting from IV — the final state is the digest h.",
+   "w": 560,
+   "h": 240,
+   "nodes": [
+    {
+     "id": "TT",
+     "shape": "text",
+     "label": "بناء ميركل–دامغارد",
+     "label_en": "Merkle–Damgård construction",
+     "x": 280,
+     "y": 44,
+     "fs": 11,
+     "fw": 700,
+     "color": "navy"
+    },
+    {
+     "id": "M1",
+     "label": "M₁",
+     "label_en": "M₁",
+     "x": 150,
+     "y": 88,
+     "w": 56,
+     "h": 28,
+     "color": "cream"
+    },
+    {
+     "id": "M2",
+     "label": "M₂",
+     "label_en": "M₂",
+     "x": 280,
+     "y": 88,
+     "w": 56,
+     "h": 28,
+     "color": "cream"
+    },
+    {
+     "id": "M3",
+     "label": "M₃",
+     "label_en": "M₃",
+     "x": 410,
+     "y": 88,
+     "w": 56,
+     "h": 28,
+     "color": "cream"
+    },
+    {
+     "id": "IV",
+     "label": "IV",
+     "label_en": "IV",
+     "x": 60,
+     "y": 152,
+     "w": 50,
+     "h": 32,
+     "color": "blue"
+    },
+    {
+     "id": "F1",
+     "label": "f",
+     "label_en": "f",
+     "x": 150,
+     "y": 152,
+     "w": 60,
+     "h": 40,
+     "color": "teal",
+     "hl": true
+    },
+    {
+     "id": "F2",
+     "label": "f",
+     "label_en": "f",
+     "x": 280,
+     "y": 152,
+     "w": 60,
+     "h": 40,
+     "color": "teal",
+     "hl": true
+    },
+    {
+     "id": "F3",
+     "label": "f",
+     "label_en": "f",
+     "x": 410,
+     "y": 152,
+     "w": 60,
+     "h": 40,
+     "color": "teal",
+     "hl": true
+    },
+    {
+     "id": "HH",
+     "label": "h",
+     "label_en": "h",
+     "x": 500,
+     "y": 152,
+     "w": 46,
+     "h": 32,
+     "color": "green"
+    },
+    {
+     "id": "TH",
+     "shape": "text",
+     "label": "البصمة",
+     "label_en": "digest",
+     "x": 500,
+     "y": 198,
+     "fs": 9.5,
+     "fw": 400,
+     "color": "teal"
+    }
+   ],
+   "edges": [
+    {
+     "from": "IV",
+     "to": "F1",
+     "color": "navy",
+     "hl": true
+    },
+    {
+     "from": "M1",
+     "to": "F1",
+     "color": "navy"
+    },
+    {
+     "from": "F1",
+     "to": "F2",
+     "color": "navy",
+     "hl": true
+    },
+    {
+     "from": "M2",
+     "to": "F2",
+     "color": "navy"
+    },
+    {
+     "from": "F2",
+     "to": "F3",
+     "color": "navy",
+     "hl": true
+    },
+    {
+     "from": "M3",
+     "to": "F3",
+     "color": "navy"
+    },
+    {
+     "from": "F3",
+     "to": "HH",
+     "color": "bob",
+     "hl": true
+    }
+   ]
+  },
+  {
+   "caption": "خاصية الانهيار: قلب بتٍّ واحد في المدخل يقلب نحو نصف بتّات البصمة — لا علاقة مرئية بين مدخلين متقاربين. ومع 256 بتاً يحتاج هجوم عيد الميلاد نحو 2¹²⁸ محاولة.",
+   "caption_en": "The avalanche effect: flipping one input bit flips about half the digest bits — no visible relation between similar inputs. At 256 bits, a birthday attack still needs about 2¹²⁸ tries.",
+   "w": 560,
+   "h": 240,
+   "nodes": [
+    {
+     "id": "AM",
+     "label": "m",
+     "label_en": "m",
+     "x": 86,
+     "y": 102,
+     "w": 52,
+     "h": 30,
+     "color": "cream"
+    },
+    {
+     "id": "AH",
+     "label": "H",
+     "label_en": "H",
+     "x": 220,
+     "y": 102,
+     "w": 52,
+     "h": 34,
+     "color": "teal"
+    },
+    {
+     "id": "AD",
+     "label": "a3f9…",
+     "label_en": "a3f9…",
+     "x": 390,
+     "y": 102,
+     "w": 110,
+     "h": 30,
+     "color": "navy"
+    },
+    {
+     "id": "BM",
+     "label": "m′ — بتّ واحد تغيّر",
+     "label_en": "m′ — one bit flipped",
+     "x": 120,
+     "y": 178,
+     "w": 168,
+     "h": 34,
+     "color": "cream"
+    },
+    {
+     "id": "BH",
+     "label": "H",
+     "label_en": "H",
+     "x": 290,
+     "y": 178,
+     "w": 52,
+     "h": 34,
+     "color": "teal"
+    },
+    {
+     "id": "BD",
+     "label": "f07c… مختلفة كلّياً",
+     "label_en": "f07c… entirely different",
+     "x": 442,
+     "y": 178,
+     "w": 168,
+     "h": 34,
+     "color": "mallory",
+     "hl": true
+    }
+   ],
+   "edges": [
+    {
+     "from": "AM",
+     "to": "AH",
+     "color": "navy"
+    },
+    {
+     "from": "AH",
+     "to": "AD",
+     "color": "teal"
+    },
+    {
+     "from": "BM",
+     "to": "BH",
+     "color": "navy",
+     "hl": true
+    },
+    {
+     "from": "BH",
+     "to": "BD",
+     "color": "mallory",
+     "hl": true
+    }
+   ]
+  },
+  {
+   "caption": "حدود البصمة المجرّدة: الدالّة H علنية، فمن بدّل الرسالة يعيد حساب بصمتها ببساطة — السلامة وحدها لا تثبت الهوية.",
+   "caption_en": "The bare digest has a limit: H is public, so whoever alters the message simply recomputes its digest — integrity alone proves no identity.",
+   "w": 560,
+   "h": 240,
+   "nodes": [
+    {
+     "id": "HP",
+     "label": "H معروفة للجميع",
+     "label_en": "H is public to all",
+     "x": 150,
+     "y": 118,
+     "w": 168,
+     "h": 40,
+     "color": "navy"
+    },
+    {
+     "id": "AN",
+     "label": "أيّ طرفٍ يعيد حساب البصمة",
+     "label_en": "anyone can recompute the digest",
+     "x": 400,
+     "y": 118,
+     "w": 204,
+     "h": 44,
+     "color": "cream"
+    },
+    {
+     "id": "NX",
+     "shape": "text",
+     "label": "البصمة تثبت السلامة لا المصدر — نحتاج سرّاً",
+     "label_en": "a digest proves integrity, not origin — we need a key",
+     "x": 280,
+     "y": 196,
+     "fs": 11,
+     "fw": 700,
+     "color": "mallory",
+     "hl": true
+    }
+   ],
+   "edges": [
+    {
+     "from": "HP",
+     "to": "AN",
+     "color": "navy",
+     "hl": true
+    }
+   ]
+  },
+  {
+   "caption": "HMAC: تجزئةٌ متداخلة بمفتاح — الداخلية على (K⊕ipad)∥m ثم الخارجية على (K⊕opad)∥البصمة، فلا يصنع الوسمَ إلا حاملُ K، وهو أمانٌ من عيار EUF-CMA ويقاوم هجوم الإطالة.",
+   "caption_en": "HMAC: nested keyed hashing — inner over (K⊕ipad)∥m, then outer over (K⊕opad)∥digest, so only the holder of K can produce the Tag; EUF-CMA-grade security that also resists length extension.",
+   "w": 560,
+   "h": 240,
+   "nodes": [
+    {
+     "id": "I1",
+     "label": "(K ⊕ ipad) ∥ m",
+     "label_en": "(K ⊕ ipad) ∥ m",
+     "x": 122,
+     "y": 95,
+     "w": 176,
+     "h": 34,
+     "color": "blue"
+    },
+    {
+     "id": "H1",
+     "label": "H",
+     "label_en": "H",
+     "x": 282,
+     "y": 95,
+     "w": 50,
+     "h": 34,
+     "color": "teal"
+    },
+    {
+     "id": "DG",
+     "label": "بصمة داخلية",
+     "label_en": "inner digest",
+     "x": 420,
+     "y": 95,
+     "w": 120,
+     "h": 32,
+     "color": "teal"
+    },
+    {
+     "id": "I2",
+     "label": "(K ⊕ opad) ∥ البصمة",
+     "label_en": "(K ⊕ opad) ∥ digest",
+     "x": 126,
+     "y": 178,
+     "w": 184,
+     "h": 34,
+     "color": "blue"
+    },
+    {
+     "id": "H2",
+     "label": "H",
+     "label_en": "H",
+     "x": 282,
+     "y": 178,
+     "w": 50,
+     "h": 34,
+     "color": "teal"
+    },
+    {
+     "id": "TG",
+     "label": "الوسم Tag",
+     "label_en": "the Tag",
+     "x": 420,
+     "y": 178,
+     "w": 110,
+     "h": 34,
+     "color": "green",
+     "hl": true
+    }
+   ],
+   "edges": [
+    {
+     "from": "I1",
+     "to": "H1",
+     "color": "navy",
+     "hl": true
+    },
+    {
+     "from": "H1",
+     "to": "DG",
+     "color": "teal",
+     "hl": true
+    },
+    {
+     "from": "DG",
+     "to": "I2",
+     "color": "navy",
+     "dash": true,
+     "hl": true
+    },
+    {
+     "from": "I2",
+     "to": "H2",
+     "color": "navy",
+     "hl": true
+    },
+    {
+     "from": "H2",
+     "to": "TG",
+     "color": "bob",
+     "hl": true
+    }
+   ]
+  }
+ ]
+},
+{
+ "id": "dh_exchange_m7",
+ "name": "Diffie–Hellman Exchange & the Elliptic Bridge",
+ "icon": "🔑",
+ "desc": "Book-twin (LTR ladder) of dh.png + ec_add.png: public exchange, shared secret, discrete-log wall, ECC bridge",
+ "audioDesc": "يطابق شكل تبادل دفي–هلمان في الكتاب: أليس وبوب يتبادلان قيمتين علنيّتين ويشتقّان سرّاً مشتركاً لم يُرسَل قط، وإيف أمام مسألة اللوغاريتم المتقطع — والمنحنى الإهليجي يعيد المبدأ نفسه بمفاتيح أصغر بكثير.",
+ "audioDesc_en": "It matches the book's Diffie–Hellman figure: Alice and Bob exchange two public values and derive a shared secret that never travelled, leaving Eve facing the discrete-log problem — and elliptic curves repeat the same principle with far smaller keys.",
+ "modules": [
+  7
+ ],
+ "type": "interactive",
+ "steps": [
+  {
+   "caption": "الإعداد: يتّفق الطرفان علناً على الأساس g والمقياس p، ويختار كلٌّ سرَّه — a عند أليس وb عند بوب. لا شيء سرّي غادر جهازه بعد.",
+   "caption_en": "Setup: both agree publicly on the base g and modulus p, and each picks a secret — a for Alice, b for Bob. Nothing secret has left either device yet.",
+   "w": 560,
+   "h": 300,
+   "guides": [
+    {
+     "x": 110,
+     "y1": 76,
+     "y2": 272
+    },
+    {
+     "x": 450,
+     "y1": 76,
+     "y2": 272
+    }
+   ],
+   "nodes": [
+    {
+     "id": "AL",
+     "shape": "actor",
+     "letter": "A",
+     "label": "أليس",
+     "label_en": "Alice",
+     "sub": "Alice",
+     "sub_en": "",
+     "x": 110,
+     "y": 52,
+     "r": 19,
+     "color": "alice"
+    },
+    {
+     "id": "BO",
+     "shape": "actor",
+     "letter": "B",
+     "label": "بوب",
+     "label_en": "Bob",
+     "sub": "Bob",
+     "sub_en": "",
+     "x": 450,
+     "y": 52,
+     "r": 19,
+     "color": "bob"
+    },
+    {
+     "id": "PP",
+     "shape": "text",
+     "label": "معلَنٌ للجميع: الأساس g والمقياس p",
+     "label_en": "public to all: base g and modulus p",
+     "x": 280,
+     "y": 100,
+     "fs": 10.5,
+     "fw": 700,
+     "color": "amber",
+     "hl": true
+    },
+    {
+     "id": "SA",
+     "shape": "text",
+     "label": "السرّ a",
+     "label_en": "secret a",
+     "x": 110,
+     "y": 122,
+     "fs": 10.5,
+     "fw": 700,
+     "color": "amber",
+     "hl": true
+    },
+    {
+     "id": "SB",
+     "shape": "text",
+     "label": "السرّ b",
+     "label_en": "secret b",
+     "x": 450,
+     "y": 122,
+     "fs": 10.5,
+     "fw": 700,
+     "color": "amber",
+     "hl": true
+    }
+   ],
+   "edges": []
+  },
+  {
+   "caption": "التبادل العلني: تُرسل أليس A = gᵃ ويردّ بوب بـ B = gᵇ — على قناةٍ مكشوفةٍ تماماً، وإيف تسجّل كلّ شيء.",
+   "caption_en": "The public exchange: Alice sends A = gᵃ and Bob replies with B = gᵇ — over a fully exposed channel, with Eve recording everything.",
+   "w": 560,
+   "h": 300,
+   "guides": [
+    {
+     "x": 110,
+     "y1": 76,
+     "y2": 272
+    },
+    {
+     "x": 450,
+     "y1": 76,
+     "y2": 272
+    }
+   ],
+   "nodes": [
+    {
+     "id": "AL",
+     "shape": "actor",
+     "letter": "A",
+     "label": "أليس",
+     "label_en": "Alice",
+     "sub": "Alice",
+     "sub_en": "",
+     "x": 110,
+     "y": 52,
+     "r": 19,
+     "color": "alice"
+    },
+    {
+     "id": "BO",
+     "shape": "actor",
+     "letter": "B",
+     "label": "بوب",
+     "label_en": "Bob",
+     "sub": "Bob",
+     "sub_en": "",
+     "x": 450,
+     "y": 52,
+     "r": 19,
+     "color": "bob"
+    },
+    {
+     "id": "PP",
+     "shape": "text",
+     "label": "معلَنٌ للجميع: الأساس g والمقياس p",
+     "label_en": "public to all: base g and modulus p",
+     "x": 280,
+     "y": 100,
+     "fs": 10.5,
+     "fw": 700,
+     "color": "amber"
+    },
+    {
+     "id": "SA",
+     "shape": "text",
+     "label": "السرّ a",
+     "label_en": "secret a",
+     "x": 110,
+     "y": 122,
+     "fs": 10.5,
+     "fw": 700,
+     "color": "amber"
+    },
+    {
+     "id": "SB",
+     "shape": "text",
+     "label": "السرّ b",
+     "label_en": "secret b",
+     "x": 450,
+     "y": 122,
+     "fs": 10.5,
+     "fw": 700,
+     "color": "amber"
+    },
+    {
+     "id": "L1",
+     "shape": "text",
+     "label": "A = gᵃ mod p",
+     "label_en": "A = gᵃ mod p",
+     "x": 280,
+     "y": 142,
+     "fs": 10.5,
+     "fw": 700,
+     "color": "navy",
+     "hl": true
+    },
+    {
+     "id": "L2",
+     "shape": "text",
+     "label": "B = gᵇ mod p",
+     "label_en": "B = gᵇ mod p",
+     "x": 280,
+     "y": 182,
+     "fs": 10.5,
+     "fw": 700,
+     "color": "navy",
+     "hl": true
+    },
+    {
+     "id": "EV",
+     "shape": "actor",
+     "letter": "E",
+     "label": "إيف",
+     "label_en": "Eve",
+     "sub": "Eve",
+     "sub_en": "",
+     "x": 280,
+     "y": 238,
+     "r": 15,
+     "color": "eve",
+     "hl": true
+    }
+   ],
+   "edges": [
+    {
+     "fromPoint": {
+      "x": 116,
+      "y": 154
+     },
+     "toPoint": {
+      "x": 444,
+      "y": 154
+     },
+     "color": "alice",
+     "hl": true
+    },
+    {
+     "fromPoint": {
+      "x": 444,
+      "y": 194
+     },
+     "toPoint": {
+      "x": 116,
+      "y": 194
+     },
+     "color": "bob",
+     "hl": true
+    }
+   ]
+  },
+  {
+   "caption": "السرّ المشترك: يرفع كلٌّ ما استلمه إلى سرّه فيبلغ الطرفان gᵃᵇ نفسه — سرٌّ مشترك لم يعبر القناة قط، وإيف عالقة أمام اللوغاريتم المتقطع.",
+   "caption_en": "The shared secret: each raises what he received to his own secret and both reach the same gᵃᵇ — a shared secret that never crossed the channel, while Eve is stuck at the discrete log.",
+   "w": 560,
+   "h": 300,
+   "guides": [
+    {
+     "x": 110,
+     "y1": 76,
+     "y2": 272
+    },
+    {
+     "x": 450,
+     "y1": 76,
+     "y2": 272
+    }
+   ],
+   "nodes": [
+    {
+     "id": "AL",
+     "shape": "actor",
+     "letter": "A",
+     "label": "أليس",
+     "label_en": "Alice",
+     "sub": "Alice",
+     "sub_en": "",
+     "x": 110,
+     "y": 52,
+     "r": 19,
+     "color": "alice"
+    },
+    {
+     "id": "BO",
+     "shape": "actor",
+     "letter": "B",
+     "label": "بوب",
+     "label_en": "Bob",
+     "sub": "Bob",
+     "sub_en": "",
+     "x": 450,
+     "y": 52,
+     "r": 19,
+     "color": "bob"
+    },
+    {
+     "id": "PP",
+     "shape": "text",
+     "label": "معلَنٌ للجميع: الأساس g والمقياس p",
+     "label_en": "public to all: base g and modulus p",
+     "x": 280,
+     "y": 100,
+     "fs": 10.5,
+     "fw": 700,
+     "color": "amber"
+    },
+    {
+     "id": "SA",
+     "shape": "text",
+     "label": "السرّ a",
+     "label_en": "secret a",
+     "x": 110,
+     "y": 122,
+     "fs": 10.5,
+     "fw": 700,
+     "color": "amber"
+    },
+    {
+     "id": "SB",
+     "shape": "text",
+     "label": "السرّ b",
+     "label_en": "secret b",
+     "x": 450,
+     "y": 122,
+     "fs": 10.5,
+     "fw": 700,
+     "color": "amber"
+    },
+    {
+     "id": "L1",
+     "shape": "text",
+     "label": "A = gᵃ mod p",
+     "label_en": "A = gᵃ mod p",
+     "x": 280,
+     "y": 142,
+     "fs": 10.5,
+     "fw": 700,
+     "color": "navy"
+    },
+    {
+     "id": "L2",
+     "shape": "text",
+     "label": "B = gᵇ mod p",
+     "label_en": "B = gᵇ mod p",
+     "x": 280,
+     "y": 182,
+     "fs": 10.5,
+     "fw": 700,
+     "color": "navy"
+    },
+    {
+     "id": "EV",
+     "shape": "actor",
+     "letter": "E",
+     "label": "إيف",
+     "label_en": "Eve",
+     "sub": "Eve",
+     "sub_en": "",
+     "x": 280,
+     "y": 238,
+     "r": 15,
+     "color": "eve"
+    },
+    {
+     "id": "KA",
+     "label": "K = Bᵃ = gᵃᵇ",
+     "label_en": "K = Bᵃ = gᵃᵇ",
+     "x": 110,
+     "y": 240,
+     "w": 150,
+     "h": 32,
+     "color": "green",
+     "hl": true
+    },
+    {
+     "id": "KB",
+     "label": "K = Aᵇ = gᵃᵇ",
+     "label_en": "K = Aᵇ = gᵃᵇ",
+     "x": 450,
+     "y": 240,
+     "w": 150,
+     "h": 32,
+     "color": "green",
+     "hl": true
+    },
+    {
+     "id": "DL",
+     "shape": "text",
+     "label": "إيف ترى g وp وA وB — واستخراج a أو b مسألةُ لوغاريتمٍ متقطعٍ عسيرة",
+     "label_en": "Eve sees g, p, A and B — extracting a or b is a hard discrete-log problem",
+     "x": 280,
+     "y": 276,
+     "fs": 9.5,
+     "fw": 700,
+     "color": "mallory"
+    }
+   ],
+   "edges": [
+    {
+     "fromPoint": {
+      "x": 116,
+      "y": 154
+     },
+     "toPoint": {
+      "x": 444,
+      "y": 154
+     },
+     "color": "alice"
+    },
+    {
+     "fromPoint": {
+      "x": 444,
+      "y": 194
+     },
+     "toPoint": {
+      "x": 116,
+      "y": 194
+     },
+     "color": "bob"
+    }
+   ]
+  },
+  {
+   "caption": "جسر المنحنى الإهليجي: الضرب القياسي k·P سهلٌ في اتجاهه وعسيرٌ في عكسه (ECDLP) — المبدأ ذاته بمفاتيح أصغر بكثير، وعليه يقوم ECDH وECDSA (قارن أحجام المفاتيح في مخطط الوحدة).",
+   "caption_en": "The elliptic bridge: scalar multiplication k·P is easy forward and hard to reverse (ECDLP) — the very same principle with far smaller keys, powering ECDH and ECDSA (see the module’s key-size chart).",
+   "w": 560,
+   "h": 260,
+   "nodes": [
+    {
+     "id": "P",
+     "label": "النقطة P",
+     "label_en": "point P",
+     "x": 96,
+     "y": 118,
+     "w": 110,
+     "h": 34,
+     "color": "blue"
+    },
+    {
+     "id": "SM",
+     "label": "الضرب القياسي\nk · P",
+     "label_en": "scalar multiplication\nk · P",
+     "x": 262,
+     "y": 118,
+     "w": 132,
+     "h": 46,
+     "color": "teal",
+     "hl": true
+    },
+    {
+     "id": "KP",
+     "label": "kP",
+     "label_en": "kP",
+     "x": 408,
+     "y": 118,
+     "w": 60,
+     "h": 32,
+     "color": "green"
+    },
+    {
+     "id": "EC",
+     "shape": "text",
+     "label": "من kP إلى k: عسير ✗ (ECDLP)",
+     "label_en": "from kP back to k: hard ✗ (ECDLP)",
+     "x": 280,
+     "y": 190,
+     "fs": 11,
+     "fw": 700,
+     "color": "mallory",
+     "hl": true
+    },
+    {
+     "id": "E2",
+     "shape": "text",
+     "label": "المبدأ نفسه بمفاتيح أصغر بكثير — وهذا أساس ECDH وECDSA",
+     "label_en": "the same principle with far smaller keys — the basis of ECDH and ECDSA",
+     "x": 280,
+     "y": 224,
+     "fs": 10,
+     "fw": 700,
+     "color": "teal"
+    }
+   ],
+   "edges": [
+    {
+     "from": "P",
+     "to": "SM",
+     "color": "navy",
+     "hl": true
+    },
+    {
+     "from": "SM",
+     "to": "KP",
+     "color": "bob",
+     "hl": true
+    }
+   ]
+  }
+ ]
+},
+{
+ "id": "mitm_2des_m12",
+ "name": "Meet-in-the-Middle on 2DES",
+ "icon": "🎯",
+ "desc": "Book-twin (LTR) of mitm_2des.png: why double encryption buys almost nothing",
+ "audioDesc": "يطابق شكل الالتقاء في المنتصف في الكتاب: تشفيرٌ مزدوج يَعِد بأمان 112 بتاً، لكنّ جدولاً أمامياً من m وجدولاً عكسياً من c يلتقيان في القيمة الوسطى فيسقط الزوجان بكلفة 2⁵⁷ تقريباً — ولهذا وُجد 3DES.",
+ "audioDesc_en": "It matches the book's meet-in-the-middle figure: double encryption promises 112-bit security, but a forward table from m and a backward table from c meet at the middle value, recovering both keys for roughly 2⁵⁷ work — hence 3DES.",
+ "modules": [
+  12
+ ],
+ "type": "interactive",
+ "steps": [
+  {
+   "caption": "الفكرة المغرية: شفّر مرّتين بمفتاحين — 2DES — فيبدو الأمن 2⁵⁶ × 2⁵⁶ = 2¹¹². لاحظ القيمة الوسطى x بين العمليتين.",
+   "caption_en": "The tempting idea: encrypt twice with two keys — 2DES — so security looks like 2⁵⁶ × 2⁵⁶ = 2¹¹². Note the middle value x between the two passes.",
+   "w": 560,
+   "h": 180,
+   "nodes": [
+    {
+     "id": "M",
+     "label": "m",
+     "label_en": "m",
+     "x": 56,
+     "y": 112,
+     "w": 46,
+     "h": 30,
+     "color": "cream"
+    },
+    {
+     "id": "E1",
+     "label": "E بالمفتاح k₁",
+     "label_en": "E under key k₁",
+     "x": 162,
+     "y": 112,
+     "w": 120,
+     "h": 42,
+     "color": "blue"
+    },
+    {
+     "id": "X",
+     "label": "x — المنتصف",
+     "label_en": "x — the middle",
+     "x": 292,
+     "y": 112,
+     "w": 116,
+     "h": 32,
+     "color": "navy",
+     "hl": true
+    },
+    {
+     "id": "E2",
+     "label": "E بالمفتاح k₂",
+     "label_en": "E under key k₂",
+     "x": 424,
+     "y": 112,
+     "w": 120,
+     "h": 42,
+     "color": "blue"
+    },
+    {
+     "id": "C",
+     "label": "c",
+     "label_en": "c",
+     "x": 528,
+     "y": 112,
+     "w": 44,
+     "h": 30,
+     "color": "teal"
+    }
+   ],
+   "edges": [
+    {
+     "from": "M",
+     "to": "E1",
+     "color": "navy"
+    },
+    {
+     "from": "E1",
+     "to": "X",
+     "color": "navy",
+     "hl": true
+    },
+    {
+     "from": "X",
+     "to": "E2",
+     "color": "navy",
+     "hl": true
+    },
+    {
+     "from": "E2",
+     "to": "C",
+     "color": "teal"
+    }
+   ]
+  },
+  {
+   "caption": "الاتجاه الأمامي: بزوجٍ معلوم (m, c) تحسب مالوري E_k₁(m) لكلّ مفتاحٍ ممكن وتخزّن النتائج — 2⁵⁶ قيمةً وسطى مرشّحة.",
+   "caption_en": "The forward pass: with a known pair (m, c), Mallory computes E_k₁(m) for every possible key and stores the results — 2⁵⁶ candidate middle values.",
+   "w": 560,
+   "h": 300,
+   "nodes": [
+    {
+     "id": "M",
+     "label": "m",
+     "label_en": "m",
+     "x": 56,
+     "y": 112,
+     "w": 46,
+     "h": 30,
+     "color": "cream"
+    },
+    {
+     "id": "E1",
+     "label": "E بالمفتاح k₁",
+     "label_en": "E under key k₁",
+     "x": 162,
+     "y": 112,
+     "w": 120,
+     "h": 42,
+     "color": "blue"
+    },
+    {
+     "id": "X",
+     "label": "x — المنتصف",
+     "label_en": "x — the middle",
+     "x": 292,
+     "y": 112,
+     "w": 116,
+     "h": 32,
+     "color": "navy"
+    },
+    {
+     "id": "E2",
+     "label": "E بالمفتاح k₂",
+     "label_en": "E under key k₂",
+     "x": 424,
+     "y": 112,
+     "w": 120,
+     "h": 42,
+     "color": "blue"
+    },
+    {
+     "id": "C",
+     "label": "c",
+     "label_en": "c",
+     "x": 528,
+     "y": 112,
+     "w": 44,
+     "h": 30,
+     "color": "teal"
+    },
+    {
+     "id": "T1",
+     "label": "جدول أمامي: E_k₁(m) لكلّ k₁ — 2⁵⁶ إدخالاً",
+     "label_en": "forward table: E_k₁(m) for every k₁ — 2⁵⁶ entries",
+     "x": 170,
+     "y": 208,
+     "w": 230,
+     "h": 44,
+     "color": "cream",
+     "hl": true
+    }
+   ],
+   "edges": [
+    {
+     "from": "M",
+     "to": "E1",
+     "color": "navy"
+    },
+    {
+     "from": "E1",
+     "to": "X",
+     "color": "navy"
+    },
+    {
+     "from": "X",
+     "to": "E2",
+     "color": "navy"
+    },
+    {
+     "from": "E2",
+     "to": "C",
+     "color": "teal"
+    },
+    {
+     "from": "M",
+     "to": "T1",
+     "color": "mallory",
+     "hl": true,
+     "dash": true
+    }
+   ]
+  },
+  {
+   "caption": "الاتجاه العكسي والالتقاء: تحسب D_k₂(c) لكلّ k₂ وتبحث عن تطابقٍ مع الجدول الأمامي — كلُّ تطابقٍ في x يكشف الزوج (k₁, k₂).",
+   "caption_en": "The backward pass and the meeting: she computes D_k₂(c) for every k₂ and looks for a match in the forward table — any match at x exposes the pair (k₁, k₂).",
+   "w": 560,
+   "h": 300,
+   "nodes": [
+    {
+     "id": "M",
+     "label": "m",
+     "label_en": "m",
+     "x": 56,
+     "y": 112,
+     "w": 46,
+     "h": 30,
+     "color": "cream"
+    },
+    {
+     "id": "E1",
+     "label": "E بالمفتاح k₁",
+     "label_en": "E under key k₁",
+     "x": 162,
+     "y": 112,
+     "w": 120,
+     "h": 42,
+     "color": "blue"
+    },
+    {
+     "id": "X",
+     "label": "x — المنتصف",
+     "label_en": "x — the middle",
+     "x": 292,
+     "y": 112,
+     "w": 116,
+     "h": 32,
+     "color": "navy"
+    },
+    {
+     "id": "E2",
+     "label": "E بالمفتاح k₂",
+     "label_en": "E under key k₂",
+     "x": 424,
+     "y": 112,
+     "w": 120,
+     "h": 42,
+     "color": "blue"
+    },
+    {
+     "id": "C",
+     "label": "c",
+     "label_en": "c",
+     "x": 528,
+     "y": 112,
+     "w": 44,
+     "h": 30,
+     "color": "teal"
+    },
+    {
+     "id": "T1",
+     "label": "جدول أمامي: E_k₁(m) لكلّ k₁ — 2⁵⁶ إدخالاً",
+     "label_en": "forward table: E_k₁(m) for every k₁ — 2⁵⁶ entries",
+     "x": 170,
+     "y": 208,
+     "w": 230,
+     "h": 44,
+     "color": "cream"
+    },
+    {
+     "id": "T2",
+     "label": "عكسي: D_k₂(c) لكلّ k₂",
+     "label_en": "backward: D_k₂(c) for every k₂",
+     "x": 428,
+     "y": 208,
+     "w": 200,
+     "h": 44,
+     "color": "cream",
+     "hl": true
+    },
+    {
+     "id": "MT",
+     "shape": "text",
+     "label": "تطابقٌ في المنتصف ⇐ استخراج (k₁, k₂)",
+     "label_en": "a middle match ⇒ (k₁, k₂) recovered",
+     "x": 300,
+     "y": 270,
+     "fs": 11,
+     "fw": 700,
+     "color": "mallory",
+     "hl": true
+    }
+   ],
+   "edges": [
+    {
+     "from": "M",
+     "to": "E1",
+     "color": "navy"
+    },
+    {
+     "from": "E1",
+     "to": "X",
+     "color": "navy"
+    },
+    {
+     "from": "X",
+     "to": "E2",
+     "color": "navy"
+    },
+    {
+     "from": "E2",
+     "to": "C",
+     "color": "teal"
+    },
+    {
+     "from": "M",
+     "to": "T1",
+     "color": "mallory",
+     "dash": true
+    },
+    {
+     "from": "C",
+     "to": "T2",
+     "color": "mallory",
+     "hl": true,
+     "dash": true
+    }
+   ]
+  },
+  {
+   "caption": "الحساب الصادم: عملان بحجم 2⁵⁶ بدل 2¹¹² — المضاعفة أضافت بتّاً واحداً فعلياً. الذاكرة كبيرة لكنّ المبدأ قاتل، ولهذا اعتمد 3DES ثلاثَ عمليات.",
+   "caption_en": "The sobering count: two efforts of size 2⁵⁶ instead of 2¹¹² — doubling bought about one effective bit. Memory-hungry, yes, but the principle kills it; hence 3DES uses three passes.",
+   "w": 560,
+   "h": 260,
+   "nodes": [
+    {
+     "id": "CO",
+     "label": "الكلفة ≈ 2 × 2⁵⁶ ≈ 2⁵⁷ ≪ 2¹¹²",
+     "label_en": "cost ≈ 2 × 2⁵⁶ ≈ 2⁵⁷ ≪ 2¹¹²",
+     "x": 280,
+     "y": 110,
+     "w": 270,
+     "h": 44,
+     "color": "mallory",
+     "hl": true
+    },
+    {
+     "id": "CC",
+     "label": "لهذا لا تُضاعِف الشفرات بسذاجة — ووُلد 3DES بثلاث عمليات",
+     "label_en": "this is why ciphers are never naively doubled — hence 3DES with three passes",
+     "x": 280,
+     "y": 190,
+     "w": 330,
+     "h": 44,
+     "color": "teal"
+    }
+   ],
+   "edges": [
+    {
+     "from": "CO",
+     "to": "CC",
+     "color": "navy",
+     "hl": true
+    }
+   ]
+  }
+ ]
+},
+{
+ "id": "sign_pqc_m13",
+ "name": "Digital Signatures & the Post-Quantum Horizon",
+ "icon": "✍️",
+ "desc": "Book-twin (LTR) of rsa_sign.png + pqc_families.png: hash-and-sign, verification, EUF-CMA, and the PQC transition",
+ "audioDesc": "يطابق شكلَي التوقيع الرقمي وعائلات ما بعد الكم في الكتاب: نوقّع بصمة الرسالة بالمفتاح الخاصّ ويتحقّق أيُّ طرفٍ بالعامّ، والمزوِّرة بلا الخاصّ تُرفَض — ثمّ يأتي شور فيهدّد الأساس كلّه وتتقدّم بدائل NIST المعيارية.",
+ "audioDesc_en": "It matches the book's digital-signature and post-quantum figures: we sign the message digest with the private key and anyone verifies with the public one, a forger without the private key is rejected — then Shor threatens the whole foundation and NIST's standard successors step in.",
+ "modules": [
+  13
+ ],
+ "type": "interactive",
+ "steps": [
+  {
+   "caption": "التوقيع بأسلوب hash-and-sign: تُختزل الرسالة إلى بصمةٍ ثمّ توقَّع البصمة بالمفتاح الخاصّ d — وهو قالب RSA-PSS وECDSA وEdDSA جميعاً.",
+   "caption_en": "Hash-and-sign: the message is reduced to a digest, then the digest is signed with the private key d — the template behind RSA-PSS, ECDSA and EdDSA alike.",
+   "w": 560,
+   "h": 200,
+   "nodes": [
+    {
+     "id": "KD",
+     "shape": "text",
+     "label": "d 🔒 الخاصّ",
+     "label_en": "private d 🔒",
+     "x": 392,
+     "y": 58,
+     "fs": 10,
+     "fw": 700,
+     "color": "amber"
+    },
+    {
+     "id": "M",
+     "label": "m",
+     "label_en": "m",
+     "x": 54,
+     "y": 124,
+     "w": 44,
+     "h": 30,
+     "color": "cream"
+    },
+    {
+     "id": "H",
+     "label": "H",
+     "label_en": "H",
+     "x": 140,
+     "y": 124,
+     "w": 50,
+     "h": 34,
+     "color": "teal",
+     "hl": true
+    },
+    {
+     "id": "DG",
+     "label": "البصمة",
+     "label_en": "digest",
+     "x": 242,
+     "y": 124,
+     "w": 90,
+     "h": 32,
+     "color": "navy"
+    },
+    {
+     "id": "SG",
+     "label": "التوقيع بالخاصّ",
+     "label_en": "sign with the private key",
+     "x": 392,
+     "y": 124,
+     "w": 140,
+     "h": 46,
+     "color": "amber",
+     "hl": true
+    },
+    {
+     "id": "SI",
+     "label": "σ",
+     "label_en": "σ",
+     "x": 516,
+     "y": 124,
+     "w": 42,
+     "h": 30,
+     "color": "green"
+    }
+   ],
+   "edges": [
+    {
+     "from": "M",
+     "to": "H",
+     "color": "navy",
+     "hl": true
+    },
+    {
+     "from": "H",
+     "to": "DG",
+     "color": "teal",
+     "hl": true
+    },
+    {
+     "from": "DG",
+     "to": "SG",
+     "color": "navy",
+     "hl": true
+    },
+    {
+     "from": "KD",
+     "to": "SG",
+     "color": "amber",
+     "hl": true
+    },
+    {
+     "from": "SG",
+     "to": "SI",
+     "color": "bob",
+     "hl": true
+    }
+   ]
+  },
+  {
+   "caption": "التحقّق: أيُّ طرفٍ يملك المفتاح العامّ يفحص (m, σ) بنفسه — ومن هنا يولد عدم الإنكار: توقيعٌ صحيح لا يصدر إلا عن حامل d.",
+   "caption_en": "Verification: anyone holding the public key checks (m, σ) independently — and non-repudiation is born: a valid signature can only come from the holder of d.",
+   "w": 560,
+   "h": 200,
+   "nodes": [
+    {
+     "id": "KP",
+     "shape": "text",
+     "label": "المفتاح العامّ 🔓",
+     "label_en": "public key 🔓",
+     "x": 256,
+     "y": 58,
+     "fs": 10,
+     "fw": 700,
+     "color": "blue"
+    },
+    {
+     "id": "MS",
+     "label": "(m, σ)",
+     "label_en": "(m, σ)",
+     "x": 80,
+     "y": 124,
+     "w": 90,
+     "h": 32,
+     "color": "cream"
+    },
+    {
+     "id": "VR",
+     "label": "التحقّق بالعامّ",
+     "label_en": "verify with the public key",
+     "x": 256,
+     "y": 124,
+     "w": 150,
+     "h": 46,
+     "color": "blue",
+     "hl": true
+    },
+    {
+     "id": "OK",
+     "label": "✓ التوقيع صحيح",
+     "label_en": "✓ signature valid",
+     "x": 442,
+     "y": 124,
+     "w": 140,
+     "h": 34,
+     "color": "green",
+     "hl": true
+    }
+   ],
+   "edges": [
+    {
+     "from": "MS",
+     "to": "VR",
+     "color": "navy",
+     "hl": true
+    },
+    {
+     "from": "KP",
+     "to": "VR",
+     "color": "blue",
+     "hl": true
+    },
+    {
+     "from": "VR",
+     "to": "OK",
+     "color": "bob",
+     "hl": true
+    }
+   ]
+  },
+  {
+   "caption": "المزوِّرة تفشل: بلا d لا تستطيع مالوري توقيع رسالةٍ جديدة تجتاز التحقّق — وهذا تعريف أمان EUF-CMA الذي نطالب به كلّ مخطط توقيع.",
+   "caption_en": "The forger fails: without d, Mallory cannot sign a new message that passes verification — the very definition of EUF-CMA security we demand of every signature scheme.",
+   "w": 560,
+   "h": 240,
+   "nodes": [
+    {
+     "id": "MA",
+     "shape": "actor",
+     "letter": "M",
+     "label": "مالوري",
+     "label_en": "Mallory",
+     "sub": "Mallory",
+     "sub_en": "",
+     "x": 86,
+     "y": 124,
+     "r": 18,
+     "color": "mallory"
+    },
+    {
+     "id": "FR",
+     "label": "تزوير σ′ على رسالةٍ جديدة بلا d",
+     "label_en": "forging σ′ on a new message without d",
+     "x": 272,
+     "y": 124,
+     "w": 210,
+     "h": 44,
+     "color": "mallory"
+    },
+    {
+     "id": "RJ",
+     "label": "✗ يُرفض",
+     "label_en": "✗ rejected",
+     "x": 452,
+     "y": 124,
+     "w": 96,
+     "h": 34,
+     "color": "mallory",
+     "hl": true
+    },
+    {
+     "id": "FN",
+     "shape": "text",
+     "label": "هذا هو أمان EUF-CMA: العجز عن تزوير توقيعٍ لرسالةٍ لم تُوقَّع",
+     "label_en": "this is EUF-CMA security: inability to forge a signature on any unsigned message",
+     "x": 280,
+     "y": 196,
+     "fs": 10,
+     "fw": 700,
+     "color": "navy"
+    }
+   ],
+   "edges": [
+    {
+     "from": "MA",
+     "to": "FR",
+     "color": "mallory",
+     "dash": true,
+     "hl": true
+    },
+    {
+     "from": "FR",
+     "to": "RJ",
+     "color": "mallory",
+     "hl": true
+    }
+   ]
+  },
+  {
+   "caption": "أفق الكم: «التقط الآن وفكّ لاحقاً» — شور يكسر RSA وECC متى اكتمل العتاد، فبدأ الانتقال الهجين إلى ML-DSA وSLH-DSA للتوقيع (وML-KEM — FIPS 203 — للتبادل).",
+   "caption_en": "The quantum horizon: “harvest now, decrypt later” — Shor breaks RSA and ECC once the hardware matures, so the hybrid migration to ML-DSA and SLH-DSA for signatures (and ML-KEM, FIPS 203, for key exchange) has already begun.",
+   "w": 560,
+   "h": 260,
+   "nodes": [
+    {
+     "id": "QC",
+     "label": "حاسوبٌ كمّي: خوارزمية شور",
+     "label_en": "a quantum computer: Shor’s algorithm",
+     "x": 150,
+     "y": 104,
+     "w": 190,
+     "h": 44,
+     "color": "eve",
+     "hl": true
+    },
+    {
+     "id": "BR",
+     "label": "يكسر RSA وECC ✗",
+     "label_en": "breaks RSA and ECC ✗",
+     "x": 392,
+     "y": 104,
+     "w": 160,
+     "h": 38,
+     "color": "mallory"
+    },
+    {
+     "id": "PQ",
+     "label": "البدائل المعيارية: ML-DSA (FIPS 204) · SLH-DSA (FIPS 205)",
+     "label_en": "the standard successors: ML-DSA (FIPS 204) · SLH-DSA (FIPS 205)",
+     "x": 280,
+     "y": 192,
+     "w": 344,
+     "h": 46,
+     "color": "teal",
+     "hl": true
+    }
+   ],
+   "edges": [
+    {
+     "from": "QC",
+     "to": "BR",
+     "color": "mallory",
+     "hl": true
+    },
+    {
+     "from": "BR",
+     "to": "PQ",
+     "color": "teal",
+     "dash": true,
+     "hl": true
+    }
+   ]
+  }
+ ]
 }
 ];
 
