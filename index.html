@@ -23290,8 +23290,29 @@ function renderAdaptiveTierNotice(tier) {
 // ============================================================
 // QUIZ
 // ============================================================
+// Randomise MCQ option order to remove authoring position bias.
+// Correctness travels on opt.correct / data-correct, never on array index,
+// so scoring, retries and telemetry are unaffected. Position-dependent
+// options ("None/All of the above") are pinned to the last slot.
+function shuffleQuizOptions(options) {
+  if (!Array.isArray(options)) return options;
+  const arr = options.slice();
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    const tmp = arr[i]; arr[i] = arr[j]; arr[j] = tmp;
+  }
+  const isPinned = function(o) {
+    const s = (o && o.text ? String(o.text) : '').trim().toLowerCase();
+    return s.indexOf('none of the above') === 0 || s.indexOf('all of the above') === 0;
+  };
+  return arr.filter(function(o){ return !isPinned(o); })
+            .concat(arr.filter(isPinned));
+}
+
 function renderQuiz(activeQ) {
   // activeQ is now a resolved question object (already tier/bank-selected upstream)
+  // Shuffle options before display (see shuffleQuizOptions above).
+  activeQ = Object.assign({}, activeQ, { options: shuffleQuizOptions(activeQ.options) });
   // Store for retry/skip reference
   quizContent = activeQ;
 
