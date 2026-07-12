@@ -15292,7 +15292,7 @@ function renderLab(content, mod) {
       <div class="lab-container">
         <div class="lab-header">
           <span class="lab-icon">🕵️</span>
-          <div><div class="lab-title">${content.heading}</div><div class="lab-subtitle">Schnorr identification · p = 23, g = 5 · You are the verifier</div></div>
+          <div><div class="lab-title">${content.heading}</div><div class="lab-subtitle">Schnorr identification · p = 23, g = 5 · You are the verifier · Goal: pass 3 honest rounds, then run one round in cheat mode</div></div>
         </div>
 
         <div class="lab-field">
@@ -15319,13 +15319,18 @@ function renderLab(content, mod) {
             <button class="btn btn-secondary" style="width:auto" id="sch-c1" onclick="schChallenge(1)" disabled>2 · Challenge c = 1</button>
           </div>
           <div class="lab-output" id="sch-log" style="font-family:var(--mono);font-size:11px;margin-top:8px;max-height:180px;overflow-y:auto;white-space:pre-wrap">Set up first, then run rounds...</div>
-          <div style="font-size:12px;font-weight:700;margin-top:6px" id="sch-status">Honest rounds passed: 0 · Verifier confidence: 0%</div>
+          <div style="font-size:12px;font-weight:700;margin-top:6px" id="sch-status">Honest rounds: 0/3 · Cheat mode: not yet · Verifier confidence: 0%</div>
+          <div style="font-size:11px;margin-top:4px;color:#0F766E" id="sch-hint">To complete: keep cheat mode OFF and pass 3 honest rounds, then tick cheat mode and run one round. (Regenerating y resets your progress.)</div>
         </div>
 
         <div class="lab-field" style="margin-top:12px">
           <label class="lab-label">Fiat–Shamir — remove the verifier</label>
           <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center"><input class="lab-input" id="sch-msg" type="text" value="Attack at dawn" placeholder="message m to sign" style="flex:1;min-width:150px;font-family:var(--mono)"><button class="btn btn-secondary btn-sm" style="width:auto" onclick="schFiatShamir()">⚡ c = H(t ∥ m) mod 2</button></div>
           <div class="lab-output" id="sch-fs" style="font-size:12px;margin-top:8px;white-space:pre-wrap">After a commitment, derive the challenge from the commitment and a message — a signature is born...</div>
+        </div>
+
+        <div class="lab-field" style="margin-top:12px;text-align:center">
+          <button class="btn btn-secondary btn-sm" onclick="completeLabStage()" style="width:auto">✓ Mark Lab Complete</button>
         </div>
       </div>
     `,
@@ -18002,7 +18007,9 @@ function schSetup() {
     'Secret  x = ' + x + '          (Alice keeps this)\n' +
     'Public  y = g^x mod p = 5^' + x + ' mod 23 = ' + y + '   (everyone sees this)';
   document.getElementById('sch-log').textContent = '';
-  document.getElementById('sch-status').textContent = 'Honest rounds passed: 0 · Verifier confidence: 0%';
+  document.getElementById('sch-status').textContent = 'Honest rounds: 0/3 · Cheat mode: not yet · Verifier confidence: 0%';
+  const hint0 = document.getElementById('sch-hint');
+  if (hint0) hint0.textContent = 'To complete: keep cheat mode OFF and pass 3 honest rounds, then tick cheat mode and run one round. (Regenerating y resets your progress.)';
   document.getElementById('sch-commit-btn').disabled = false;
   document.getElementById('sch-c0').disabled = true;
   document.getElementById('sch-c1').disabled = true;
@@ -18059,8 +18066,15 @@ function schChallenge(c, viaFS) {
   log.scrollTop = log.scrollHeight;
   const conf = (1 - Math.pow(2, -st.honest)) * 100;
   document.getElementById('sch-status').textContent =
-    'Honest rounds passed: ' + st.honest + ' · Verifier confidence: ' + conf.toFixed(1) + '%' +
-    (st.cheatRun ? ' · Cheat mode tested ✓' : '');
+    'Honest rounds: ' + Math.min(st.honest, 3) + '/3 · Cheat mode: ' + (st.cheatRun ? 'tested ✓' : 'not yet') +
+    ' · Verifier confidence: ' + conf.toFixed(1) + '%';
+  const hint = document.getElementById('sch-hint');
+  if (hint) {
+    if (st.honest >= 3 && st.cheatRun) hint.textContent = 'Lab complete ✓ — you saw completeness, soundness, and zero-knowledge in action.';
+    else if (st.honest < 3 && !st.cheatRun) hint.textContent = 'Next: pass ' + (3 - st.honest) + ' more honest round(s) with cheat mode OFF, then run one round with cheat mode ON.';
+    else if (st.honest < 3) hint.textContent = 'Next: turn cheat mode OFF and pass ' + (3 - st.honest) + ' more honest round(s).';
+    else hint.textContent = 'Next: tick cheat mode and run one round to watch Mallory get caught.';
+  }
   document.getElementById('sch-c0').disabled = true;
   document.getElementById('sch-c1').disabled = true;
   document.getElementById('sch-commit-btn').disabled = false;
