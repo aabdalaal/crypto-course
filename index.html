@@ -16083,7 +16083,7 @@ function renderLab(content, mod) {
       <div class="lab-container">
         <div class="lab-header">
           <span class="lab-icon">🤝</span>
-          <div><div class="lab-title">${content.heading}</div><div class="lab-subtitle">Real ECDH P-256 via Web Crypto · Ephemeral keys · STS transcript signing</div></div>
+          <div><div class="lab-title">${content.heading}</div><div class="lab-subtitle">Real ECDH P-256 via Web Crypto · Ephemeral keys · STS transcript signing · Goal: verify one honest exchange (VALID), then run one with Mallory and watch STS reject it</div></div>
         </div>
 
         <div class="lab-field">
@@ -16124,6 +16124,13 @@ function renderLab(content, mod) {
           </div>
           <div class="lab-output" id="sts-sig-out" style="font-size:11px;margin-top:8px;word-break:break-all">Run an exchange, then sign...</div>
           <div class="lab-output" id="sts-verify-out" style="font-size:12px;margin-top:6px;white-space:pre-wrap">Verification result will appear here...</div>
+        </div>
+
+        <div style="font-size:12px;font-weight:700;margin-top:14px" id="ecdh-status">Honest verify: not yet · Mallory caught: not yet</div>
+        <div style="font-size:11px;margin-top:4px;color:#0F766E" id="ecdh-hint">To complete: with Mallory OFF, run → sign → verify (should be VALID). Then tick Mallory, run → sign → verify (STS rejects it). Both steps done = lab complete.</div>
+
+        <div style="margin-top:12px;text-align:center">
+          <button class="btn btn-secondary btn-sm" onclick="completeLabStage()" style="width:auto">✓ Mark Lab Complete</button>
         </div>
       </div>
     `,
@@ -20811,6 +20818,20 @@ async function runRSADecrypt() {
   } catch(e) { out.textContent = 'Error: '+e.message; }
 }
 
+function ecdhUpdateStatus() {
+  const st = window._ecdh; if (!st) return;
+  const hv = st.flags.honestVerified, mc = st.flags.malloryCaught;
+  const statusEl = document.getElementById('ecdh-status');
+  const hintEl = document.getElementById('ecdh-hint');
+  if (statusEl) statusEl.textContent = 'Honest verify: ' + (hv ? 'passed ✓' : 'not yet') + ' · Mallory caught: ' + (mc ? 'yes ✓' : 'not yet');
+  if (hintEl) {
+    if (hv && mc) hintEl.textContent = 'Lab complete ✓ — you saw an authenticated exchange succeed and STS reject a man-in-the-middle.';
+    else if (!hv && !mc) hintEl.textContent = 'To complete: with Mallory OFF, run → sign → verify (should be VALID). Then tick Mallory, run → sign → verify (STS rejects it).';
+    else if (!hv) hintEl.textContent = 'Next: turn Mallory OFF, then run → sign → verify to get a VALID honest exchange.';
+    else hintEl.textContent = 'Next: tick Mallory, then run → sign → verify to watch STS reject her substitution.';
+  }
+}
+
 async function runECDHLab() {
   const outA = document.getElementById('lab-output-ecdh-alice');
   const outB = document.getElementById('lab-output-ecdh-bob');
@@ -20819,8 +20840,11 @@ async function runECDHLab() {
   const malRow = document.getElementById('ecdh-mallory-row');
   const malOut = document.getElementById('ecdh-mallory-out');
   const mallory = !!(document.getElementById('ecdh-mallory') && document.getElementById('ecdh-mallory').checked);
-  window._ecdh = window._ecdh || { lastHex: null, flags: { verified: false, mitm: false }, ecdsa: null };
+  window._ecdh = window._ecdh || { lastHex: null, flags: { verified: false, mitm: false, honestVerified: false, malloryCaught: false }, ecdsa: null };
   const st = window._ecdh;
+  if (typeof st.flags.honestVerified === 'undefined') st.flags.honestVerified = false;
+  if (typeof st.flags.malloryCaught === 'undefined') st.flags.malloryCaught = false;
+  st.currentMitm = mallory;
   const b64 = function(buf) { return btoa(String.fromCharCode.apply(null, Array.from(new Uint8Array(buf)))); };
   const hex = function(buf) { return Array.from(new Uint8Array(buf)).map(function(b) { return b.toString(16).padStart(2, '0'); }).join(''); };
   try {
@@ -20873,6 +20897,7 @@ async function runECDHLab() {
     st.sig = null;
     document.getElementById('sts-sig-out').textContent = 'Exchange complete — now sign the transcript...';
     document.getElementById('sts-verify-out').textContent = 'Verification result will appear here...';
+    ecdhUpdateStatus();
   } catch (e) { outS.textContent = 'Error: ' + e.message; }
 }
 
@@ -20901,10 +20926,13 @@ async function runSTSVerify() {
     if (ok) {
       out.textContent = '✓ Signature VALID — the public keys Bob saw are exactly the ones Alice signed.\nThe exchange is authentically bound to Alice. Session key is trusted.';
       st.flags.verified = true;
+      if (!st.currentMitm) st.flags.honestVerified = true;
     } else {
       out.textContent = '✗ Signature INVALID — the transcript Bob received contains Mallory’s key,\nnot the key Alice signed. STS catches her substitution: the handshake aborts.';
+      if (st.currentMitm) st.flags.malloryCaught = true;
     }
-    if (st.flags.verified && st.flags.mitm) completeLabStage();
+    ecdhUpdateStatus();
+    if (st.flags.honestVerified && st.flags.malloryCaught) completeLabStage();
   } catch (e) { out.textContent = 'Error: ' + e.message; }
 }
 
