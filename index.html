@@ -12254,10 +12254,10 @@ Verifier:  Verify(pk_prover, N, σ) → accept/reject</div>
   <div class="concept-box-title">📌 ZKP in Practice — Schnorr Identification (Seminar 9)</div>
   <div class="concept-box-body">
     The Schnorr protocol (Seminar 9 exercises) proves knowledge of a discrete log x (where y = g^x mod p) without revealing x. Three phases:<br><br>
-    <strong>Commit:</strong> Peggy picks random r, sends t = g^r mod p<br>
-    <strong>Challenge:</strong> Victor sends random c<br>
-    <strong>Respond:</strong> Peggy sends s = (r + c·x) mod (p−1)<br>
-    <strong>Verify:</strong> Victor checks g^s ≡ t · y^c mod p<br><br>
+    <strong>Commit:</strong> Alice picks a random k, sends t = g^k mod p<br>
+    <strong>Challenge:</strong> Bob sends a random c<br>
+    <strong>Respond:</strong> Alice sends s = (k + c·x) mod (p−1)<br>
+    <strong>Verify:</strong> Bob checks g^s ≡ t · y^c mod p<br><br>
     Why zero-knowledge? A simulator can generate indistinguishable transcripts without knowing x: pick random s and c, compute t = g^s · y^(−c) mod p. This transcript (t, c, s) passes verification but x was never used. Schnorr's protocol is the foundation of ECDSA and the Fiat–Shamir transform (used to convert interactive proofs into digital signatures).
   </div>
 </div>
@@ -12442,7 +12442,7 @@ Verifier: recompute MAC(K, r) and compare</div>
       stage4: {
         type: 'lab',
         heading: 'Lab: Schnorr Zero-Knowledge Identification',
-        scenario: '🕵️ Scenario: Peggy claims to know the discrete log x of y = g^x mod p — without revealing it. Act as the verifier: receive her commitment, fire challenges of your choice, and check her responses. Then enable cheat mode and watch a Peggy who does not know x get caught within a few rounds — soundness in action. Finally, apply Fiat–Shamir to turn the interaction into a signature.',
+        scenario: '🕵️ Scenario: Alice claims to know the discrete log x of y = g^x mod p — without revealing it. Act as the verifier: receive her commitment, fire challenges of your choice, and check her responses. Then enable cheat mode and watch Mallory — impersonating Alice without knowing x — get caught within a few rounds — soundness in action. Finally, apply Fiat–Shamir to turn the interaction into a signature.',
         labId: 'schnorr_lab'
       },
       stage5: {
@@ -12547,7 +12547,7 @@ Verifier: recompute MAC(K, r) and compare</div>
               { text: 'Zero-knowledge — the verifier learns nothing about the secret', correct: false },
               { text: 'Succinctness — the proof is short enough to transmit', correct: false },
             ],
-            why: 'Soundness guarantees that a cheating prover who does not know the secret x cannot respond correctly to a fresh challenge c chosen after the commit phase. In Schnorr: the prover commits t = g^r, then must produce s = r + c·x. Without knowing x, they cannot compute the correct s for an arbitrary c. Completeness is the opposite guarantee (honest prover always succeeds). Zero-knowledge ensures no information about x leaks — distinct from soundness.',
+            why: 'Soundness guarantees that a cheating prover who does not know the secret x cannot respond correctly to a fresh challenge c chosen after the commit phase. In Schnorr: the prover commits t = g^k, then must produce s = k + c·x. Without knowing x, they cannot compute the correct s for an arbitrary c. Completeness is the opposite guarantee (honest prover always succeeds). Zero-knowledge ensures no information about x leaks — distinct from soundness.',
             concept: 'ZKP soundness — Module 10',
             hintVideoYtId: 'AQDCe585Lnc',
             hintVideoTitle: 'Zero-Knowledge Proof Properties',
@@ -12786,14 +12786,14 @@ Result: K = g^(ab) is correct and actually shared between Alice and Bob, but:
             concept: 'Nonce predictability and replay in challenge-response — Module 10',
           },
           {
-            question: 'The Schnorr identification protocol is interactive: commit (t = g^r), challenge (c), respond (s = r + c·x mod q). The Fiat-Shamir transform makes it non-interactive. What does this transform do?',
+            question: 'The Schnorr identification protocol is interactive: commit (t = g^k), challenge (c), respond (s = k + c·x mod q). The Fiat-Shamir transform makes it non-interactive. What does this transform do?',
             options: [
               { text: 'It replaces the prover with a trusted third party who generates the response', correct: false },
               { text: 'It replaces the verifier\'s random challenge c with a hash of the commitment: c = H(t, message). The prover can now generate the proof without interaction, creating a digital signature scheme', correct: true },
               { text: 'It removes the commitment phase, combining t and s into a single round message', correct: false },
               { text: 'It adds a second round of challenge-response to strengthen security against quantum computers', correct: false },
             ],
-            why: 'The Fiat-Shamir transform models H as a random oracle. The prover computes c = H(t, message) — a value they cannot control. This replaces the interactive verifier\'s challenge with a deterministic, unpredictable challenge derived from the commitment itself. The result is a non-interactive zero-knowledge proof (NIZK). Applied to Schnorr, this yields the Schnorr signature scheme: Sign(sk, m) = (t, s) where c = H(g^r, m) and s = r + c·sk. ECDSA is a variant of this construction.',
+            why: 'The Fiat-Shamir transform models H as a random oracle. The prover computes c = H(t, message) — a value they cannot control. This replaces the interactive verifier\'s challenge with a deterministic, unpredictable challenge derived from the commitment itself. The result is a non-interactive zero-knowledge proof (NIZK). Applied to Schnorr, this yields the Schnorr signature scheme: Sign(sk, m) = (t, s) where c = H(g^k, m) and s = k + c·sk. ECDSA is a variant of this construction.',
             concept: 'Fiat-Shamir transform and Schnorr signatures — Module 10',
           },
           {
@@ -15296,7 +15296,7 @@ function renderLab(content, mod) {
         </div>
 
         <div class="lab-field">
-          <label class="lab-label">Setup · Choose Peggy's secret x (1–21) — in real life you would never see this</label>
+          <label class="lab-label">Setup · Choose Alice's secret x (1–21) — in real life you would never see this</label>
           <div style="display:flex;gap:8px">
             <input class="lab-input" id="sch-x" type="number" min="1" max="21" value="7" style="font-family:var(--mono)">
             <button class="btn btn-primary" style="width:auto" onclick="schSetup()">Generate public y = g^x mod p</button>
@@ -15307,14 +15307,14 @@ function renderLab(content, mod) {
         <div class="lab-field" style="margin-top:12px">
           <label class="lab-label" style="display:flex;align-items:center;gap:8px">
             <input type="checkbox" id="sch-cheat" style="width:auto;margin:0">
-            <span style="color:#DC2626;font-weight:700">Cheat mode</span> — Peggy is bluffing: she does not know x and must guess your challenge
+            <span style="color:#DC2626;font-weight:700">Cheat mode</span> — Mallory impersonates Alice: she does not know x and must guess your challenge
           </label>
         </div>
 
         <div class="lab-field" style="margin-top:6px">
           <label class="lab-label">Protocol rounds — you choose the challenge</label>
           <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
-            <button class="btn btn-primary" style="width:auto" id="sch-commit-btn" onclick="schCommit()" disabled>1 · Peggy commits t = g^k</button>
+            <button class="btn btn-primary" style="width:auto" id="sch-commit-btn" onclick="schCommit()" disabled>1 · Prover commits t = g^k</button>
             <button class="btn btn-secondary" style="width:auto" id="sch-c0" onclick="schChallenge(0)" disabled>2 · Challenge c = 0</button>
             <button class="btn btn-secondary" style="width:auto" id="sch-c1" onclick="schChallenge(1)" disabled>2 · Challenge c = 1</button>
           </div>
@@ -15324,8 +15324,8 @@ function renderLab(content, mod) {
 
         <div class="lab-field" style="margin-top:12px">
           <label class="lab-label">Fiat–Shamir — remove the verifier</label>
-          <button class="btn btn-secondary btn-sm" style="width:auto" onclick="schFiatShamir()">⚡ Derive c = H(t) mod 2 with SHA-256</button>
-          <div class="lab-output" id="sch-fs" style="font-size:12px;margin-top:8px;white-space:pre-wrap">After a commitment, derive the challenge from the commitment itself...</div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center"><input class="lab-input" id="sch-msg" type="text" value="Attack at dawn" placeholder="message m to sign" style="flex:1;min-width:150px;font-family:var(--mono)"><button class="btn btn-secondary btn-sm" style="width:auto" onclick="schFiatShamir()">⚡ c = H(t ∥ m) mod 2</button></div>
+          <div class="lab-output" id="sch-fs" style="font-size:12px;margin-top:8px;white-space:pre-wrap">After a commitment, derive the challenge from the commitment and a message — a signature is born...</div>
         </div>
       </div>
     `,
@@ -17999,7 +17999,7 @@ function schSetup() {
   const y = schModPow(SCH_G, x, SCH_P);
   window._sch = { x: x, y: y, k: null, t: null, sPre: null, guess: null, cheat: false, honest: 0, cheatRun: false, pending: false, rounds: 0, done: false };
   pub.textContent = 'p = 23 (prime)    g = 5 (generator, order 22)\n' +
-    'Secret  x = ' + x + '          (Peggy keeps this)\n' +
+    'Secret  x = ' + x + '          (Alice keeps this)\n' +
     'Public  y = g^x mod p = 5^' + x + ' mod 23 = ' + y + '   (everyone sees this)';
   document.getElementById('sch-log').textContent = '';
   document.getElementById('sch-status').textContent = 'Honest rounds passed: 0 · Verifier confidence: 0%';
@@ -18028,14 +18028,14 @@ function schCommit() {
   }
   st.pending = true;
   const log = document.getElementById('sch-log');
-  log.textContent += 'Peggy' + (st.cheat ? ' (bluffing, guessed c=' + st.guess + ')' : '') + ' commits: t = ' + st.t + '\n';
+  log.textContent += (st.cheat ? 'Mallory (posing as Alice, guessed c=' + st.guess + ')' : 'Alice') + ' commits: t = ' + st.t + '\n';
   log.scrollTop = log.scrollHeight;
   document.getElementById('sch-c0').disabled = false;
   document.getElementById('sch-c1').disabled = false;
   document.getElementById('sch-commit-btn').disabled = true;
 }
 
-function schChallenge(c) {
+function schChallenge(c, viaFS) {
   const st = window._sch;
   if (!st || !st.pending) return;
   const cb = BigInt(c);
@@ -18043,7 +18043,7 @@ function schChallenge(c) {
   if (!st.cheat) {
     s = (st.k + cb * st.x) % SCH_ORD;
   } else {
-    s = (c === st.guess) ? st.sPre : BigInt(1 + schRand(21));
+    s = st.sPre;  // أعدّت جواباً لتخمينها فقط: يصحّ إن أصابت ويفشل حتماً إن أخطأت
   }
   const lhs = schModPow(SCH_G, s, SCH_P);
   const rhs = (st.t * schModPow(st.y, cb, SCH_P)) % SCH_P;
@@ -18053,9 +18053,9 @@ function schChallenge(c) {
   if (!st.cheat && pass) st.honest++;
   if (st.cheat) st.cheatRun = true;
   const log = document.getElementById('sch-log');
-  log.textContent += '  You challenge c = ' + c + '  →  Peggy responds s = ' + s + '\n' +
+  log.textContent += (viaFS ? '  Fiat–Shamir fixes c = ' : '  You challenge c = ') + c + '  →  ' + (st.cheat ? 'Mallory' : 'Alice') + ' responds s = ' + s + '\n' +
     '  Check: g^s = ' + lhs + '   vs   t·y^c = ' + rhs + '   →  ' +
-    (pass ? '✓ ACCEPT' : '✗ REJECT — Peggy is caught! She guessed the wrong challenge.') + '\n\n';
+    (pass ? '✓ ACCEPT' : '✗ REJECT — Mallory is caught! She guessed the wrong challenge.') + '\n\n';
   log.scrollTop = log.scrollHeight;
   const conf = (1 - Math.pow(2, -st.honest)) * 100;
   document.getElementById('sch-status').textContent =
@@ -18072,13 +18072,15 @@ async function schFiatShamir() {
   const out = document.getElementById('sch-fs');
   if (!st || !st.pending) { out.textContent = 'Commit first (step 1), then derive the challenge here instead of choosing it.'; return; }
   try {
-    const h = await sha256(st.t.toString());
+    const m = ((document.getElementById('sch-msg') || {}).value || '').trim() || 'Attack at dawn';
+    const h = await sha256(st.t.toString() + '|' + m);
     const c = parseInt(h.charAt(0), 16) % 2;
-    out.textContent = 'H(t) = SHA-256("' + st.t + '") = ' + h.substring(0, 16) + '...\n' +
-      'c = H(t) mod 2 = ' + c + ' — the challenge now comes from the commitment itself.\n' +
-      'No verifier needed: prover, alone, produces (t, s) anyone can check.\n' +
-      'This transformation is exactly how Schnorr signatures (and EdDSA) are built.';
-    schChallenge(c);
+    out.textContent = 'H(t ∥ m) = SHA-256("' + st.t + ' ∥ ' + m + '") = ' + h.substring(0, 16) + '...\n' +
+      'c = H(t ∥ m) mod 2 = ' + c + ' — the challenge now binds the commitment to the message.\n' +
+      'No verifier needed: the prover alone produces (t, s) — a signature on m that anyone can check.\n' +
+      'Real Schnorr signatures (and EdDSA) work exactly this way, with the full hash as the challenge.\n' +
+      'Why the full hash matters: with a 1-bit challenge a forger just retries commitments until H lands on her guess \u2014 the full-width hash removes that freedom.';
+    schChallenge(c, true);
   } catch (e) { out.textContent = 'Error: ' + e.message; }
 }
 
