@@ -23290,29 +23290,8 @@ function renderAdaptiveTierNotice(tier) {
 // ============================================================
 // QUIZ
 // ============================================================
-// Randomise MCQ option order to remove authoring position bias.
-// Correctness travels on opt.correct / data-correct, never on array index,
-// so scoring, retries and telemetry are unaffected. Position-dependent
-// options ("None/All of the above") are pinned to the last slot.
-function shuffleQuizOptions(options) {
-  if (!Array.isArray(options)) return options;
-  const arr = options.slice();
-  for (let i = arr.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    const tmp = arr[i]; arr[i] = arr[j]; arr[j] = tmp;
-  }
-  const isPinned = function(o) {
-    const s = (o && o.text ? String(o.text) : '').trim().toLowerCase();
-    return s.indexOf('none of the above') === 0 || s.indexOf('all of the above') === 0;
-  };
-  return arr.filter(function(o){ return !isPinned(o); })
-            .concat(arr.filter(isPinned));
-}
-
 function renderQuiz(activeQ) {
   // activeQ is now a resolved question object (already tier/bank-selected upstream)
-  // Shuffle options before display (see shuffleQuizOptions above).
-  activeQ = Object.assign({}, activeQ, { options: shuffleQuizOptions(activeQ.options) });
   // Store for retry/skip reference
   quizContent = activeQ;
 
@@ -28136,93 +28115,64 @@ async function saveForcePasswordChange(userId) {
 }
 
 // ============================================================
-// DEFAULT VIDEO SEEDS — Computerphile / Numberphile
-// Only runs once (flagged in localStorage). Safe to re-run:
-// existing admin-added videos are never overwritten.
+// DEFAULT VIDEO SEEDS — Official Crypto-Course (CC_M01–CC_M14)
+// One authoritative course video per module, seeded as that
+// module's default (first) video. Teacher/admin-added videos
+// are preserved. Migration to v2 removes the retired v1
+// Computerphile/Numberphile seeds so the CC video is the sole
+// default, then prepends it. Runs once (flagged in localStorage).
 // ============================================================
+
+// ytIds seeded by the retired v1 defaults. Cleared on migration
+// so option-A ("CC video is the only default") holds. A learner
+// who deliberately re-adds one of these keeps it (re-added after
+// this one-time migration runs).
+const LEGACY_SEED_YTIDS = [
+  'GSIDS_lvRv4','b4b8ktEV4Bg','UeIpq-C-GSA','wlSG3pEiQdc','FGhj3CGxl8I',
+  'O4xNJsjtN6E','-fpVv_T4xwA','DMtFhACPnTY','8ZtInClXe1Q','JD72Ry60eP4',
+  'M7kEpw1tn50','sWeVOXpTOhk','ShUyfk4QB-8','NmM9HA2MQGI','NF1pwjL9-DE',
+  '0TLDTodL7Lc','pgzWxOtk1zg','AQDCe585Lnc','vXe8pe18MNk','jkV1KEJGKRA',
+  'vsXMMT2CqqE','86cQJ0MMses','E_wX40fQwEA','I5mRwzVvFGE','9sO2qdTci-s',
+  'BYRTvoZ3Rho',
+];
+
+// Official course videos — one per module (CC_M01 → moduleId 0, … CC_M14 → moduleId 13).
+const OFFICIAL_MODULE_VIDEOS = [
+  { moduleId: 0,  ytId: '50Fn8WXmgXQ', title: 'CC_M01 · Cryptography Essentials' },
+  { moduleId: 1,  ytId: '3k5VubfS05k', title: 'CC_M02 · Breaking Classical Cryptography' },
+  { moduleId: 2,  ytId: 'qRjP2-UQEqo', title: 'CC_M03 · Symmetric Cryptography Foundations' },
+  { moduleId: 3,  ytId: 'iKMJ-Fhd0Dw', title: 'CC_M04 · Block Cipher Security' },
+  { moduleId: 4,  ytId: '8QgmkRhmXYY', title: 'CC_M05 · Securing Hash Functions' },
+  { moduleId: 5,  ytId: 'yF1XQIEpx8s', title: 'CC_M06 · RSA Essentials' },
+  { moduleId: 6,  ytId: '4zKlEeV0qp0', title: 'CC_M07 · Midpoint Review' },
+  { moduleId: 7,  ytId: 'CVh5YztEvS0', title: 'CC_M08 · Public Key Cryptography II (DH & ECC)' },
+  { moduleId: 8,  ytId: 'xxl0osTXVsA', title: 'CC_M09 · Key Management & PKI' },
+  { moduleId: 9,  ytId: '0okVdDdYKEo', title: 'CC_M10 · Authentication Protocols' },
+  { moduleId: 10, ytId: 'zu08UMMTlho', title: 'CC_M11 · Zero-Knowledge Proofs' },
+  { moduleId: 11, ytId: 'PLxxLbwLMKU', title: 'CC_M12 · Key Establishment & TLS' },
+  { moduleId: 12, ytId: 'TNQMeHsrzn0', title: 'CC_M13 · Attacks & Cryptanalysis' },
+  { moduleId: 13, ytId: 'xw9kmxdy-rw', title: 'CC_M14 · Modern Developments & Post-Quantum' },
+];
+
 function seedDefaultVideos() {
-  const FLAG = 'crypto_course_videos_seeded_v1';
+  const FLAG = 'crypto_course_videos_seeded_v2';
   if (localStorage.getItem(FLAG)) return;
 
-  const defaults = [
-    // Module 1 (id:0) — Introduction to Cryptography
-    { moduleId: 0, videos: [
-      { ytId: 'GSIDS_lvRv4', title: 'Public Key Cryptography — Computerphile' },
-      { ytId: 'b4b8ktEV4Bg', title: 'Hashing Algorithms and Security — Computerphile' },
-    ]},
-    // Module 2 (id:1) — Classical Cryptography
-    { moduleId: 1, videos: [
-      { ytId: 'UeIpq-C-GSA', title: 'ChaCha Cipher (Stream Cipher) — Computerphile' },
-      { ytId: 'wlSG3pEiQdc', title: 'Securing Stream Ciphers (HMAC) — Computerphile' },
-    ]},
-    // Module 3 (id:2) — Symmetric Cryptography I (OTP, stream ciphers, PRG/PRF/PRP)
-    { moduleId: 2, videos: [
-      { ytId: 'UeIpq-C-GSA', title: 'ChaCha Cipher (Stream Cipher) — Computerphile' },
-      { ytId: 'wlSG3pEiQdc', title: 'Securing Stream Ciphers (HMAC) — Computerphile' },
-    ]},
-    // Module 4 (id:3) — Symmetric Cryptography II (DES, AES, ECB/CBC/CTR, IND-CPA)
-    { moduleId: 3, videos: [
-      { ytId: 'FGhj3CGxl8I', title: 'Feistel Cipher (DES foundations) — Computerphile' },
-      { ytId: 'O4xNJsjtN6E', title: 'AES Explained (Advanced Encryption Standard) — Computerphile' },
-      { ytId: '-fpVv_T4xwA', title: 'AES GCM (Galois Counter Mode) — Computerphile' },
-    ]},
-    // Module 5 (id:4) — Hash Functions (collision resistance, birthday attack, MAC, IND-CCA)
-    { moduleId: 4, videos: [
-      { ytId: 'DMtFhACPnTY', title: 'SHA: Secure Hashing Algorithm — Computerphile' },
-      { ytId: '8ZtInClXe1Q', title: 'How NOT to Store Passwords! — Computerphile' },
-    ]},
-    // Module 6 (id:5) — Public Key Cryptography I (RSA, trapdoor functions)
-    { moduleId: 5, videos: [
-      { ytId: 'JD72Ry60eP4', title: 'Prime Numbers & RSA Encryption Algorithm — Numberphile' },
-      { ytId: 'M7kEpw1tn50', title: 'Encryption and HUGE Numbers — Numberphile' },
-    ]},
-    // Module 7 (id:6) — Careers
-    { moduleId: 6, videos: [
-      { ytId: 'sWeVOXpTOhk', title: 'Encryption and Security Agencies — Computerphile' },
-      { ytId: 'ShUyfk4QB-8', title: 'Could We Ban Encryption? — Numberphile' },
-    ]},
-    // Module 8 (id:7) — Public Key Cryptography II (DHKE, ElGamal, ECC)
-    { moduleId: 7, videos: [
-      { ytId: 'NmM9HA2MQGI', title: 'Secret Key Exchange (Diffie–Hellman) — Computerphile' },
-      { ytId: 'NF1pwjL9-DE', title: 'Elliptic Curves — Numberphile' },
-    ]},
-    // Module 9 (id:8) — Key Management (key lifecycle, PKI)
-    { moduleId: 8, videos: [
-      { ytId: '0TLDTodL7Lc', title: 'Transport Layer Security (TLS) — Computerphile' },
-      { ytId: 'pgzWxOtk1zg', title: '128 Bit or 256 Bit Encryption? — Computerphile' },
-    ]},
-    // Module 10 (id:9) — Digital Signatures
-    { moduleId: 9, videos: [
-      { ytId: 'AQDCe585Lnc', title: 'Digital Signatures — Computerphile' },
-      { ytId: 'vXe8pe18MNk', title: 'Power LED Attack (Side-Channel) — Computerphile' },
-    ]},
-    // Module 11 (id:10) — Protocols I (entity auth, MAC-based, ZKP)
-    { moduleId: 10, videos: [
-      { ytId: 'jkV1KEJGKRA', title: 'End to End Encryption (E2EE) — Computerphile' },
-      { ytId: 'vsXMMT2CqqE', title: 'Key Exchange Problems (MitM) — Computerphile' },
-    ]},
-    // Module 12 (id:11) — Protocols II (TLS, IPSec, SSH, STS, forward secrecy)
-    { moduleId: 11, videos: [
-      { ytId: '86cQJ0MMses', title: 'TLS Handshake Explained — Computerphile' },
-      { ytId: 'E_wX40fQwEA', title: 'Secure Web Browsing — Computerphile' },
-    ]},
-    // Module 13 (id:12) — Attacks (side-channel, timing, power, cryptanalysis)
-    { moduleId: 12, videos: [
-      { ytId: 'vXe8pe18MNk', title: 'Power LED Attack (Side-Channel) — Computerphile' },
-      { ytId: 'I5mRwzVvFGE', title: 'Spectre & Meltdown (Microarchitectural Side-Channel) — Computerphile' },
-    ]},
-    // Module 14 (id:13) — Developments (PQC, blockchain, special signatures)
-    { moduleId: 13, videos: [
-      { ytId: '9sO2qdTci-s', title: 'Double Ratchet Messaging Encryption — Numberphile' },
-      { ytId: 'BYRTvoZ3Rho', title: 'Was YOUR Vote Counted? (Homomorphic Encryption) — Numberphile' },
-    ]},
-  ];
+  const legacy = new Set(LEGACY_SEED_YTIDS);
+  const now = new Date().toISOString();
 
-  defaults.forEach(({ moduleId, videos }) => {
-    const existing = loadModuleVideos(moduleId);
-    if (existing.length === 0) {
-      saveModuleVideos(moduleId, videos.map(v => ({ ...v, addedAt: new Date().toISOString() })));
-    }
+  OFFICIAL_MODULE_VIDEOS.forEach(({ moduleId, ytId, title }) => {
+    // Current videos may include teacher-added entries and/or old v1 seeds.
+    let vids = loadModuleVideos(moduleId);
+
+    // Drop retired v1 seeds, any prior 'official' entry, and any existing
+    // copy of this CC video — leaving only genuine teacher-added videos.
+    vids = vids.filter(v => !legacy.has(v.ytId) && !v.official && v.ytId !== ytId);
+
+    // Prepend the official course video as the module's default (first).
+    vids.unshift({ ytId, title, official: true, addedAt: now });
+
+    saveModuleVideos(moduleId, vids);
   });
 
   localStorage.setItem(FLAG, '1');
@@ -30116,7 +30066,7 @@ async function pushContentToServer() {
   if (!registry) throw new Error('No content registry to publish');
   const payload = JSON.stringify({
     registry,
-    videos_seeded_flag: localStorage.getItem('crypto_course_videos_seeded_v1'),
+    videos_seeded_flag: localStorage.getItem('crypto_course_videos_seeded_v2'),
     flowcharts_seeded_flag: localStorage.getItem('crypto_course_flowcharts_seeded_v4'),
   });
   const resp = await fetchWithTimeout(base + '/content', {
@@ -30139,7 +30089,7 @@ async function pullContentFromServer() {
     if (!res.ok) return false;
     const payload = await res.json();
     if (payload.registry) localStorage.setItem(CONTENT_REGISTRY_KEY, payload.registry);
-    if (payload.videos_seeded_flag) localStorage.setItem('crypto_course_videos_seeded_v1', payload.videos_seeded_flag);
+    if (payload.videos_seeded_flag) localStorage.setItem('crypto_course_videos_seeded_v2', payload.videos_seeded_flag);
     if (payload.flowcharts_seeded_flag) localStorage.setItem('crypto_course_flowcharts_seeded_v4', payload.flowcharts_seeded_flag);
     return true;
   } catch(e) { return false; /* offline or local file — silently skip */ }
@@ -30148,7 +30098,7 @@ async function pullContentFromServer() {
 function exportContentRegistry() {
   const payload = {
     registry: localStorage.getItem(CONTENT_REGISTRY_KEY),
-    videos_seeded_flag: localStorage.getItem('crypto_course_videos_seeded_v1'),
+    videos_seeded_flag: localStorage.getItem('crypto_course_videos_seeded_v2'),
     flowcharts_seeded_flag: localStorage.getItem('crypto_course_flowcharts_seeded_v4'),
     exported_at: new Date().toISOString(),
   };
@@ -30167,7 +30117,7 @@ function importContentRegistry(event) {
     try {
       const payload = JSON.parse(e.target.result);
       if (payload.registry) localStorage.setItem(CONTENT_REGISTRY_KEY, payload.registry);
-      if (payload.videos_seeded_flag) localStorage.setItem('crypto_course_videos_seeded_v1', payload.videos_seeded_flag);
+      if (payload.videos_seeded_flag) localStorage.setItem('crypto_course_videos_seeded_v2', payload.videos_seeded_flag);
       if (payload.flowcharts_seeded_flag) localStorage.setItem('crypto_course_flowcharts_seeded_v4', payload.flowcharts_seeded_flag);
       showToast('Content imported — reloading…');
       setTimeout(() => location.reload(), 1200);
