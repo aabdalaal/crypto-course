@@ -28155,7 +28155,7 @@ const OFFICIAL_MODULE_VIDEOS = [
 ];
 
 function seedDefaultVideos() {
-  const FLAG = 'crypto_course_videos_seeded_v2';
+  const FLAG = 'crypto_course_videos_seeded_v4';
   if (localStorage.getItem(FLAG)) return;
 
   const legacy = new Set(LEGACY_SEED_YTIDS);
@@ -30066,7 +30066,7 @@ async function pushContentToServer() {
   if (!registry) throw new Error('No content registry to publish');
   const payload = JSON.stringify({
     registry,
-    videos_seeded_flag: localStorage.getItem('crypto_course_videos_seeded_v2'),
+    videos_seeded_flag: localStorage.getItem('crypto_course_videos_seeded_v4'),
     flowcharts_seeded_flag: localStorage.getItem('crypto_course_flowcharts_seeded_v4'),
   });
   const resp = await fetchWithTimeout(base + '/content', {
@@ -30089,7 +30089,7 @@ async function pullContentFromServer() {
     if (!res.ok) return false;
     const payload = await res.json();
     if (payload.registry) localStorage.setItem(CONTENT_REGISTRY_KEY, payload.registry);
-    if (payload.videos_seeded_flag) localStorage.setItem('crypto_course_videos_seeded_v2', payload.videos_seeded_flag);
+    if (payload.videos_seeded_flag) localStorage.setItem('crypto_course_videos_seeded_v4', payload.videos_seeded_flag);
     if (payload.flowcharts_seeded_flag) localStorage.setItem('crypto_course_flowcharts_seeded_v4', payload.flowcharts_seeded_flag);
     return true;
   } catch(e) { return false; /* offline or local file — silently skip */ }
@@ -30098,7 +30098,7 @@ async function pullContentFromServer() {
 function exportContentRegistry() {
   const payload = {
     registry: localStorage.getItem(CONTENT_REGISTRY_KEY),
-    videos_seeded_flag: localStorage.getItem('crypto_course_videos_seeded_v2'),
+    videos_seeded_flag: localStorage.getItem('crypto_course_videos_seeded_v4'),
     flowcharts_seeded_flag: localStorage.getItem('crypto_course_flowcharts_seeded_v4'),
     exported_at: new Date().toISOString(),
   };
@@ -30117,7 +30117,7 @@ function importContentRegistry(event) {
     try {
       const payload = JSON.parse(e.target.result);
       if (payload.registry) localStorage.setItem(CONTENT_REGISTRY_KEY, payload.registry);
-      if (payload.videos_seeded_flag) localStorage.setItem('crypto_course_videos_seeded_v2', payload.videos_seeded_flag);
+      if (payload.videos_seeded_flag) localStorage.setItem('crypto_course_videos_seeded_v4', payload.videos_seeded_flag);
       if (payload.flowcharts_seeded_flag) localStorage.setItem('crypto_course_flowcharts_seeded_v4', payload.flowcharts_seeded_flag);
       showToast('Content imported — reloading…');
       setTimeout(() => location.reload(), 1200);
