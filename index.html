@@ -2418,8 +2418,8 @@ body.high-contrast {
 // Bump on EVERY deploy; keep sw.js CACHE_NAME in lockstep.
 // MAJOR = breaking data/schema change · MINOR = feature batch · PATCH = fix
 // ============================================================
-const APP_VERSION = '1.4.0';
-const APP_VERSION_DATE = '2026-07-11';
+const APP_VERSION = '1.4.1';
+const APP_VERSION_DATE = '2026-08-21';
 const WHATS_NEW = 'Pre-print alignment patch: UKS attack direction unified with the book (Mallory registers Alice\'s key as her own; Bob is the deceived party — lesson text and both quiz items updated), qr_xor deep link now opens the OTP/XOR tool (same destination as activity code 16), ECDH cross-link unit label corrected to Unit 12, and minor digit cleanup in the DDT lab. With the rewired labs (55–57), the app now covers every chapter of the book.';
 
 // EmailJS — student email verification. These travel with the file (USB/WhatsApp/web).
@@ -28048,12 +28048,16 @@ async function enterApp() {
 
   // PR12 — Diagnostic entry assessment: auto-trigger for new student learners
   // Condition: student role, no prior progress, hasn't done or dismissed the diagnostic
+  // Guests are excluded — no account to attach diagnostic results to.
+  const _isGuest = !!currentUser?.sub?.startsWith('guest-');
   const _isNewStudent = currentUser?.role === ROLES.STUDENT
+    && !_isGuest
     && !state.diagnosticDone
     && !state.diagDismissed
     && state.lessonsCompleted === 0
     && !Object.keys(state.moduleProgress || {}).length;
   const _needsPrivacy = currentUser?.role === ROLES.STUDENT
+    && !_isGuest
     && !state.privacyNoticeSeen
     && !me?.mustChangePassword;
   if (_needsPrivacy) {
