@@ -34158,6 +34158,7 @@ function enrollInSemester(semId) {
 function checkSemesterEnrollment() {
   if (!isStudentView()) return;
   if (state.semesterId) return;
+  if (currentUser?.sub?.startsWith('guest-')) return; // guests aren't enrolled in a semester
   showEnrollSemesterSheet(true);
 }
 
