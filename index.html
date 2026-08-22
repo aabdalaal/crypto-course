@@ -3046,6 +3046,675 @@ const INTERACTIVE_DIAGRAM_TEMPLATES = [
  "audioDesc_en": "This diagram matches Kerckhoffs's principle from chapter one: a system that relies on hiding its algorithm collapses once it leaks, while an open design confines the whole secret to the replaceable key k."
 },
 {
+ "id": "ctr_mode_m3",
+ "name": "CTR (Counter) Mode",
+ "icon": "🔢",
+ "desc": "Book-twin (schematic) of fig 4.12: counter mode built up row by row on one block — counter → block cipher (key k) → XOR with plaintext → cipher block — then revealed as fully parallel across blocks.",
+ "audioDesc": "يطابق شكل 4.12 في الكتاب: نمط العدّاد CTR يُبنى صفّاً صفّاً على كتلةٍ واحدة ثمّ يُكشف توازيه. لكلّ كتلةٍ عدّادٌ فريد لا يتكرّر، يُشفَّر بشفرة الكتل مثل AES بالمفتاح k فينتج تدفّقٌ مفتاحيّ، يُجمع مع كتلة النصّ العاديّ x عبر XOR فتنتج الكتلة المشفّرة Y؛ أي Y يساوي x جمعاً حصريّاً مع ناتج تشفير العدّاد. والفكّ مطابقٌ للتشفير لأنّ الجمع الحصريّ معكوسُ نفسه. وكلُّ كتلةٍ مستقلّة، فتُشفَّر الكتل كلُّها في آنٍ واحد؛ وهكذا يحوّل نمط العدّاد شفرةَ الكتل إلى شفرةٍ تدفقية.",
+ "modules": [
+  3
+ ],
+ "type": "interactive",
+ "steps": [
+  {
+   "caption": "الخطوة ١ — العدّاد: لكلّ كتلةٍ عدّادٌ فريد ⁦Ctrᵢ⁩ (مثلاً nonce مسبوقٌ برقمٍ متزايد). لا يتكرّر أبداً.",
+   "caption_en": "Step 1 — The counter: each block gets a unique counter ⁦Ctrᵢ⁩ (e.g. a nonce plus an incrementing index). It must never repeat.",
+   "w": 640,
+   "h": 440,
+   "nodes": [
+    {
+     "id": "CT0",
+     "x": 170,
+     "y": 92,
+     "w": 150,
+     "h": 34,
+     "color": "amber",
+     "hl": false,
+     "label": "عدّاد ⁦Ctr1⁩",
+     "label_en": "Counter ⁦Ctr1⁩"
+    }
+   ],
+   "edges": []
+  },
+  {
+   "caption": "الخطوة ٢ — تشفير العدّاد: تُشفَّر قيمة العدّاد بشفرة الكتل ⁦Eₖ⁩ (AES مثلاً) بالمفتاح k فينتج تدفّقٌ مفتاحيّ.",
+   "caption_en": "Step 2 — Encrypt the counter: the counter is run through the block cipher ⁦Eₖ⁩ (e.g. AES) under key k, producing a keystream.",
+   "w": 640,
+   "h": 440,
+   "nodes": [
+    {
+     "id": "CT0",
+     "x": 170,
+     "y": 92,
+     "w": 150,
+     "h": 34,
+     "color": "amber",
+     "hl": false,
+     "label": "عدّاد ⁦Ctr1⁩",
+     "label_en": "Counter ⁦Ctr1⁩"
+    },
+    {
+     "id": "EN0",
+     "x": 170,
+     "y": 176,
+     "w": 150,
+     "h": 42,
+     "color": "navy",
+     "hl": false,
+     "label": "شفرة كتلة ⁦Eₖ⁩\n(AES مثلاً)",
+     "label_en": "Block cipher ⁦Eₖ⁩\n(e.g. AES)"
+    },
+    {
+     "id": "K0",
+     "shape": "text",
+     "x": 74,
+     "y": 180,
+     "fs": 14,
+     "fw": 800,
+     "color": "amber",
+     "label": "⁦k⁩",
+     "label_en": "⁦k⁩"
+    }
+   ],
+   "edges": [
+    {
+     "fromPoint": {
+      "x": 86,
+      "y": 176
+     },
+     "toPoint": {
+      "x": 94,
+      "y": 176
+     },
+     "color": "amber",
+     "hl": false
+    },
+    {
+     "from": "CT0",
+     "to": "EN0",
+     "color": "navy",
+     "hl": false
+    }
+   ]
+  },
+  {
+   "caption": "الخطوة ٣ — الجمع بـ XOR: يُجمع التدفّق المفتاحيّ مع كتلة النصّ العاديّ ⁦xᵢ⁩ عبر ⁦⊕⁩ — تماماً كالشفرة التدفقية.",
+   "caption_en": "Step 3 — XOR: the keystream is combined with the plaintext block ⁦xᵢ⁩ via ⁦⊕⁩ — exactly like a stream cipher.",
+   "w": 640,
+   "h": 440,
+   "nodes": [
+    {
+     "id": "CT0",
+     "x": 170,
+     "y": 92,
+     "w": 150,
+     "h": 34,
+     "color": "amber",
+     "hl": false,
+     "label": "عدّاد ⁦Ctr1⁩",
+     "label_en": "Counter ⁦Ctr1⁩"
+    },
+    {
+     "id": "EN0",
+     "x": 170,
+     "y": 176,
+     "w": 150,
+     "h": 42,
+     "color": "navy",
+     "hl": false,
+     "label": "شفرة كتلة ⁦Eₖ⁩\n(AES مثلاً)",
+     "label_en": "Block cipher ⁦Eₖ⁩\n(e.g. AES)"
+    },
+    {
+     "id": "K0",
+     "shape": "text",
+     "x": 74,
+     "y": 180,
+     "fs": 14,
+     "fw": 800,
+     "color": "amber",
+     "label": "⁦k⁩",
+     "label_en": "⁦k⁩"
+    },
+    {
+     "id": "XR0",
+     "x": 170,
+     "y": 262,
+     "w": 150,
+     "h": 34,
+     "color": "navy",
+     "hl": true,
+     "label": "⁦⊕⁩  تدفّق مفتاحيّ",
+     "label_en": "⁦⊕⁩  keystream"
+    },
+    {
+     "id": "PT0",
+     "shape": "text",
+     "x": 70,
+     "y": 266,
+     "fs": 12,
+     "fw": 800,
+     "color": "ink",
+     "label": "⁦x1⁩",
+     "label_en": "⁦x1⁩"
+    }
+   ],
+   "edges": [
+    {
+     "fromPoint": {
+      "x": 86,
+      "y": 176
+     },
+     "toPoint": {
+      "x": 94,
+      "y": 176
+     },
+     "color": "amber",
+     "hl": false
+    },
+    {
+     "from": "CT0",
+     "to": "EN0",
+     "color": "navy",
+     "hl": false
+    },
+    {
+     "fromPoint": {
+      "x": 82,
+      "y": 262
+     },
+     "toPoint": {
+      "x": 94,
+      "y": 262
+     },
+     "color": "navy",
+     "hl": false
+    },
+    {
+     "from": "EN0",
+     "to": "XR0",
+     "color": "navy",
+     "hl": false
+    }
+   ]
+  },
+  {
+   "caption": "الخطوة ٤ — الكتلة المشفّرة: ينتج ⁦Yᵢ = xᵢ ⊕ Eₖ(Ctrᵢ)⁩. الفكّ مطابقٌ للتشفير لأنّ ⁦⊕⁩ معكوسُ نفسه.",
+   "caption_en": "Step 4 — The cipher block: ⁦Yᵢ = xᵢ ⊕ Eₖ(Ctrᵢ)⁩. Decryption is identical to encryption because ⁦⊕⁩ is its own inverse.",
+   "w": 640,
+   "h": 440,
+   "nodes": [
+    {
+     "id": "CT0",
+     "x": 170,
+     "y": 92,
+     "w": 150,
+     "h": 34,
+     "color": "amber",
+     "hl": false,
+     "label": "عدّاد ⁦Ctr1⁩",
+     "label_en": "Counter ⁦Ctr1⁩"
+    },
+    {
+     "id": "EN0",
+     "x": 170,
+     "y": 176,
+     "w": 150,
+     "h": 42,
+     "color": "navy",
+     "hl": false,
+     "label": "شفرة كتلة ⁦Eₖ⁩\n(AES مثلاً)",
+     "label_en": "Block cipher ⁦Eₖ⁩\n(e.g. AES)"
+    },
+    {
+     "id": "K0",
+     "shape": "text",
+     "x": 74,
+     "y": 180,
+     "fs": 14,
+     "fw": 800,
+     "color": "amber",
+     "label": "⁦k⁩",
+     "label_en": "⁦k⁩"
+    },
+    {
+     "id": "XR0",
+     "x": 170,
+     "y": 262,
+     "w": 150,
+     "h": 34,
+     "color": "navy",
+     "hl": false,
+     "label": "⁦⊕⁩  تدفّق مفتاحيّ",
+     "label_en": "⁦⊕⁩  keystream"
+    },
+    {
+     "id": "PT0",
+     "shape": "text",
+     "x": 70,
+     "y": 266,
+     "fs": 12,
+     "fw": 800,
+     "color": "ink",
+     "label": "⁦x1⁩",
+     "label_en": "⁦x1⁩"
+    },
+    {
+     "id": "OT0",
+     "x": 170,
+     "y": 348,
+     "w": 150,
+     "h": 34,
+     "color": "teal",
+     "hl": true,
+     "label": "كتلة مشفّرة ⁦Y1⁩",
+     "label_en": "Cipher block ⁦Y1⁩"
+    }
+   ],
+   "edges": [
+    {
+     "fromPoint": {
+      "x": 86,
+      "y": 176
+     },
+     "toPoint": {
+      "x": 94,
+      "y": 176
+     },
+     "color": "amber",
+     "hl": false
+    },
+    {
+     "from": "CT0",
+     "to": "EN0",
+     "color": "navy",
+     "hl": false
+    },
+    {
+     "fromPoint": {
+      "x": 82,
+      "y": 262
+     },
+     "toPoint": {
+      "x": 94,
+      "y": 262
+     },
+     "color": "navy",
+     "hl": false
+    },
+    {
+     "from": "EN0",
+     "to": "XR0",
+     "color": "navy",
+     "hl": false
+    },
+    {
+     "from": "XR0",
+     "to": "OT0",
+     "color": "teal",
+     "hl": false
+    }
+   ]
+  },
+  {
+   "caption": "الخطوة ٥ — التوازي: كلُّ كتلةٍ مستقلّةٌ عن غيرها، فتُشفَّر الكتل كلُّها في آنٍ واحد. هكذا يحوّل CTR شفرةَ الكتل إلى شفرةٍ تدفقية.",
+   "caption_en": "Step 5 — Parallelism: every block is independent, so all blocks can be processed at once. This is how CTR turns a block cipher into a stream cipher.",
+   "w": 640,
+   "h": 440,
+   "nodes": [
+    {
+     "id": "CT0",
+     "x": 170,
+     "y": 92,
+     "w": 150,
+     "h": 34,
+     "color": "amber",
+     "hl": false,
+     "label": "عدّاد ⁦Ctr1⁩",
+     "label_en": "Counter ⁦Ctr1⁩"
+    },
+    {
+     "id": "EN0",
+     "x": 170,
+     "y": 176,
+     "w": 150,
+     "h": 42,
+     "color": "navy",
+     "hl": false,
+     "label": "شفرة كتلة ⁦Eₖ⁩\n(AES مثلاً)",
+     "label_en": "Block cipher ⁦Eₖ⁩\n(e.g. AES)"
+    },
+    {
+     "id": "K0",
+     "shape": "text",
+     "x": 74,
+     "y": 180,
+     "fs": 14,
+     "fw": 800,
+     "color": "amber",
+     "label": "⁦k⁩",
+     "label_en": "⁦k⁩"
+    },
+    {
+     "id": "XR0",
+     "x": 170,
+     "y": 262,
+     "w": 150,
+     "h": 34,
+     "color": "navy",
+     "hl": false,
+     "label": "⁦⊕⁩  تدفّق مفتاحيّ",
+     "label_en": "⁦⊕⁩  keystream"
+    },
+    {
+     "id": "PT0",
+     "shape": "text",
+     "x": 70,
+     "y": 266,
+     "fs": 12,
+     "fw": 800,
+     "color": "ink",
+     "label": "⁦x1⁩",
+     "label_en": "⁦x1⁩"
+    },
+    {
+     "id": "OT0",
+     "x": 170,
+     "y": 348,
+     "w": 150,
+     "h": 34,
+     "color": "teal",
+     "hl": true,
+     "label": "كتلة مشفّرة ⁦Y1⁩",
+     "label_en": "Cipher block ⁦Y1⁩"
+    },
+    {
+     "id": "CT1",
+     "x": 360,
+     "y": 92,
+     "w": 150,
+     "h": 34,
+     "color": "amber",
+     "hl": false,
+     "label": "عدّاد ⁦Ctr2⁩",
+     "label_en": "Counter ⁦Ctr2⁩"
+    },
+    {
+     "id": "EN1",
+     "x": 360,
+     "y": 176,
+     "w": 150,
+     "h": 42,
+     "color": "navy",
+     "hl": false,
+     "label": "شفرة كتلة ⁦Eₖ⁩\n(AES مثلاً)",
+     "label_en": "Block cipher ⁦Eₖ⁩\n(e.g. AES)"
+    },
+    {
+     "id": "K1",
+     "shape": "text",
+     "x": 264,
+     "y": 180,
+     "fs": 14,
+     "fw": 800,
+     "color": "amber",
+     "label": "⁦k⁩",
+     "label_en": "⁦k⁩"
+    },
+    {
+     "id": "XR1",
+     "x": 360,
+     "y": 262,
+     "w": 150,
+     "h": 34,
+     "color": "navy",
+     "hl": false,
+     "label": "⁦⊕⁩  تدفّق مفتاحيّ",
+     "label_en": "⁦⊕⁩  keystream"
+    },
+    {
+     "id": "PT1",
+     "shape": "text",
+     "x": 260,
+     "y": 266,
+     "fs": 12,
+     "fw": 800,
+     "color": "ink",
+     "label": "⁦x2⁩",
+     "label_en": "⁦x2⁩"
+    },
+    {
+     "id": "OT1",
+     "x": 360,
+     "y": 348,
+     "w": 150,
+     "h": 34,
+     "color": "teal",
+     "hl": true,
+     "label": "كتلة مشفّرة ⁦Y2⁩",
+     "label_en": "Cipher block ⁦Y2⁩"
+    },
+    {
+     "id": "CT2",
+     "x": 540,
+     "y": 92,
+     "w": 150,
+     "h": 34,
+     "color": "amber",
+     "hl": false,
+     "label": "عدّاد ⁦Ctrn⁩",
+     "label_en": "Counter ⁦Ctrn⁩"
+    },
+    {
+     "id": "EN2",
+     "x": 540,
+     "y": 176,
+     "w": 150,
+     "h": 42,
+     "color": "navy",
+     "hl": false,
+     "label": "شفرة كتلة ⁦Eₖ⁩\n(AES مثلاً)",
+     "label_en": "Block cipher ⁦Eₖ⁩\n(e.g. AES)"
+    },
+    {
+     "id": "K2",
+     "shape": "text",
+     "x": 444,
+     "y": 180,
+     "fs": 14,
+     "fw": 800,
+     "color": "amber",
+     "label": "⁦k⁩",
+     "label_en": "⁦k⁩"
+    },
+    {
+     "id": "XR2",
+     "x": 540,
+     "y": 262,
+     "w": 150,
+     "h": 34,
+     "color": "navy",
+     "hl": false,
+     "label": "⁦⊕⁩  تدفّق مفتاحيّ",
+     "label_en": "⁦⊕⁩  keystream"
+    },
+    {
+     "id": "PT2",
+     "shape": "text",
+     "x": 440,
+     "y": 266,
+     "fs": 12,
+     "fw": 800,
+     "color": "ink",
+     "label": "⁦xn⁩",
+     "label_en": "⁦xn⁩"
+    },
+    {
+     "id": "OT2",
+     "x": 540,
+     "y": 348,
+     "w": 150,
+     "h": 34,
+     "color": "teal",
+     "hl": true,
+     "label": "كتلة مشفّرة ⁦Yn⁩",
+     "label_en": "Cipher block ⁦Yn⁩"
+    },
+    {
+     "id": "EL1",
+     "shape": "text",
+     "x": 450,
+     "y": 92,
+     "fs": 16,
+     "fw": 800,
+     "color": "ink",
+     "label": "···",
+     "label_en": "···"
+    },
+    {
+     "id": "EL2",
+     "shape": "text",
+     "x": 450,
+     "y": 348,
+     "fs": 16,
+     "fw": 800,
+     "color": "ink",
+     "label": "···",
+     "label_en": "···"
+    }
+   ],
+   "edges": [
+    {
+     "fromPoint": {
+      "x": 86,
+      "y": 176
+     },
+     "toPoint": {
+      "x": 94,
+      "y": 176
+     },
+     "color": "amber",
+     "hl": false
+    },
+    {
+     "from": "CT0",
+     "to": "EN0",
+     "color": "navy",
+     "hl": false
+    },
+    {
+     "fromPoint": {
+      "x": 82,
+      "y": 262
+     },
+     "toPoint": {
+      "x": 94,
+      "y": 262
+     },
+     "color": "navy",
+     "hl": false
+    },
+    {
+     "from": "EN0",
+     "to": "XR0",
+     "color": "navy",
+     "hl": false
+    },
+    {
+     "from": "XR0",
+     "to": "OT0",
+     "color": "teal",
+     "hl": false
+    },
+    {
+     "fromPoint": {
+      "x": 276,
+      "y": 176
+     },
+     "toPoint": {
+      "x": 284,
+      "y": 176
+     },
+     "color": "amber",
+     "hl": false
+    },
+    {
+     "from": "CT1",
+     "to": "EN1",
+     "color": "navy",
+     "hl": false
+    },
+    {
+     "fromPoint": {
+      "x": 272,
+      "y": 262
+     },
+     "toPoint": {
+      "x": 284,
+      "y": 262
+     },
+     "color": "navy",
+     "hl": false
+    },
+    {
+     "from": "EN1",
+     "to": "XR1",
+     "color": "navy",
+     "hl": false
+    },
+    {
+     "from": "XR1",
+     "to": "OT1",
+     "color": "teal",
+     "hl": false
+    },
+    {
+     "fromPoint": {
+      "x": 456,
+      "y": 176
+     },
+     "toPoint": {
+      "x": 464,
+      "y": 176
+     },
+     "color": "amber",
+     "hl": false
+    },
+    {
+     "from": "CT2",
+     "to": "EN2",
+     "color": "navy",
+     "hl": false
+    },
+    {
+     "fromPoint": {
+      "x": 452,
+      "y": 262
+     },
+     "toPoint": {
+      "x": 464,
+      "y": 262
+     },
+     "color": "navy",
+     "hl": false
+    },
+    {
+     "from": "EN2",
+     "to": "XR2",
+     "color": "navy",
+     "hl": false
+    },
+    {
+     "from": "XR2",
+     "to": "OT2",
+     "color": "teal",
+     "hl": false
+    }
+   ]
+  }
+ ]
+},
+  {
  "id": "block_modes_m3",
  "name": "Block Cipher Modes — ECB vs CBC",
  "icon": "🐧",
@@ -6507,6 +7176,3004 @@ const INTERACTIVE_DIAGRAM_TEMPLATES = [
  "audioDesc_en": "It matches the book's mid-course map: symmetric encryption gives confidentiality and hashing gives an integrity digest, yet every tool so far assumes a shared secret whose pair count explodes quadratically — the coming answer is the key pair."
 },
   {
+ "id": "key_lifecycle_m8",
+ "name": "Key Lifecycle — 9 Stages",
+ "icon": "🔑",
+ "desc": "Book-twin (wheel) of fig 9.1: the nine NIST key-lifecycle stages revealed one by one, closing with the renewal arc.",
+ "audioDesc": "يطابق شكل 9.1 في الكتاب: تُكشف مراحل دورة حياة المفتاح التسع واحدةً تلو الأخرى على عجلة — من التوليد فالتسجيل والتوزيع فالتخزين فالاستخدام فالتدوير فالنسخ الاحتياطيّ فالإبطال فالأرشفة فالإتلاف — ثمّ يُغلق قوسُ التجديد الدورةَ عائداً إلى التوليد بمفتاحٍ جديد.",
+ "modules": [
+  8
+ ],
+ "type": "interactive",
+ "steps": [
+  {
+   "caption": "المرحلة ١ – التوليد — من مصدرِ عشوائيّةٍ قويّ (CSPRNG)",
+   "caption_en": "Stage 1 – Generation — From a strong entropy source (CSPRNG)",
+   "w": 580,
+   "h": 548,
+   "nodes": [
+    {
+     "id": "CT",
+     "shape": "text",
+     "x": 290,
+     "y": 254,
+     "fs": 18,
+     "fw": 800,
+     "color": "navy",
+     "label": "دورة حياة",
+     "label_en": "Key"
+    },
+    {
+     "id": "CT2",
+     "shape": "text",
+     "x": 290,
+     "y": 278,
+     "fs": 18,
+     "fw": 800,
+     "color": "navy",
+     "label": "المفتاح",
+     "label_en": "Lifecycle"
+    },
+    {
+     "id": "CT3",
+     "shape": "text",
+     "x": 290,
+     "y": 302,
+     "fs": 11,
+     "fw": 600,
+     "color": "teal",
+     "label": "٩ مراحل",
+     "label_en": "9 stages"
+    },
+    {
+     "id": "S0",
+     "x": 290,
+     "y": 74,
+     "w": 132,
+     "h": 48,
+     "color": "navy",
+     "hl": true,
+     "label": "١ – التوليد",
+     "label_en": "1 – Generation"
+    },
+    {
+     "id": "S1",
+     "x": 411,
+     "y": 118,
+     "w": 132,
+     "h": 48,
+     "color": "default",
+     "hl": false,
+     "label": "٢ – التسجيل والتوزيع",
+     "label_en": "2 – Registration"
+    },
+    {
+     "id": "S2",
+     "x": 475,
+     "y": 229,
+     "w": 132,
+     "h": 48,
+     "color": "default",
+     "hl": false,
+     "label": "٣ – التخزين",
+     "label_en": "3 – Storage"
+    },
+    {
+     "id": "S3",
+     "x": 453,
+     "y": 356,
+     "w": 132,
+     "h": 48,
+     "color": "default",
+     "hl": false,
+     "label": "٤ – الاستخدام",
+     "label_en": "4 – Use"
+    },
+    {
+     "id": "S4",
+     "x": 354,
+     "y": 439,
+     "w": 132,
+     "h": 48,
+     "color": "default",
+     "hl": false,
+     "label": "٥ – التدوير",
+     "label_en": "5 – Rotation"
+    },
+    {
+     "id": "S5",
+     "x": 226,
+     "y": 439,
+     "w": 132,
+     "h": 48,
+     "color": "default",
+     "hl": false,
+     "label": "٦ – النسخ الاحتياطيّ",
+     "label_en": "6 – Backup"
+    },
+    {
+     "id": "S6",
+     "x": 127,
+     "y": 356,
+     "w": 132,
+     "h": 48,
+     "color": "default",
+     "hl": false,
+     "label": "٧ – الإبطال",
+     "label_en": "7 – Revocation"
+    },
+    {
+     "id": "S7",
+     "x": 105,
+     "y": 229,
+     "w": 132,
+     "h": 48,
+     "color": "default",
+     "hl": false,
+     "label": "٨ – الأرشفة",
+     "label_en": "8 – Archival"
+    },
+    {
+     "id": "S8",
+     "x": 169,
+     "y": 118,
+     "w": 132,
+     "h": 48,
+     "color": "default",
+     "hl": false,
+     "label": "٩ – الإتلاف",
+     "label_en": "9 – Destruction"
+    }
+   ],
+   "edges": []
+  },
+  {
+   "caption": "المرحلة ٢ – التسجيل والتوزيع — ربطٌ بالهويّة وتسليمٌ عبر قناةٍ آمنة",
+   "caption_en": "Stage 2 – Registration — Bound to identity, delivered securely",
+   "w": 580,
+   "h": 548,
+   "nodes": [
+    {
+     "id": "CT",
+     "shape": "text",
+     "x": 290,
+     "y": 254,
+     "fs": 18,
+     "fw": 800,
+     "color": "navy",
+     "label": "دورة حياة",
+     "label_en": "Key"
+    },
+    {
+     "id": "CT2",
+     "shape": "text",
+     "x": 290,
+     "y": 278,
+     "fs": 18,
+     "fw": 800,
+     "color": "navy",
+     "label": "المفتاح",
+     "label_en": "Lifecycle"
+    },
+    {
+     "id": "CT3",
+     "shape": "text",
+     "x": 290,
+     "y": 302,
+     "fs": 11,
+     "fw": 600,
+     "color": "teal",
+     "label": "٩ مراحل",
+     "label_en": "9 stages"
+    },
+    {
+     "id": "S0",
+     "x": 290,
+     "y": 74,
+     "w": 132,
+     "h": 48,
+     "color": "teal",
+     "hl": false,
+     "label": "١ – التوليد",
+     "label_en": "1 – Generation"
+    },
+    {
+     "id": "S1",
+     "x": 411,
+     "y": 118,
+     "w": 132,
+     "h": 48,
+     "color": "navy",
+     "hl": true,
+     "label": "٢ – التسجيل والتوزيع",
+     "label_en": "2 – Registration"
+    },
+    {
+     "id": "S2",
+     "x": 475,
+     "y": 229,
+     "w": 132,
+     "h": 48,
+     "color": "default",
+     "hl": false,
+     "label": "٣ – التخزين",
+     "label_en": "3 – Storage"
+    },
+    {
+     "id": "S3",
+     "x": 453,
+     "y": 356,
+     "w": 132,
+     "h": 48,
+     "color": "default",
+     "hl": false,
+     "label": "٤ – الاستخدام",
+     "label_en": "4 – Use"
+    },
+    {
+     "id": "S4",
+     "x": 354,
+     "y": 439,
+     "w": 132,
+     "h": 48,
+     "color": "default",
+     "hl": false,
+     "label": "٥ – التدوير",
+     "label_en": "5 – Rotation"
+    },
+    {
+     "id": "S5",
+     "x": 226,
+     "y": 439,
+     "w": 132,
+     "h": 48,
+     "color": "default",
+     "hl": false,
+     "label": "٦ – النسخ الاحتياطيّ",
+     "label_en": "6 – Backup"
+    },
+    {
+     "id": "S6",
+     "x": 127,
+     "y": 356,
+     "w": 132,
+     "h": 48,
+     "color": "default",
+     "hl": false,
+     "label": "٧ – الإبطال",
+     "label_en": "7 – Revocation"
+    },
+    {
+     "id": "S7",
+     "x": 105,
+     "y": 229,
+     "w": 132,
+     "h": 48,
+     "color": "default",
+     "hl": false,
+     "label": "٨ – الأرشفة",
+     "label_en": "8 – Archival"
+    },
+    {
+     "id": "S8",
+     "x": 169,
+     "y": 118,
+     "w": 132,
+     "h": 48,
+     "color": "default",
+     "hl": false,
+     "label": "٩ – الإتلاف",
+     "label_en": "9 – Destruction"
+    }
+   ],
+   "edges": [
+    {
+     "from": "S0",
+     "to": "S1",
+     "color": "teal",
+     "hl": true
+    }
+   ]
+  },
+  {
+   "caption": "المرحلة ٣ – التخزين — مشفَّرٌ في عتادٍ محميّ (HSM)",
+   "caption_en": "Stage 3 – Storage — Encrypted in protected hardware (HSM)",
+   "w": 580,
+   "h": 548,
+   "nodes": [
+    {
+     "id": "CT",
+     "shape": "text",
+     "x": 290,
+     "y": 254,
+     "fs": 18,
+     "fw": 800,
+     "color": "navy",
+     "label": "دورة حياة",
+     "label_en": "Key"
+    },
+    {
+     "id": "CT2",
+     "shape": "text",
+     "x": 290,
+     "y": 278,
+     "fs": 18,
+     "fw": 800,
+     "color": "navy",
+     "label": "المفتاح",
+     "label_en": "Lifecycle"
+    },
+    {
+     "id": "CT3",
+     "shape": "text",
+     "x": 290,
+     "y": 302,
+     "fs": 11,
+     "fw": 600,
+     "color": "teal",
+     "label": "٩ مراحل",
+     "label_en": "9 stages"
+    },
+    {
+     "id": "S0",
+     "x": 290,
+     "y": 74,
+     "w": 132,
+     "h": 48,
+     "color": "teal",
+     "hl": false,
+     "label": "١ – التوليد",
+     "label_en": "1 – Generation"
+    },
+    {
+     "id": "S1",
+     "x": 411,
+     "y": 118,
+     "w": 132,
+     "h": 48,
+     "color": "teal",
+     "hl": false,
+     "label": "٢ – التسجيل والتوزيع",
+     "label_en": "2 – Registration"
+    },
+    {
+     "id": "S2",
+     "x": 475,
+     "y": 229,
+     "w": 132,
+     "h": 48,
+     "color": "navy",
+     "hl": true,
+     "label": "٣ – التخزين",
+     "label_en": "3 – Storage"
+    },
+    {
+     "id": "S3",
+     "x": 453,
+     "y": 356,
+     "w": 132,
+     "h": 48,
+     "color": "default",
+     "hl": false,
+     "label": "٤ – الاستخدام",
+     "label_en": "4 – Use"
+    },
+    {
+     "id": "S4",
+     "x": 354,
+     "y": 439,
+     "w": 132,
+     "h": 48,
+     "color": "default",
+     "hl": false,
+     "label": "٥ – التدوير",
+     "label_en": "5 – Rotation"
+    },
+    {
+     "id": "S5",
+     "x": 226,
+     "y": 439,
+     "w": 132,
+     "h": 48,
+     "color": "default",
+     "hl": false,
+     "label": "٦ – النسخ الاحتياطيّ",
+     "label_en": "6 – Backup"
+    },
+    {
+     "id": "S6",
+     "x": 127,
+     "y": 356,
+     "w": 132,
+     "h": 48,
+     "color": "default",
+     "hl": false,
+     "label": "٧ – الإبطال",
+     "label_en": "7 – Revocation"
+    },
+    {
+     "id": "S7",
+     "x": 105,
+     "y": 229,
+     "w": 132,
+     "h": 48,
+     "color": "default",
+     "hl": false,
+     "label": "٨ – الأرشفة",
+     "label_en": "8 – Archival"
+    },
+    {
+     "id": "S8",
+     "x": 169,
+     "y": 118,
+     "w": 132,
+     "h": 48,
+     "color": "default",
+     "hl": false,
+     "label": "٩ – الإتلاف",
+     "label_en": "9 – Destruction"
+    }
+   ],
+   "edges": [
+    {
+     "from": "S0",
+     "to": "S1",
+     "color": "teal",
+     "hl": false
+    },
+    {
+     "from": "S1",
+     "to": "S2",
+     "color": "teal",
+     "hl": true
+    }
+   ]
+  },
+  {
+   "caption": "المرحلة ٤ – الاستخدام — ضمن مدّة الصلاحيّة (Cryptoperiod)",
+   "caption_en": "Stage 4 – Use — Within its validity period (cryptoperiod)",
+   "w": 580,
+   "h": 548,
+   "nodes": [
+    {
+     "id": "CT",
+     "shape": "text",
+     "x": 290,
+     "y": 254,
+     "fs": 18,
+     "fw": 800,
+     "color": "navy",
+     "label": "دورة حياة",
+     "label_en": "Key"
+    },
+    {
+     "id": "CT2",
+     "shape": "text",
+     "x": 290,
+     "y": 278,
+     "fs": 18,
+     "fw": 800,
+     "color": "navy",
+     "label": "المفتاح",
+     "label_en": "Lifecycle"
+    },
+    {
+     "id": "CT3",
+     "shape": "text",
+     "x": 290,
+     "y": 302,
+     "fs": 11,
+     "fw": 600,
+     "color": "teal",
+     "label": "٩ مراحل",
+     "label_en": "9 stages"
+    },
+    {
+     "id": "S0",
+     "x": 290,
+     "y": 74,
+     "w": 132,
+     "h": 48,
+     "color": "teal",
+     "hl": false,
+     "label": "١ – التوليد",
+     "label_en": "1 – Generation"
+    },
+    {
+     "id": "S1",
+     "x": 411,
+     "y": 118,
+     "w": 132,
+     "h": 48,
+     "color": "teal",
+     "hl": false,
+     "label": "٢ – التسجيل والتوزيع",
+     "label_en": "2 – Registration"
+    },
+    {
+     "id": "S2",
+     "x": 475,
+     "y": 229,
+     "w": 132,
+     "h": 48,
+     "color": "teal",
+     "hl": false,
+     "label": "٣ – التخزين",
+     "label_en": "3 – Storage"
+    },
+    {
+     "id": "S3",
+     "x": 453,
+     "y": 356,
+     "w": 132,
+     "h": 48,
+     "color": "navy",
+     "hl": true,
+     "label": "٤ – الاستخدام",
+     "label_en": "4 – Use"
+    },
+    {
+     "id": "S4",
+     "x": 354,
+     "y": 439,
+     "w": 132,
+     "h": 48,
+     "color": "default",
+     "hl": false,
+     "label": "٥ – التدوير",
+     "label_en": "5 – Rotation"
+    },
+    {
+     "id": "S5",
+     "x": 226,
+     "y": 439,
+     "w": 132,
+     "h": 48,
+     "color": "default",
+     "hl": false,
+     "label": "٦ – النسخ الاحتياطيّ",
+     "label_en": "6 – Backup"
+    },
+    {
+     "id": "S6",
+     "x": 127,
+     "y": 356,
+     "w": 132,
+     "h": 48,
+     "color": "default",
+     "hl": false,
+     "label": "٧ – الإبطال",
+     "label_en": "7 – Revocation"
+    },
+    {
+     "id": "S7",
+     "x": 105,
+     "y": 229,
+     "w": 132,
+     "h": 48,
+     "color": "default",
+     "hl": false,
+     "label": "٨ – الأرشفة",
+     "label_en": "8 – Archival"
+    },
+    {
+     "id": "S8",
+     "x": 169,
+     "y": 118,
+     "w": 132,
+     "h": 48,
+     "color": "default",
+     "hl": false,
+     "label": "٩ – الإتلاف",
+     "label_en": "9 – Destruction"
+    }
+   ],
+   "edges": [
+    {
+     "from": "S0",
+     "to": "S1",
+     "color": "teal",
+     "hl": false
+    },
+    {
+     "from": "S1",
+     "to": "S2",
+     "color": "teal",
+     "hl": false
+    },
+    {
+     "from": "S2",
+     "to": "S3",
+     "color": "teal",
+     "hl": true
+    }
+   ]
+  },
+  {
+   "caption": "المرحلة ٥ – التدوير والتحديث — استبدالٌ دوريٌّ يحدّ من الضرر",
+   "caption_en": "Stage 5 – Rotation — Periodic replacement limits exposure",
+   "w": 580,
+   "h": 548,
+   "nodes": [
+    {
+     "id": "CT",
+     "shape": "text",
+     "x": 290,
+     "y": 254,
+     "fs": 18,
+     "fw": 800,
+     "color": "navy",
+     "label": "دورة حياة",
+     "label_en": "Key"
+    },
+    {
+     "id": "CT2",
+     "shape": "text",
+     "x": 290,
+     "y": 278,
+     "fs": 18,
+     "fw": 800,
+     "color": "navy",
+     "label": "المفتاح",
+     "label_en": "Lifecycle"
+    },
+    {
+     "id": "CT3",
+     "shape": "text",
+     "x": 290,
+     "y": 302,
+     "fs": 11,
+     "fw": 600,
+     "color": "teal",
+     "label": "٩ مراحل",
+     "label_en": "9 stages"
+    },
+    {
+     "id": "S0",
+     "x": 290,
+     "y": 74,
+     "w": 132,
+     "h": 48,
+     "color": "teal",
+     "hl": false,
+     "label": "١ – التوليد",
+     "label_en": "1 – Generation"
+    },
+    {
+     "id": "S1",
+     "x": 411,
+     "y": 118,
+     "w": 132,
+     "h": 48,
+     "color": "teal",
+     "hl": false,
+     "label": "٢ – التسجيل والتوزيع",
+     "label_en": "2 – Registration"
+    },
+    {
+     "id": "S2",
+     "x": 475,
+     "y": 229,
+     "w": 132,
+     "h": 48,
+     "color": "teal",
+     "hl": false,
+     "label": "٣ – التخزين",
+     "label_en": "3 – Storage"
+    },
+    {
+     "id": "S3",
+     "x": 453,
+     "y": 356,
+     "w": 132,
+     "h": 48,
+     "color": "teal",
+     "hl": false,
+     "label": "٤ – الاستخدام",
+     "label_en": "4 – Use"
+    },
+    {
+     "id": "S4",
+     "x": 354,
+     "y": 439,
+     "w": 132,
+     "h": 48,
+     "color": "navy",
+     "hl": true,
+     "label": "٥ – التدوير",
+     "label_en": "5 – Rotation"
+    },
+    {
+     "id": "S5",
+     "x": 226,
+     "y": 439,
+     "w": 132,
+     "h": 48,
+     "color": "default",
+     "hl": false,
+     "label": "٦ – النسخ الاحتياطيّ",
+     "label_en": "6 – Backup"
+    },
+    {
+     "id": "S6",
+     "x": 127,
+     "y": 356,
+     "w": 132,
+     "h": 48,
+     "color": "default",
+     "hl": false,
+     "label": "٧ – الإبطال",
+     "label_en": "7 – Revocation"
+    },
+    {
+     "id": "S7",
+     "x": 105,
+     "y": 229,
+     "w": 132,
+     "h": 48,
+     "color": "default",
+     "hl": false,
+     "label": "٨ – الأرشفة",
+     "label_en": "8 – Archival"
+    },
+    {
+     "id": "S8",
+     "x": 169,
+     "y": 118,
+     "w": 132,
+     "h": 48,
+     "color": "default",
+     "hl": false,
+     "label": "٩ – الإتلاف",
+     "label_en": "9 – Destruction"
+    }
+   ],
+   "edges": [
+    {
+     "from": "S0",
+     "to": "S1",
+     "color": "teal",
+     "hl": false
+    },
+    {
+     "from": "S1",
+     "to": "S2",
+     "color": "teal",
+     "hl": false
+    },
+    {
+     "from": "S2",
+     "to": "S3",
+     "color": "teal",
+     "hl": false
+    },
+    {
+     "from": "S3",
+     "to": "S4",
+     "color": "teal",
+     "hl": true
+    }
+   ]
+  },
+  {
+   "caption": "المرحلة ٦ – النسخ الاحتياطيّ والاستعادة — نسخٌ آمنةٌ محميّةٌ بالقدر نفسه",
+   "caption_en": "Stage 6 – Backup — Secure copies, equally protected",
+   "w": 580,
+   "h": 548,
+   "nodes": [
+    {
+     "id": "CT",
+     "shape": "text",
+     "x": 290,
+     "y": 254,
+     "fs": 18,
+     "fw": 800,
+     "color": "navy",
+     "label": "دورة حياة",
+     "label_en": "Key"
+    },
+    {
+     "id": "CT2",
+     "shape": "text",
+     "x": 290,
+     "y": 278,
+     "fs": 18,
+     "fw": 800,
+     "color": "navy",
+     "label": "المفتاح",
+     "label_en": "Lifecycle"
+    },
+    {
+     "id": "CT3",
+     "shape": "text",
+     "x": 290,
+     "y": 302,
+     "fs": 11,
+     "fw": 600,
+     "color": "teal",
+     "label": "٩ مراحل",
+     "label_en": "9 stages"
+    },
+    {
+     "id": "S0",
+     "x": 290,
+     "y": 74,
+     "w": 132,
+     "h": 48,
+     "color": "teal",
+     "hl": false,
+     "label": "١ – التوليد",
+     "label_en": "1 – Generation"
+    },
+    {
+     "id": "S1",
+     "x": 411,
+     "y": 118,
+     "w": 132,
+     "h": 48,
+     "color": "teal",
+     "hl": false,
+     "label": "٢ – التسجيل والتوزيع",
+     "label_en": "2 – Registration"
+    },
+    {
+     "id": "S2",
+     "x": 475,
+     "y": 229,
+     "w": 132,
+     "h": 48,
+     "color": "teal",
+     "hl": false,
+     "label": "٣ – التخزين",
+     "label_en": "3 – Storage"
+    },
+    {
+     "id": "S3",
+     "x": 453,
+     "y": 356,
+     "w": 132,
+     "h": 48,
+     "color": "teal",
+     "hl": false,
+     "label": "٤ – الاستخدام",
+     "label_en": "4 – Use"
+    },
+    {
+     "id": "S4",
+     "x": 354,
+     "y": 439,
+     "w": 132,
+     "h": 48,
+     "color": "teal",
+     "hl": false,
+     "label": "٥ – التدوير",
+     "label_en": "5 – Rotation"
+    },
+    {
+     "id": "S5",
+     "x": 226,
+     "y": 439,
+     "w": 132,
+     "h": 48,
+     "color": "navy",
+     "hl": true,
+     "label": "٦ – النسخ الاحتياطيّ",
+     "label_en": "6 – Backup"
+    },
+    {
+     "id": "S6",
+     "x": 127,
+     "y": 356,
+     "w": 132,
+     "h": 48,
+     "color": "default",
+     "hl": false,
+     "label": "٧ – الإبطال",
+     "label_en": "7 – Revocation"
+    },
+    {
+     "id": "S7",
+     "x": 105,
+     "y": 229,
+     "w": 132,
+     "h": 48,
+     "color": "default",
+     "hl": false,
+     "label": "٨ – الأرشفة",
+     "label_en": "8 – Archival"
+    },
+    {
+     "id": "S8",
+     "x": 169,
+     "y": 118,
+     "w": 132,
+     "h": 48,
+     "color": "default",
+     "hl": false,
+     "label": "٩ – الإتلاف",
+     "label_en": "9 – Destruction"
+    }
+   ],
+   "edges": [
+    {
+     "from": "S0",
+     "to": "S1",
+     "color": "teal",
+     "hl": false
+    },
+    {
+     "from": "S1",
+     "to": "S2",
+     "color": "teal",
+     "hl": false
+    },
+    {
+     "from": "S2",
+     "to": "S3",
+     "color": "teal",
+     "hl": false
+    },
+    {
+     "from": "S3",
+     "to": "S4",
+     "color": "teal",
+     "hl": false
+    },
+    {
+     "from": "S4",
+     "to": "S5",
+     "color": "teal",
+     "hl": true
+    }
+   ]
+  },
+  {
+   "caption": "المرحلة ٧ – الإبطال — إعلانُ الإلغاء فورًا (CRL / OCSP)",
+   "caption_en": "Stage 7 – Revocation — Announce revocation at once (CRL/OCSP)",
+   "w": 580,
+   "h": 548,
+   "nodes": [
+    {
+     "id": "CT",
+     "shape": "text",
+     "x": 290,
+     "y": 254,
+     "fs": 18,
+     "fw": 800,
+     "color": "navy",
+     "label": "دورة حياة",
+     "label_en": "Key"
+    },
+    {
+     "id": "CT2",
+     "shape": "text",
+     "x": 290,
+     "y": 278,
+     "fs": 18,
+     "fw": 800,
+     "color": "navy",
+     "label": "المفتاح",
+     "label_en": "Lifecycle"
+    },
+    {
+     "id": "CT3",
+     "shape": "text",
+     "x": 290,
+     "y": 302,
+     "fs": 11,
+     "fw": 600,
+     "color": "teal",
+     "label": "٩ مراحل",
+     "label_en": "9 stages"
+    },
+    {
+     "id": "S0",
+     "x": 290,
+     "y": 74,
+     "w": 132,
+     "h": 48,
+     "color": "teal",
+     "hl": false,
+     "label": "١ – التوليد",
+     "label_en": "1 – Generation"
+    },
+    {
+     "id": "S1",
+     "x": 411,
+     "y": 118,
+     "w": 132,
+     "h": 48,
+     "color": "teal",
+     "hl": false,
+     "label": "٢ – التسجيل والتوزيع",
+     "label_en": "2 – Registration"
+    },
+    {
+     "id": "S2",
+     "x": 475,
+     "y": 229,
+     "w": 132,
+     "h": 48,
+     "color": "teal",
+     "hl": false,
+     "label": "٣ – التخزين",
+     "label_en": "3 – Storage"
+    },
+    {
+     "id": "S3",
+     "x": 453,
+     "y": 356,
+     "w": 132,
+     "h": 48,
+     "color": "teal",
+     "hl": false,
+     "label": "٤ – الاستخدام",
+     "label_en": "4 – Use"
+    },
+    {
+     "id": "S4",
+     "x": 354,
+     "y": 439,
+     "w": 132,
+     "h": 48,
+     "color": "teal",
+     "hl": false,
+     "label": "٥ – التدوير",
+     "label_en": "5 – Rotation"
+    },
+    {
+     "id": "S5",
+     "x": 226,
+     "y": 439,
+     "w": 132,
+     "h": 48,
+     "color": "teal",
+     "hl": false,
+     "label": "٦ – النسخ الاحتياطيّ",
+     "label_en": "6 – Backup"
+    },
+    {
+     "id": "S6",
+     "x": 127,
+     "y": 356,
+     "w": 132,
+     "h": 48,
+     "color": "navy",
+     "hl": true,
+     "label": "٧ – الإبطال",
+     "label_en": "7 – Revocation"
+    },
+    {
+     "id": "S7",
+     "x": 105,
+     "y": 229,
+     "w": 132,
+     "h": 48,
+     "color": "default",
+     "hl": false,
+     "label": "٨ – الأرشفة",
+     "label_en": "8 – Archival"
+    },
+    {
+     "id": "S8",
+     "x": 169,
+     "y": 118,
+     "w": 132,
+     "h": 48,
+     "color": "default",
+     "hl": false,
+     "label": "٩ – الإتلاف",
+     "label_en": "9 – Destruction"
+    }
+   ],
+   "edges": [
+    {
+     "from": "S0",
+     "to": "S1",
+     "color": "teal",
+     "hl": false
+    },
+    {
+     "from": "S1",
+     "to": "S2",
+     "color": "teal",
+     "hl": false
+    },
+    {
+     "from": "S2",
+     "to": "S3",
+     "color": "teal",
+     "hl": false
+    },
+    {
+     "from": "S3",
+     "to": "S4",
+     "color": "teal",
+     "hl": false
+    },
+    {
+     "from": "S4",
+     "to": "S5",
+     "color": "teal",
+     "hl": false
+    },
+    {
+     "from": "S5",
+     "to": "S6",
+     "color": "teal",
+     "hl": true
+    }
+   ]
+  },
+  {
+   "caption": "المرحلة ٨ – الأرشفة — حفظٌ بعد التشغيل دون تشفيرٍ جديد",
+   "caption_en": "Stage 8 – Archival — Retained post-use, no new encryption",
+   "w": 580,
+   "h": 548,
+   "nodes": [
+    {
+     "id": "CT",
+     "shape": "text",
+     "x": 290,
+     "y": 254,
+     "fs": 18,
+     "fw": 800,
+     "color": "navy",
+     "label": "دورة حياة",
+     "label_en": "Key"
+    },
+    {
+     "id": "CT2",
+     "shape": "text",
+     "x": 290,
+     "y": 278,
+     "fs": 18,
+     "fw": 800,
+     "color": "navy",
+     "label": "المفتاح",
+     "label_en": "Lifecycle"
+    },
+    {
+     "id": "CT3",
+     "shape": "text",
+     "x": 290,
+     "y": 302,
+     "fs": 11,
+     "fw": 600,
+     "color": "teal",
+     "label": "٩ مراحل",
+     "label_en": "9 stages"
+    },
+    {
+     "id": "S0",
+     "x": 290,
+     "y": 74,
+     "w": 132,
+     "h": 48,
+     "color": "teal",
+     "hl": false,
+     "label": "١ – التوليد",
+     "label_en": "1 – Generation"
+    },
+    {
+     "id": "S1",
+     "x": 411,
+     "y": 118,
+     "w": 132,
+     "h": 48,
+     "color": "teal",
+     "hl": false,
+     "label": "٢ – التسجيل والتوزيع",
+     "label_en": "2 – Registration"
+    },
+    {
+     "id": "S2",
+     "x": 475,
+     "y": 229,
+     "w": 132,
+     "h": 48,
+     "color": "teal",
+     "hl": false,
+     "label": "٣ – التخزين",
+     "label_en": "3 – Storage"
+    },
+    {
+     "id": "S3",
+     "x": 453,
+     "y": 356,
+     "w": 132,
+     "h": 48,
+     "color": "teal",
+     "hl": false,
+     "label": "٤ – الاستخدام",
+     "label_en": "4 – Use"
+    },
+    {
+     "id": "S4",
+     "x": 354,
+     "y": 439,
+     "w": 132,
+     "h": 48,
+     "color": "teal",
+     "hl": false,
+     "label": "٥ – التدوير",
+     "label_en": "5 – Rotation"
+    },
+    {
+     "id": "S5",
+     "x": 226,
+     "y": 439,
+     "w": 132,
+     "h": 48,
+     "color": "teal",
+     "hl": false,
+     "label": "٦ – النسخ الاحتياطيّ",
+     "label_en": "6 – Backup"
+    },
+    {
+     "id": "S6",
+     "x": 127,
+     "y": 356,
+     "w": 132,
+     "h": 48,
+     "color": "teal",
+     "hl": false,
+     "label": "٧ – الإبطال",
+     "label_en": "7 – Revocation"
+    },
+    {
+     "id": "S7",
+     "x": 105,
+     "y": 229,
+     "w": 132,
+     "h": 48,
+     "color": "navy",
+     "hl": true,
+     "label": "٨ – الأرشفة",
+     "label_en": "8 – Archival"
+    },
+    {
+     "id": "S8",
+     "x": 169,
+     "y": 118,
+     "w": 132,
+     "h": 48,
+     "color": "default",
+     "hl": false,
+     "label": "٩ – الإتلاف",
+     "label_en": "9 – Destruction"
+    }
+   ],
+   "edges": [
+    {
+     "from": "S0",
+     "to": "S1",
+     "color": "teal",
+     "hl": false
+    },
+    {
+     "from": "S1",
+     "to": "S2",
+     "color": "teal",
+     "hl": false
+    },
+    {
+     "from": "S2",
+     "to": "S3",
+     "color": "teal",
+     "hl": false
+    },
+    {
+     "from": "S3",
+     "to": "S4",
+     "color": "teal",
+     "hl": false
+    },
+    {
+     "from": "S4",
+     "to": "S5",
+     "color": "teal",
+     "hl": false
+    },
+    {
+     "from": "S5",
+     "to": "S6",
+     "color": "teal",
+     "hl": false
+    },
+    {
+     "from": "S6",
+     "to": "S7",
+     "color": "teal",
+     "hl": true
+    }
+   ]
+  },
+  {
+   "caption": "المرحلة ٩ – الإتلاف — محوٌ آمنٌ لا يقبل الاستعادة",
+   "caption_en": "Stage 9 – Destruction — Secure erasure beyond recovery",
+   "w": 580,
+   "h": 548,
+   "nodes": [
+    {
+     "id": "CT",
+     "shape": "text",
+     "x": 290,
+     "y": 254,
+     "fs": 18,
+     "fw": 800,
+     "color": "navy",
+     "label": "دورة حياة",
+     "label_en": "Key"
+    },
+    {
+     "id": "CT2",
+     "shape": "text",
+     "x": 290,
+     "y": 278,
+     "fs": 18,
+     "fw": 800,
+     "color": "navy",
+     "label": "المفتاح",
+     "label_en": "Lifecycle"
+    },
+    {
+     "id": "CT3",
+     "shape": "text",
+     "x": 290,
+     "y": 302,
+     "fs": 11,
+     "fw": 600,
+     "color": "teal",
+     "label": "٩ مراحل",
+     "label_en": "9 stages"
+    },
+    {
+     "id": "S0",
+     "x": 290,
+     "y": 74,
+     "w": 132,
+     "h": 48,
+     "color": "teal",
+     "hl": false,
+     "label": "١ – التوليد",
+     "label_en": "1 – Generation"
+    },
+    {
+     "id": "S1",
+     "x": 411,
+     "y": 118,
+     "w": 132,
+     "h": 48,
+     "color": "teal",
+     "hl": false,
+     "label": "٢ – التسجيل والتوزيع",
+     "label_en": "2 – Registration"
+    },
+    {
+     "id": "S2",
+     "x": 475,
+     "y": 229,
+     "w": 132,
+     "h": 48,
+     "color": "teal",
+     "hl": false,
+     "label": "٣ – التخزين",
+     "label_en": "3 – Storage"
+    },
+    {
+     "id": "S3",
+     "x": 453,
+     "y": 356,
+     "w": 132,
+     "h": 48,
+     "color": "teal",
+     "hl": false,
+     "label": "٤ – الاستخدام",
+     "label_en": "4 – Use"
+    },
+    {
+     "id": "S4",
+     "x": 354,
+     "y": 439,
+     "w": 132,
+     "h": 48,
+     "color": "teal",
+     "hl": false,
+     "label": "٥ – التدوير",
+     "label_en": "5 – Rotation"
+    },
+    {
+     "id": "S5",
+     "x": 226,
+     "y": 439,
+     "w": 132,
+     "h": 48,
+     "color": "teal",
+     "hl": false,
+     "label": "٦ – النسخ الاحتياطيّ",
+     "label_en": "6 – Backup"
+    },
+    {
+     "id": "S6",
+     "x": 127,
+     "y": 356,
+     "w": 132,
+     "h": 48,
+     "color": "teal",
+     "hl": false,
+     "label": "٧ – الإبطال",
+     "label_en": "7 – Revocation"
+    },
+    {
+     "id": "S7",
+     "x": 105,
+     "y": 229,
+     "w": 132,
+     "h": 48,
+     "color": "teal",
+     "hl": false,
+     "label": "٨ – الأرشفة",
+     "label_en": "8 – Archival"
+    },
+    {
+     "id": "S8",
+     "x": 169,
+     "y": 118,
+     "w": 132,
+     "h": 48,
+     "color": "navy",
+     "hl": true,
+     "label": "٩ – الإتلاف",
+     "label_en": "9 – Destruction"
+    }
+   ],
+   "edges": [
+    {
+     "from": "S0",
+     "to": "S1",
+     "color": "teal",
+     "hl": false
+    },
+    {
+     "from": "S1",
+     "to": "S2",
+     "color": "teal",
+     "hl": false
+    },
+    {
+     "from": "S2",
+     "to": "S3",
+     "color": "teal",
+     "hl": false
+    },
+    {
+     "from": "S3",
+     "to": "S4",
+     "color": "teal",
+     "hl": false
+    },
+    {
+     "from": "S4",
+     "to": "S5",
+     "color": "teal",
+     "hl": false
+    },
+    {
+     "from": "S5",
+     "to": "S6",
+     "color": "teal",
+     "hl": false
+    },
+    {
+     "from": "S6",
+     "to": "S7",
+     "color": "teal",
+     "hl": false
+    },
+    {
+     "from": "S7",
+     "to": "S8",
+     "color": "teal",
+     "hl": true
+    }
+   ]
+  },
+  {
+   "caption": "الدورة كاملةً — قبل نهاية العمر يقود التدوير والتجديد إلى مفتاحٍ جديد، فتُستأنف الدورة من التوليد (١). الإبطال والأرشفة والإتلاف تُغلق حياة المفتاح القديم بأمان.",
+   "caption_en": "The full cycle — before end-of-life, rotation/renewal issues a fresh key and the cycle restarts at Generation (1). Revocation, archival and destruction safely close the old key's life.",
+   "w": 580,
+   "h": 548,
+   "nodes": [
+    {
+     "id": "CT",
+     "shape": "text",
+     "x": 290,
+     "y": 254,
+     "fs": 18,
+     "fw": 800,
+     "color": "navy",
+     "label": "دورة حياة",
+     "label_en": "Key"
+    },
+    {
+     "id": "CT2",
+     "shape": "text",
+     "x": 290,
+     "y": 278,
+     "fs": 18,
+     "fw": 800,
+     "color": "navy",
+     "label": "المفتاح",
+     "label_en": "Lifecycle"
+    },
+    {
+     "id": "CT3",
+     "shape": "text",
+     "x": 290,
+     "y": 302,
+     "fs": 11,
+     "fw": 600,
+     "color": "teal",
+     "label": "٩ مراحل",
+     "label_en": "9 stages"
+    },
+    {
+     "id": "S0",
+     "x": 290,
+     "y": 74,
+     "w": 132,
+     "h": 48,
+     "color": "teal",
+     "hl": false,
+     "label": "١ – التوليد",
+     "label_en": "1 – Generation"
+    },
+    {
+     "id": "S1",
+     "x": 411,
+     "y": 118,
+     "w": 132,
+     "h": 48,
+     "color": "teal",
+     "hl": false,
+     "label": "٢ – التسجيل والتوزيع",
+     "label_en": "2 – Registration"
+    },
+    {
+     "id": "S2",
+     "x": 475,
+     "y": 229,
+     "w": 132,
+     "h": 48,
+     "color": "teal",
+     "hl": false,
+     "label": "٣ – التخزين",
+     "label_en": "3 – Storage"
+    },
+    {
+     "id": "S3",
+     "x": 453,
+     "y": 356,
+     "w": 132,
+     "h": 48,
+     "color": "teal",
+     "hl": false,
+     "label": "٤ – الاستخدام",
+     "label_en": "4 – Use"
+    },
+    {
+     "id": "S4",
+     "x": 354,
+     "y": 439,
+     "w": 132,
+     "h": 48,
+     "color": "teal",
+     "hl": false,
+     "label": "٥ – التدوير",
+     "label_en": "5 – Rotation"
+    },
+    {
+     "id": "S5",
+     "x": 226,
+     "y": 439,
+     "w": 132,
+     "h": 48,
+     "color": "teal",
+     "hl": false,
+     "label": "٦ – النسخ الاحتياطيّ",
+     "label_en": "6 – Backup"
+    },
+    {
+     "id": "S6",
+     "x": 127,
+     "y": 356,
+     "w": 132,
+     "h": 48,
+     "color": "teal",
+     "hl": false,
+     "label": "٧ – الإبطال",
+     "label_en": "7 – Revocation"
+    },
+    {
+     "id": "S7",
+     "x": 105,
+     "y": 229,
+     "w": 132,
+     "h": 48,
+     "color": "teal",
+     "hl": false,
+     "label": "٨ – الأرشفة",
+     "label_en": "8 – Archival"
+    },
+    {
+     "id": "S8",
+     "x": 169,
+     "y": 118,
+     "w": 132,
+     "h": 48,
+     "color": "teal",
+     "hl": false,
+     "label": "٩ – الإتلاف",
+     "label_en": "9 – Destruction"
+    },
+    {
+     "id": "RN",
+     "shape": "text",
+     "x": 290,
+     "y": 328,
+     "fs": 12,
+     "fw": 700,
+     "color": "amber",
+     "label": "↻ تجديد بمفتاحٍ جديد",
+     "label_en": "↻ renew with a fresh key"
+    }
+   ],
+   "edges": [
+    {
+     "from": "S0",
+     "to": "S1",
+     "color": "teal",
+     "hl": false
+    },
+    {
+     "from": "S1",
+     "to": "S2",
+     "color": "teal",
+     "hl": false
+    },
+    {
+     "from": "S2",
+     "to": "S3",
+     "color": "teal",
+     "hl": false
+    },
+    {
+     "from": "S3",
+     "to": "S4",
+     "color": "teal",
+     "hl": false
+    },
+    {
+     "from": "S4",
+     "to": "S5",
+     "color": "teal",
+     "hl": false
+    },
+    {
+     "from": "S5",
+     "to": "S6",
+     "color": "teal",
+     "hl": false
+    },
+    {
+     "from": "S6",
+     "to": "S7",
+     "color": "teal",
+     "hl": false
+    },
+    {
+     "from": "S7",
+     "to": "S8",
+     "color": "teal",
+     "hl": false
+    },
+    {
+     "from": "S8",
+     "to": "S9",
+     "color": "teal",
+     "hl": true
+    },
+    {
+     "from": "S8",
+     "to": "S0",
+     "color": "amber",
+     "hl": true
+    }
+   ]
+  }
+ ]
+},
+  {
+ "id": "kerberos_flow_m8",
+ "name": "Kerberos Ticket Flow",
+ "icon": "🎟️",
+ "desc": "Book-twin (ladder) of fig 9.3: the six Kerberos messages revealed one by one across Client · AS · TGS · Service.",
+ "audioDesc": "يطابق شكل 9.3 في الكتاب: تُكشف رسائل كيربيروس الستّ واحدةً تلو الأخرى بين العميل وخادم المصادقة AS وخادم منح التذاكر TGS والخدمة (وAS وTGS داخل مركز توزيع المفاتيح KDC) — من طلب المصادقة، فإصدار تذكرة منح التذاكر، فطلب تذكرة الخدمة وإصدارها، فتقديمها، فمنح الوصول؛ دون أن تمرّ كلمة المرور بالشبكة.",
+ "modules": [
+  8
+ ],
+ "type": "interactive",
+ "steps": [
+  {
+   "caption": "الخطوة ١ — طلب المصادقة: يبدأ العميل بطلبٍ إلى خادم المصادقة AS دون إرسال كلمة المرور نفسها.",
+   "caption_en": "Step 1 — Authentication request: the client asks the Authentication Server (AS), without sending the password itself.",
+   "w": 620,
+   "h": 356,
+   "guides": [
+    {
+     "x": 92,
+     "y1": 76,
+     "y2": 338
+    },
+    {
+     "x": 250,
+     "y1": 76,
+     "y2": 338
+    },
+    {
+     "x": 408,
+     "y1": 76,
+     "y2": 338
+    },
+    {
+     "x": 560,
+     "y1": 76,
+     "y2": 338
+    }
+   ],
+   "nodes": [
+    {
+     "id": "KDC",
+     "shape": "text",
+     "x": 329,
+     "y": 20,
+     "fs": 11,
+     "fw": 800,
+     "color": "navy",
+     "label": "مركز توزيع المفاتيح (KDC)",
+     "label_en": "Key Distribution Center (KDC)"
+    },
+    {
+     "id": "CL",
+     "shape": "actor",
+     "letter": "C",
+     "x": 92,
+     "y": 52,
+     "r": 18,
+     "color": "alice",
+     "hl": true,
+     "label": "العميل",
+     "sub": "Client",
+     "label_en": "Client",
+     "sub_en": "Client"
+    },
+    {
+     "id": "AS",
+     "shape": "actor",
+     "letter": "A",
+     "x": 250,
+     "y": 52,
+     "r": 18,
+     "color": "teal",
+     "hl": false,
+     "label": "خادم المصادقة",
+     "sub": "AS",
+     "label_en": "Auth Server",
+     "sub_en": "AS"
+    },
+    {
+     "id": "TG",
+     "shape": "actor",
+     "letter": "T",
+     "x": 408,
+     "y": 52,
+     "r": 18,
+     "color": "teal",
+     "hl": false,
+     "label": "خادم منح التذاكر",
+     "sub": "TGS",
+     "label_en": "Ticket-Granting Server",
+     "sub_en": "TGS"
+    },
+    {
+     "id": "SV",
+     "shape": "actor",
+     "letter": "S",
+     "x": 560,
+     "y": 52,
+     "r": 18,
+     "color": "bob",
+     "hl": false,
+     "label": "الخدمة",
+     "sub": "Service",
+     "label_en": "Service",
+     "sub_en": "Service"
+    },
+    {
+     "id": "M0",
+     "shape": "text",
+     "x": 171,
+     "y": 96,
+     "fs": 10.5,
+     "fw": 700,
+     "color": "alice",
+     "hl": true,
+     "label": "طلب المصادقة",
+     "label_en": "Authentication request"
+    }
+   ],
+   "edges": [
+    {
+     "fromPoint": {
+      "x": 98,
+      "y": 108
+     },
+     "toPoint": {
+      "x": 244,
+      "y": 108
+     },
+     "color": "alice",
+     "hl": true
+    }
+   ]
+  },
+  {
+   "caption": "الخطوة ٢ — تذكرة منح التذاكر (TGT): يردّ AS بتذكرةٍ مشفّرةٍ تُثبت الهويّة وتُستعمل لاحقاً دون كلمة المرور.",
+   "caption_en": "Step 2 — Ticket-Granting Ticket (TGT): the AS returns an encrypted ticket proving identity, reused later without the password.",
+   "w": 620,
+   "h": 356,
+   "guides": [
+    {
+     "x": 92,
+     "y1": 76,
+     "y2": 338
+    },
+    {
+     "x": 250,
+     "y1": 76,
+     "y2": 338
+    },
+    {
+     "x": 408,
+     "y1": 76,
+     "y2": 338
+    },
+    {
+     "x": 560,
+     "y1": 76,
+     "y2": 338
+    }
+   ],
+   "nodes": [
+    {
+     "id": "KDC",
+     "shape": "text",
+     "x": 329,
+     "y": 20,
+     "fs": 11,
+     "fw": 800,
+     "color": "navy",
+     "label": "مركز توزيع المفاتيح (KDC)",
+     "label_en": "Key Distribution Center (KDC)"
+    },
+    {
+     "id": "CL",
+     "shape": "actor",
+     "letter": "C",
+     "x": 92,
+     "y": 52,
+     "r": 18,
+     "color": "alice",
+     "hl": false,
+     "label": "العميل",
+     "sub": "Client",
+     "label_en": "Client",
+     "sub_en": "Client"
+    },
+    {
+     "id": "AS",
+     "shape": "actor",
+     "letter": "A",
+     "x": 250,
+     "y": 52,
+     "r": 18,
+     "color": "teal",
+     "hl": true,
+     "label": "خادم المصادقة",
+     "sub": "AS",
+     "label_en": "Auth Server",
+     "sub_en": "AS"
+    },
+    {
+     "id": "TG",
+     "shape": "actor",
+     "letter": "T",
+     "x": 408,
+     "y": 52,
+     "r": 18,
+     "color": "teal",
+     "hl": false,
+     "label": "خادم منح التذاكر",
+     "sub": "TGS",
+     "label_en": "Ticket-Granting Server",
+     "sub_en": "TGS"
+    },
+    {
+     "id": "SV",
+     "shape": "actor",
+     "letter": "S",
+     "x": 560,
+     "y": 52,
+     "r": 18,
+     "color": "bob",
+     "hl": false,
+     "label": "الخدمة",
+     "sub": "Service",
+     "label_en": "Service",
+     "sub_en": "Service"
+    },
+    {
+     "id": "M0",
+     "shape": "text",
+     "x": 171,
+     "y": 96,
+     "fs": 10.5,
+     "fw": 700,
+     "color": "ink",
+     "hl": false,
+     "label": "طلب المصادقة",
+     "label_en": "Authentication request"
+    },
+    {
+     "id": "M1",
+     "shape": "text",
+     "x": 171,
+     "y": 140,
+     "fs": 10.5,
+     "fw": 700,
+     "color": "teal",
+     "hl": true,
+     "label": "إصدار تذكرة منح التذاكر",
+     "label_en": "Issue ticket-granting ticket"
+    },
+    {
+     "id": "K1",
+     "shape": "text",
+     "x": 171,
+     "y": 165,
+     "fs": 9.5,
+     "fw": 700,
+     "color": "amber",
+     "hl": false,
+     "label": "TGT",
+     "label_en": "TGT"
+    }
+   ],
+   "edges": [
+    {
+     "fromPoint": {
+      "x": 98,
+      "y": 108
+     },
+     "toPoint": {
+      "x": 244,
+      "y": 108
+     },
+     "color": "alice",
+     "hl": false
+    },
+    {
+     "fromPoint": {
+      "x": 244,
+      "y": 152
+     },
+     "toPoint": {
+      "x": 98,
+      "y": 152
+     },
+     "color": "teal",
+     "hl": true
+    }
+   ]
+  },
+  {
+   "caption": "الخطوة ٣ — طلب تذكرة خدمة: يقدّم العميل الـTGT إلى خادم منح التذاكر TGS طالباً الوصول إلى خدمةٍ بعينها.",
+   "caption_en": "Step 3 — Request a service ticket: the client presents the TGT to the Ticket-Granting Server (TGS) for a specific service.",
+   "w": 620,
+   "h": 356,
+   "guides": [
+    {
+     "x": 92,
+     "y1": 76,
+     "y2": 338
+    },
+    {
+     "x": 250,
+     "y1": 76,
+     "y2": 338
+    },
+    {
+     "x": 408,
+     "y1": 76,
+     "y2": 338
+    },
+    {
+     "x": 560,
+     "y1": 76,
+     "y2": 338
+    }
+   ],
+   "nodes": [
+    {
+     "id": "KDC",
+     "shape": "text",
+     "x": 329,
+     "y": 20,
+     "fs": 11,
+     "fw": 800,
+     "color": "navy",
+     "label": "مركز توزيع المفاتيح (KDC)",
+     "label_en": "Key Distribution Center (KDC)"
+    },
+    {
+     "id": "CL",
+     "shape": "actor",
+     "letter": "C",
+     "x": 92,
+     "y": 52,
+     "r": 18,
+     "color": "alice",
+     "hl": true,
+     "label": "العميل",
+     "sub": "Client",
+     "label_en": "Client",
+     "sub_en": "Client"
+    },
+    {
+     "id": "AS",
+     "shape": "actor",
+     "letter": "A",
+     "x": 250,
+     "y": 52,
+     "r": 18,
+     "color": "teal",
+     "hl": false,
+     "label": "خادم المصادقة",
+     "sub": "AS",
+     "label_en": "Auth Server",
+     "sub_en": "AS"
+    },
+    {
+     "id": "TG",
+     "shape": "actor",
+     "letter": "T",
+     "x": 408,
+     "y": 52,
+     "r": 18,
+     "color": "teal",
+     "hl": false,
+     "label": "خادم منح التذاكر",
+     "sub": "TGS",
+     "label_en": "Ticket-Granting Server",
+     "sub_en": "TGS"
+    },
+    {
+     "id": "SV",
+     "shape": "actor",
+     "letter": "S",
+     "x": 560,
+     "y": 52,
+     "r": 18,
+     "color": "bob",
+     "hl": false,
+     "label": "الخدمة",
+     "sub": "Service",
+     "label_en": "Service",
+     "sub_en": "Service"
+    },
+    {
+     "id": "M0",
+     "shape": "text",
+     "x": 171,
+     "y": 96,
+     "fs": 10.5,
+     "fw": 700,
+     "color": "ink",
+     "hl": false,
+     "label": "طلب المصادقة",
+     "label_en": "Authentication request"
+    },
+    {
+     "id": "M1",
+     "shape": "text",
+     "x": 171,
+     "y": 140,
+     "fs": 10.5,
+     "fw": 700,
+     "color": "ink",
+     "hl": false,
+     "label": "إصدار تذكرة منح التذاكر",
+     "label_en": "Issue ticket-granting ticket"
+    },
+    {
+     "id": "K1",
+     "shape": "text",
+     "x": 171,
+     "y": 165,
+     "fs": 9.5,
+     "fw": 700,
+     "color": "amber",
+     "hl": false,
+     "label": "TGT",
+     "label_en": "TGT"
+    },
+    {
+     "id": "M2",
+     "shape": "text",
+     "x": 250,
+     "y": 184,
+     "fs": 10.5,
+     "fw": 700,
+     "color": "alice",
+     "hl": true,
+     "label": "طلب تذكرة خدمة",
+     "label_en": "Request a service ticket"
+    },
+    {
+     "id": "K2",
+     "shape": "text",
+     "x": 250,
+     "y": 209,
+     "fs": 9.5,
+     "fw": 700,
+     "color": "amber",
+     "hl": false,
+     "label": "TGT",
+     "label_en": "TGT"
+    }
+   ],
+   "edges": [
+    {
+     "fromPoint": {
+      "x": 98,
+      "y": 108
+     },
+     "toPoint": {
+      "x": 244,
+      "y": 108
+     },
+     "color": "alice",
+     "hl": false
+    },
+    {
+     "fromPoint": {
+      "x": 244,
+      "y": 152
+     },
+     "toPoint": {
+      "x": 98,
+      "y": 152
+     },
+     "color": "teal",
+     "hl": false
+    },
+    {
+     "fromPoint": {
+      "x": 98,
+      "y": 196
+     },
+     "toPoint": {
+      "x": 402,
+      "y": 196
+     },
+     "color": "alice",
+     "hl": true
+    }
+   ]
+  },
+  {
+   "caption": "الخطوة ٤ — إصدار تذكرة الخدمة: يتحقّق TGS من الـTGT ويصدر تذكرةً موجّهةً إلى الخدمة المطلوبة.",
+   "caption_en": "Step 4 — Issue the service ticket: the TGS validates the TGT and issues a ticket addressed to the target service.",
+   "w": 620,
+   "h": 356,
+   "guides": [
+    {
+     "x": 92,
+     "y1": 76,
+     "y2": 338
+    },
+    {
+     "x": 250,
+     "y1": 76,
+     "y2": 338
+    },
+    {
+     "x": 408,
+     "y1": 76,
+     "y2": 338
+    },
+    {
+     "x": 560,
+     "y1": 76,
+     "y2": 338
+    }
+   ],
+   "nodes": [
+    {
+     "id": "KDC",
+     "shape": "text",
+     "x": 329,
+     "y": 20,
+     "fs": 11,
+     "fw": 800,
+     "color": "navy",
+     "label": "مركز توزيع المفاتيح (KDC)",
+     "label_en": "Key Distribution Center (KDC)"
+    },
+    {
+     "id": "CL",
+     "shape": "actor",
+     "letter": "C",
+     "x": 92,
+     "y": 52,
+     "r": 18,
+     "color": "alice",
+     "hl": false,
+     "label": "العميل",
+     "sub": "Client",
+     "label_en": "Client",
+     "sub_en": "Client"
+    },
+    {
+     "id": "AS",
+     "shape": "actor",
+     "letter": "A",
+     "x": 250,
+     "y": 52,
+     "r": 18,
+     "color": "teal",
+     "hl": false,
+     "label": "خادم المصادقة",
+     "sub": "AS",
+     "label_en": "Auth Server",
+     "sub_en": "AS"
+    },
+    {
+     "id": "TG",
+     "shape": "actor",
+     "letter": "T",
+     "x": 408,
+     "y": 52,
+     "r": 18,
+     "color": "teal",
+     "hl": true,
+     "label": "خادم منح التذاكر",
+     "sub": "TGS",
+     "label_en": "Ticket-Granting Server",
+     "sub_en": "TGS"
+    },
+    {
+     "id": "SV",
+     "shape": "actor",
+     "letter": "S",
+     "x": 560,
+     "y": 52,
+     "r": 18,
+     "color": "bob",
+     "hl": false,
+     "label": "الخدمة",
+     "sub": "Service",
+     "label_en": "Service",
+     "sub_en": "Service"
+    },
+    {
+     "id": "M0",
+     "shape": "text",
+     "x": 171,
+     "y": 96,
+     "fs": 10.5,
+     "fw": 700,
+     "color": "ink",
+     "hl": false,
+     "label": "طلب المصادقة",
+     "label_en": "Authentication request"
+    },
+    {
+     "id": "M1",
+     "shape": "text",
+     "x": 171,
+     "y": 140,
+     "fs": 10.5,
+     "fw": 700,
+     "color": "ink",
+     "hl": false,
+     "label": "إصدار تذكرة منح التذاكر",
+     "label_en": "Issue ticket-granting ticket"
+    },
+    {
+     "id": "K1",
+     "shape": "text",
+     "x": 171,
+     "y": 165,
+     "fs": 9.5,
+     "fw": 700,
+     "color": "amber",
+     "hl": false,
+     "label": "TGT",
+     "label_en": "TGT"
+    },
+    {
+     "id": "M2",
+     "shape": "text",
+     "x": 250,
+     "y": 184,
+     "fs": 10.5,
+     "fw": 700,
+     "color": "ink",
+     "hl": false,
+     "label": "طلب تذكرة خدمة",
+     "label_en": "Request a service ticket"
+    },
+    {
+     "id": "K2",
+     "shape": "text",
+     "x": 250,
+     "y": 209,
+     "fs": 9.5,
+     "fw": 700,
+     "color": "amber",
+     "hl": false,
+     "label": "TGT",
+     "label_en": "TGT"
+    },
+    {
+     "id": "M3",
+     "shape": "text",
+     "x": 250,
+     "y": 228,
+     "fs": 10.5,
+     "fw": 700,
+     "color": "teal",
+     "hl": true,
+     "label": "إصدار تذكرة الخدمة",
+     "label_en": "Issue the service ticket"
+    },
+    {
+     "id": "K3",
+     "shape": "text",
+     "x": 250,
+     "y": 253,
+     "fs": 9.5,
+     "fw": 700,
+     "color": "amber",
+     "hl": false,
+     "label": "تذكرة الخدمة",
+     "label_en": "Service Ticket"
+    }
+   ],
+   "edges": [
+    {
+     "fromPoint": {
+      "x": 98,
+      "y": 108
+     },
+     "toPoint": {
+      "x": 244,
+      "y": 108
+     },
+     "color": "alice",
+     "hl": false
+    },
+    {
+     "fromPoint": {
+      "x": 244,
+      "y": 152
+     },
+     "toPoint": {
+      "x": 98,
+      "y": 152
+     },
+     "color": "teal",
+     "hl": false
+    },
+    {
+     "fromPoint": {
+      "x": 98,
+      "y": 196
+     },
+     "toPoint": {
+      "x": 402,
+      "y": 196
+     },
+     "color": "alice",
+     "hl": false
+    },
+    {
+     "fromPoint": {
+      "x": 402,
+      "y": 240
+     },
+     "toPoint": {
+      "x": 98,
+      "y": 240
+     },
+     "color": "teal",
+     "hl": true
+    }
+   ]
+  },
+  {
+   "caption": "الخطوة ٥ — تقديم تذكرة الخدمة: يقدّم العميل تذكرة الخدمة مباشرةً إلى الخدمة للمصادقة عليها.",
+   "caption_en": "Step 5 — Present the service ticket: the client submits the service ticket directly to the service.",
+   "w": 620,
+   "h": 356,
+   "guides": [
+    {
+     "x": 92,
+     "y1": 76,
+     "y2": 338
+    },
+    {
+     "x": 250,
+     "y1": 76,
+     "y2": 338
+    },
+    {
+     "x": 408,
+     "y1": 76,
+     "y2": 338
+    },
+    {
+     "x": 560,
+     "y1": 76,
+     "y2": 338
+    }
+   ],
+   "nodes": [
+    {
+     "id": "KDC",
+     "shape": "text",
+     "x": 329,
+     "y": 20,
+     "fs": 11,
+     "fw": 800,
+     "color": "navy",
+     "label": "مركز توزيع المفاتيح (KDC)",
+     "label_en": "Key Distribution Center (KDC)"
+    },
+    {
+     "id": "CL",
+     "shape": "actor",
+     "letter": "C",
+     "x": 92,
+     "y": 52,
+     "r": 18,
+     "color": "alice",
+     "hl": true,
+     "label": "العميل",
+     "sub": "Client",
+     "label_en": "Client",
+     "sub_en": "Client"
+    },
+    {
+     "id": "AS",
+     "shape": "actor",
+     "letter": "A",
+     "x": 250,
+     "y": 52,
+     "r": 18,
+     "color": "teal",
+     "hl": false,
+     "label": "خادم المصادقة",
+     "sub": "AS",
+     "label_en": "Auth Server",
+     "sub_en": "AS"
+    },
+    {
+     "id": "TG",
+     "shape": "actor",
+     "letter": "T",
+     "x": 408,
+     "y": 52,
+     "r": 18,
+     "color": "teal",
+     "hl": false,
+     "label": "خادم منح التذاكر",
+     "sub": "TGS",
+     "label_en": "Ticket-Granting Server",
+     "sub_en": "TGS"
+    },
+    {
+     "id": "SV",
+     "shape": "actor",
+     "letter": "S",
+     "x": 560,
+     "y": 52,
+     "r": 18,
+     "color": "bob",
+     "hl": false,
+     "label": "الخدمة",
+     "sub": "Service",
+     "label_en": "Service",
+     "sub_en": "Service"
+    },
+    {
+     "id": "M0",
+     "shape": "text",
+     "x": 171,
+     "y": 96,
+     "fs": 10.5,
+     "fw": 700,
+     "color": "ink",
+     "hl": false,
+     "label": "طلب المصادقة",
+     "label_en": "Authentication request"
+    },
+    {
+     "id": "M1",
+     "shape": "text",
+     "x": 171,
+     "y": 140,
+     "fs": 10.5,
+     "fw": 700,
+     "color": "ink",
+     "hl": false,
+     "label": "إصدار تذكرة منح التذاكر",
+     "label_en": "Issue ticket-granting ticket"
+    },
+    {
+     "id": "K1",
+     "shape": "text",
+     "x": 171,
+     "y": 165,
+     "fs": 9.5,
+     "fw": 700,
+     "color": "amber",
+     "hl": false,
+     "label": "TGT",
+     "label_en": "TGT"
+    },
+    {
+     "id": "M2",
+     "shape": "text",
+     "x": 250,
+     "y": 184,
+     "fs": 10.5,
+     "fw": 700,
+     "color": "ink",
+     "hl": false,
+     "label": "طلب تذكرة خدمة",
+     "label_en": "Request a service ticket"
+    },
+    {
+     "id": "K2",
+     "shape": "text",
+     "x": 250,
+     "y": 209,
+     "fs": 9.5,
+     "fw": 700,
+     "color": "amber",
+     "hl": false,
+     "label": "TGT",
+     "label_en": "TGT"
+    },
+    {
+     "id": "M3",
+     "shape": "text",
+     "x": 250,
+     "y": 228,
+     "fs": 10.5,
+     "fw": 700,
+     "color": "ink",
+     "hl": false,
+     "label": "إصدار تذكرة الخدمة",
+     "label_en": "Issue the service ticket"
+    },
+    {
+     "id": "K3",
+     "shape": "text",
+     "x": 250,
+     "y": 253,
+     "fs": 9.5,
+     "fw": 700,
+     "color": "amber",
+     "hl": false,
+     "label": "تذكرة الخدمة",
+     "label_en": "Service Ticket"
+    },
+    {
+     "id": "M4",
+     "shape": "text",
+     "x": 326,
+     "y": 272,
+     "fs": 10.5,
+     "fw": 700,
+     "color": "alice",
+     "hl": true,
+     "label": "تقديم تذكرة الخدمة",
+     "label_en": "Present the service ticket"
+    },
+    {
+     "id": "K4",
+     "shape": "text",
+     "x": 326,
+     "y": 297,
+     "fs": 9.5,
+     "fw": 700,
+     "color": "amber",
+     "hl": false,
+     "label": "تذكرة الخدمة",
+     "label_en": "Service Ticket"
+    }
+   ],
+   "edges": [
+    {
+     "fromPoint": {
+      "x": 98,
+      "y": 108
+     },
+     "toPoint": {
+      "x": 244,
+      "y": 108
+     },
+     "color": "alice",
+     "hl": false
+    },
+    {
+     "fromPoint": {
+      "x": 244,
+      "y": 152
+     },
+     "toPoint": {
+      "x": 98,
+      "y": 152
+     },
+     "color": "teal",
+     "hl": false
+    },
+    {
+     "fromPoint": {
+      "x": 98,
+      "y": 196
+     },
+     "toPoint": {
+      "x": 402,
+      "y": 196
+     },
+     "color": "alice",
+     "hl": false
+    },
+    {
+     "fromPoint": {
+      "x": 402,
+      "y": 240
+     },
+     "toPoint": {
+      "x": 98,
+      "y": 240
+     },
+     "color": "teal",
+     "hl": false
+    },
+    {
+     "fromPoint": {
+      "x": 98,
+      "y": 284
+     },
+     "toPoint": {
+      "x": 554,
+      "y": 284
+     },
+     "color": "alice",
+     "hl": true
+    }
+   ]
+  },
+  {
+   "caption": "الخطوة ٦ — منح الوصول: تتحقّق الخدمة من التذكرة فتمنح الوصول — دون أن تمرّ كلمة المرور بالشبكة قطّ.",
+   "caption_en": "Step 6 — Grant access: the service validates the ticket and grants access — the password never traversed the network.",
+   "w": 620,
+   "h": 356,
+   "guides": [
+    {
+     "x": 92,
+     "y1": 76,
+     "y2": 338
+    },
+    {
+     "x": 250,
+     "y1": 76,
+     "y2": 338
+    },
+    {
+     "x": 408,
+     "y1": 76,
+     "y2": 338
+    },
+    {
+     "x": 560,
+     "y1": 76,
+     "y2": 338
+    }
+   ],
+   "nodes": [
+    {
+     "id": "KDC",
+     "shape": "text",
+     "x": 329,
+     "y": 20,
+     "fs": 11,
+     "fw": 800,
+     "color": "navy",
+     "label": "مركز توزيع المفاتيح (KDC)",
+     "label_en": "Key Distribution Center (KDC)"
+    },
+    {
+     "id": "CL",
+     "shape": "actor",
+     "letter": "C",
+     "x": 92,
+     "y": 52,
+     "r": 18,
+     "color": "alice",
+     "hl": false,
+     "label": "العميل",
+     "sub": "Client",
+     "label_en": "Client",
+     "sub_en": "Client"
+    },
+    {
+     "id": "AS",
+     "shape": "actor",
+     "letter": "A",
+     "x": 250,
+     "y": 52,
+     "r": 18,
+     "color": "teal",
+     "hl": false,
+     "label": "خادم المصادقة",
+     "sub": "AS",
+     "label_en": "Auth Server",
+     "sub_en": "AS"
+    },
+    {
+     "id": "TG",
+     "shape": "actor",
+     "letter": "T",
+     "x": 408,
+     "y": 52,
+     "r": 18,
+     "color": "teal",
+     "hl": false,
+     "label": "خادم منح التذاكر",
+     "sub": "TGS",
+     "label_en": "Ticket-Granting Server",
+     "sub_en": "TGS"
+    },
+    {
+     "id": "SV",
+     "shape": "actor",
+     "letter": "S",
+     "x": 560,
+     "y": 52,
+     "r": 18,
+     "color": "bob",
+     "hl": true,
+     "label": "الخدمة",
+     "sub": "Service",
+     "label_en": "Service",
+     "sub_en": "Service"
+    },
+    {
+     "id": "M0",
+     "shape": "text",
+     "x": 171,
+     "y": 96,
+     "fs": 10.5,
+     "fw": 700,
+     "color": "ink",
+     "hl": false,
+     "label": "طلب المصادقة",
+     "label_en": "Authentication request"
+    },
+    {
+     "id": "M1",
+     "shape": "text",
+     "x": 171,
+     "y": 140,
+     "fs": 10.5,
+     "fw": 700,
+     "color": "ink",
+     "hl": false,
+     "label": "إصدار تذكرة منح التذاكر",
+     "label_en": "Issue ticket-granting ticket"
+    },
+    {
+     "id": "K1",
+     "shape": "text",
+     "x": 171,
+     "y": 165,
+     "fs": 9.5,
+     "fw": 700,
+     "color": "amber",
+     "hl": false,
+     "label": "TGT",
+     "label_en": "TGT"
+    },
+    {
+     "id": "M2",
+     "shape": "text",
+     "x": 250,
+     "y": 184,
+     "fs": 10.5,
+     "fw": 700,
+     "color": "ink",
+     "hl": false,
+     "label": "طلب تذكرة خدمة",
+     "label_en": "Request a service ticket"
+    },
+    {
+     "id": "K2",
+     "shape": "text",
+     "x": 250,
+     "y": 209,
+     "fs": 9.5,
+     "fw": 700,
+     "color": "amber",
+     "hl": false,
+     "label": "TGT",
+     "label_en": "TGT"
+    },
+    {
+     "id": "M3",
+     "shape": "text",
+     "x": 250,
+     "y": 228,
+     "fs": 10.5,
+     "fw": 700,
+     "color": "ink",
+     "hl": false,
+     "label": "إصدار تذكرة الخدمة",
+     "label_en": "Issue the service ticket"
+    },
+    {
+     "id": "K3",
+     "shape": "text",
+     "x": 250,
+     "y": 253,
+     "fs": 9.5,
+     "fw": 700,
+     "color": "amber",
+     "hl": false,
+     "label": "تذكرة الخدمة",
+     "label_en": "Service Ticket"
+    },
+    {
+     "id": "M4",
+     "shape": "text",
+     "x": 326,
+     "y": 272,
+     "fs": 10.5,
+     "fw": 700,
+     "color": "ink",
+     "hl": false,
+     "label": "تقديم تذكرة الخدمة",
+     "label_en": "Present the service ticket"
+    },
+    {
+     "id": "K4",
+     "shape": "text",
+     "x": 326,
+     "y": 297,
+     "fs": 9.5,
+     "fw": 700,
+     "color": "amber",
+     "hl": false,
+     "label": "تذكرة الخدمة",
+     "label_en": "Service Ticket"
+    },
+    {
+     "id": "M5",
+     "shape": "text",
+     "x": 326,
+     "y": 316,
+     "fs": 10.5,
+     "fw": 700,
+     "color": "bob",
+     "hl": true,
+     "label": "منح الوصول ✓",
+     "label_en": "Grant access ✓"
+    }
+   ],
+   "edges": [
+    {
+     "fromPoint": {
+      "x": 98,
+      "y": 108
+     },
+     "toPoint": {
+      "x": 244,
+      "y": 108
+     },
+     "color": "alice",
+     "hl": false
+    },
+    {
+     "fromPoint": {
+      "x": 244,
+      "y": 152
+     },
+     "toPoint": {
+      "x": 98,
+      "y": 152
+     },
+     "color": "teal",
+     "hl": false
+    },
+    {
+     "fromPoint": {
+      "x": 98,
+      "y": 196
+     },
+     "toPoint": {
+      "x": 402,
+      "y": 196
+     },
+     "color": "alice",
+     "hl": false
+    },
+    {
+     "fromPoint": {
+      "x": 402,
+      "y": 240
+     },
+     "toPoint": {
+      "x": 98,
+      "y": 240
+     },
+     "color": "teal",
+     "hl": false
+    },
+    {
+     "fromPoint": {
+      "x": 98,
+      "y": 284
+     },
+     "toPoint": {
+      "x": 554,
+      "y": 284
+     },
+     "color": "alice",
+     "hl": false
+    },
+    {
+     "fromPoint": {
+      "x": 554,
+      "y": 328
+     },
+     "toPoint": {
+      "x": 98,
+      "y": 328
+     },
+     "color": "bob",
+     "hl": true
+    }
+   ]
+  }
+ ]
+},
+  {
  "id": "chain_of_trust",
  "name": "PKI Chain of Trust",
  "icon": "⛓️",
@@ -6850,6 +10517,997 @@ const INTERACTIVE_DIAGRAM_TEMPLATES = [
   }
  ],
  "audioDesc_en": "It matches the book's chain-of-trust figure: a self-signed pre-installed root signs an intermediate, the intermediate signs the site certificate, and validation climbs the chain to a trusted root — with revocation lists to withdraw trust when needed."
+},
+  {
+ "id": "two_factor_auth_m9",
+ "name": "Two-Factor Authentication (2FA)",
+ "icon": "🔐",
+ "desc": "Book-twin (flow) of fig 10.1: a 2FA sign-in revealed factor by factor — know + have — granting access only when both verify.",
+ "audioDesc": "يطابق شكل 10.1 في الكتاب: تدفّق مصادقةٍ ثنائيّة يُكشف عاملاً عاملاً — يبدأ المستخدم بتسجيل الدخول، ثمّ العامل الأوّل «شيءٌ تعرفه» وهو كلمة المرور، ثمّ العامل الثاني «شيءٌ تملكه» وهو رمزٌ مؤقّت OTP عبر رسالة SMS، ولا يُمنح الوصول إلّا بتحقّق العاملَين معاً؛ فسرقة كلمة المرور وحدها لا تكفي.",
+ "modules": [
+  9
+ ],
+ "type": "interactive",
+ "steps": [
+  {
+   "caption": "المصادقة الثنائية (2FA): يبدأ المستخدم بتسجيل الدخول — والمصادقة تتطلّب عاملَين من فئتَين مختلفتَين، لا عاملاً واحداً.",
+   "caption_en": "Two-factor authentication (2FA): the user begins sign-in — authentication requires two factors from different categories, not one.",
+   "w": 650,
+   "h": 232,
+   "nodes": [
+    {
+     "id": "USR",
+     "shape": "actor",
+     "letter": "U",
+     "x": 70,
+     "y": 132,
+     "r": 20,
+     "color": "alice",
+     "label": "المستخدم",
+     "sub": "تسجيل الدخول",
+     "label_en": "User",
+     "sub_en": "sign-in",
+     "hl": true
+    },
+    {
+     "id": "F1",
+     "x": 224,
+     "y": 132,
+     "w": 150,
+     "h": 118,
+     "color": "default",
+     "label": "العامل الأوّل — شيءٌ تعرفه\nكلمة المرور",
+     "label_en": "Factor 1 — Know\nPassword",
+     "hl": false
+    },
+    {
+     "id": "F2",
+     "x": 404,
+     "y": 132,
+     "w": 150,
+     "h": 118,
+     "color": "default",
+     "label": "العامل الثاني — شيءٌ تملكه\nرمزٌ مؤقّت (OTP) · SMS",
+     "label_en": "Factor 2 — Have\nOne-time code (OTP) · SMS",
+     "hl": false
+    },
+    {
+     "id": "RES",
+     "x": 566,
+     "y": 132,
+     "w": 120,
+     "h": 118,
+     "color": "default",
+     "label": "مُنِح الوصول ✓\nتحقّق العاملان معاً",
+     "label_en": "Access granted ✓\nBoth factors verified",
+     "hl": false
+    }
+   ],
+   "edges": []
+  },
+  {
+   "caption": "العامل الأوّل «شيءٌ تعرفه» (Know): كلمة المرور، سرٌّ يُدخِله المستخدم — ووحده لا يكفي.",
+   "caption_en": "First factor “something you know”: a password the user enters — insufficient on its own.",
+   "w": 650,
+   "h": 232,
+   "nodes": [
+    {
+     "id": "USR",
+     "shape": "actor",
+     "letter": "U",
+     "x": 70,
+     "y": 132,
+     "r": 20,
+     "color": "alice",
+     "label": "المستخدم",
+     "sub": "تسجيل الدخول",
+     "label_en": "User",
+     "sub_en": "sign-in",
+     "hl": false
+    },
+    {
+     "id": "F1",
+     "x": 224,
+     "y": 132,
+     "w": 150,
+     "h": 118,
+     "color": "alice",
+     "label": "العامل الأوّل — شيءٌ تعرفه\nكلمة المرور",
+     "label_en": "Factor 1 — Know\nPassword",
+     "hl": true
+    },
+    {
+     "id": "F2",
+     "x": 404,
+     "y": 132,
+     "w": 150,
+     "h": 118,
+     "color": "default",
+     "label": "العامل الثاني — شيءٌ تملكه\nرمزٌ مؤقّت (OTP) · SMS",
+     "label_en": "Factor 2 — Have\nOne-time code (OTP) · SMS",
+     "hl": false
+    },
+    {
+     "id": "RES",
+     "x": 566,
+     "y": 132,
+     "w": 120,
+     "h": 118,
+     "color": "default",
+     "label": "مُنِح الوصول ✓\nتحقّق العاملان معاً",
+     "label_en": "Access granted ✓\nBoth factors verified",
+     "hl": false
+    }
+   ],
+   "edges": [
+    {
+     "fromPoint": {
+      "x": 92,
+      "y": 132
+     },
+     "toPoint": {
+      "x": 149,
+      "y": 132
+     },
+     "color": "navy",
+     "hl": true
+    }
+   ]
+  },
+  {
+   "caption": "العامل الثاني «شيءٌ تملكه» (Have): رمزٌ مؤقّت (OTP) يصل عبر رسالة SMS إلى جهازٍ يملكه المستخدم.",
+   "caption_en": "Second factor “something you have”: a one-time code (OTP) delivered by SMS to a device the user holds.",
+   "w": 650,
+   "h": 232,
+   "nodes": [
+    {
+     "id": "USR",
+     "shape": "actor",
+     "letter": "U",
+     "x": 70,
+     "y": 132,
+     "r": 20,
+     "color": "alice",
+     "label": "المستخدم",
+     "sub": "تسجيل الدخول",
+     "label_en": "User",
+     "sub_en": "sign-in",
+     "hl": false
+    },
+    {
+     "id": "F1",
+     "x": 224,
+     "y": 132,
+     "w": 150,
+     "h": 118,
+     "color": "alice",
+     "label": "العامل الأوّل — شيءٌ تعرفه\nكلمة المرور",
+     "label_en": "Factor 1 — Know\nPassword",
+     "hl": false
+    },
+    {
+     "id": "F2",
+     "x": 404,
+     "y": 132,
+     "w": 150,
+     "h": 118,
+     "color": "teal",
+     "label": "العامل الثاني — شيءٌ تملكه\nرمزٌ مؤقّت (OTP) · SMS",
+     "label_en": "Factor 2 — Have\nOne-time code (OTP) · SMS",
+     "hl": true
+    },
+    {
+     "id": "RES",
+     "x": 566,
+     "y": 132,
+     "w": 120,
+     "h": 118,
+     "color": "default",
+     "label": "مُنِح الوصول ✓\nتحقّق العاملان معاً",
+     "label_en": "Access granted ✓\nBoth factors verified",
+     "hl": false
+    }
+   ],
+   "edges": [
+    {
+     "fromPoint": {
+      "x": 92,
+      "y": 132
+     },
+     "toPoint": {
+      "x": 149,
+      "y": 132
+     },
+     "color": "navy",
+     "hl": false
+    },
+    {
+     "fromPoint": {
+      "x": 299,
+      "y": 132
+     },
+     "toPoint": {
+      "x": 329,
+      "y": 132
+     },
+     "color": "navy",
+     "hl": true
+    }
+   ]
+  },
+  {
+   "caption": "مُنِح الوصول: لا يُمنح إلّا بتحقّق العاملَين معاً؛ فسرقة كلمة المرور وحدها لا تكفي المهاجم. (والفئة الثالثة: «شيءٌ أنت» كبصمةٍ حيويّة.)",
+   "caption_en": "Access granted only when both factors verify together; a stolen password alone is not enough. (A third category is “something you are”, e.g. biometrics.)",
+   "w": 650,
+   "h": 232,
+   "nodes": [
+    {
+     "id": "USR",
+     "shape": "actor",
+     "letter": "U",
+     "x": 70,
+     "y": 132,
+     "r": 20,
+     "color": "alice",
+     "label": "المستخدم",
+     "sub": "تسجيل الدخول",
+     "label_en": "User",
+     "sub_en": "sign-in",
+     "hl": false
+    },
+    {
+     "id": "F1",
+     "x": 224,
+     "y": 132,
+     "w": 150,
+     "h": 118,
+     "color": "alice",
+     "label": "العامل الأوّل — شيءٌ تعرفه\nكلمة المرور",
+     "label_en": "Factor 1 — Know\nPassword",
+     "hl": false
+    },
+    {
+     "id": "F2",
+     "x": 404,
+     "y": 132,
+     "w": 150,
+     "h": 118,
+     "color": "teal",
+     "label": "العامل الثاني — شيءٌ تملكه\nرمزٌ مؤقّت (OTP) · SMS",
+     "label_en": "Factor 2 — Have\nOne-time code (OTP) · SMS",
+     "hl": false
+    },
+    {
+     "id": "RES",
+     "x": 566,
+     "y": 132,
+     "w": 120,
+     "h": 118,
+     "color": "bob",
+     "label": "مُنِح الوصول ✓\nتحقّق العاملان معاً",
+     "label_en": "Access granted ✓\nBoth factors verified",
+     "hl": true
+    }
+   ],
+   "edges": [
+    {
+     "fromPoint": {
+      "x": 92,
+      "y": 132
+     },
+     "toPoint": {
+      "x": 149,
+      "y": 132
+     },
+     "color": "navy",
+     "hl": false
+    },
+    {
+     "fromPoint": {
+      "x": 299,
+      "y": 132
+     },
+     "toPoint": {
+      "x": 329,
+      "y": 132
+     },
+     "color": "navy",
+     "hl": false
+    },
+    {
+     "fromPoint": {
+      "x": 479,
+      "y": 132
+     },
+     "toPoint": {
+      "x": 506,
+      "y": 132
+     },
+     "color": "navy",
+     "hl": true
+    }
+   ]
+  }
+ ]
+},
+  {
+ "id": "totp_enroll_m9",
+ "name": "TOTP Enrolment & Codes",
+ "icon": "⏱️",
+ "desc": "Book-twin (ladder) of fig 10.2: 2FA/TOTP enrolment revealed step by step, distinguishing HTTPS from manual steps, with the two scientific answers — what the QR encodes and how the OTP is generated.",
+ "audioDesc": "يطابق شكل 10.2 المصحّح في الكتاب: تسجيلُ المصادقة الثنائية بالرمز الزمنيّ TOTP يُكشف خطوةً خطوة بين أليس ومزوّد الخدمة، مع تمييز خطوات HTTPS المؤمَّنة (بالأزرق) عن الإجراءات اليدويّة خارج القناة (بالعنبريّ): بدء التسجيل، فعرض رمز QR في المتصفّح، فتثبيت تطبيق المصادقة، فمسح QR لالتقاط السرّ المشترك K، فإدخال الرمز OTP. ويُجيب المخطّط علميّاً: رمز QR يُرمّز السرَّ K بصيغة otpauth، والرمز يُولَّد بالصيغة OTP يساوي اقتطاع دالّة HMAC للسرّ K مع الزمن T حيث T هو حاصل قسمة الوقت على ثلاثين ثانية.",
+ "modules": [
+  9
+ ],
+ "type": "interactive",
+ "steps": [
+  {
+   "caption": "الخطوة ١ — تبدأ أليس تسجيل المصادقة الثنائية لدى المزوّد عبر اتّصال HTTPS مؤمَّن.",
+   "caption_en": "Step 1 — Alice starts enrolling in 2FA with the provider over a secure HTTPS connection.",
+   "w": 600,
+   "h": 470,
+   "guides": [
+    {
+     "x": 130,
+     "y1": 76,
+     "y2": 352
+    },
+    {
+     "x": 470,
+     "y1": 76,
+     "y2": 352
+    }
+   ],
+   "nodes": [
+    {
+     "id": "LG",
+     "shape": "text",
+     "x": 300,
+     "y": 20,
+     "fs": 10.5,
+     "fw": 700,
+     "color": "default",
+     "label": "الأزرق: عبر HTTPS   ·   العنبريّ: إجراءٌ يدويّ",
+     "label_en": "Blue: over HTTPS   ·   Amber: manual step"
+    },
+    {
+     "id": "AL",
+     "shape": "actor",
+     "letter": "A",
+     "x": 130,
+     "y": 52,
+     "r": 18,
+     "color": "alice",
+     "hl": true,
+     "label": "أليس",
+     "sub": "Alice",
+     "label_en": "Alice",
+     "sub_en": "Alice"
+    },
+    {
+     "id": "PR",
+     "shape": "actor",
+     "letter": "S",
+     "x": 470,
+     "y": 52,
+     "r": 18,
+     "color": "navy",
+     "hl": false,
+     "label": "مزوّد الخدمة",
+     "sub": "Service Provider",
+     "label_en": "Service Provider",
+     "sub_en": "Service Provider"
+    },
+    {
+     "id": "M0",
+     "shape": "text",
+     "x": 300,
+     "y": 101,
+     "fs": 11,
+     "fw": 700,
+     "color": "navy",
+     "hl": true,
+     "label": "بدء تسجيل المصادقة الثنائية (2FA)",
+     "label_en": "Start 2FA registration"
+    }
+   ],
+   "edges": [
+    {
+     "fromPoint": {
+      "x": 138,
+      "y": 112
+     },
+     "toPoint": {
+      "x": 462,
+      "y": 112
+     },
+     "color": "blue",
+     "hl": true
+    }
+   ]
+  },
+  {
+   "caption": "الخطوة ٢ — يعرض المزوّد رمز QR في متصفّح أليس (عبر HTTPS).",
+   "caption_en": "Step 2 — The provider displays a QR code in Alice's browser (over HTTPS).",
+   "w": 600,
+   "h": 470,
+   "guides": [
+    {
+     "x": 130,
+     "y1": 76,
+     "y2": 352
+    },
+    {
+     "x": 470,
+     "y1": 76,
+     "y2": 352
+    }
+   ],
+   "nodes": [
+    {
+     "id": "LG",
+     "shape": "text",
+     "x": 300,
+     "y": 20,
+     "fs": 10.5,
+     "fw": 700,
+     "color": "default",
+     "label": "الأزرق: عبر HTTPS   ·   العنبريّ: إجراءٌ يدويّ",
+     "label_en": "Blue: over HTTPS   ·   Amber: manual step"
+    },
+    {
+     "id": "AL",
+     "shape": "actor",
+     "letter": "A",
+     "x": 130,
+     "y": 52,
+     "r": 18,
+     "color": "alice",
+     "hl": false,
+     "label": "أليس",
+     "sub": "Alice",
+     "label_en": "Alice",
+     "sub_en": "Alice"
+    },
+    {
+     "id": "PR",
+     "shape": "actor",
+     "letter": "S",
+     "x": 470,
+     "y": 52,
+     "r": 18,
+     "color": "navy",
+     "hl": true,
+     "label": "مزوّد الخدمة",
+     "sub": "Service Provider",
+     "label_en": "Service Provider",
+     "sub_en": "Service Provider"
+    },
+    {
+     "id": "M0",
+     "shape": "text",
+     "x": 300,
+     "y": 101,
+     "fs": 11,
+     "fw": 700,
+     "color": "ink",
+     "hl": false,
+     "label": "بدء تسجيل المصادقة الثنائية (2FA)",
+     "label_en": "Start 2FA registration"
+    },
+    {
+     "id": "M1",
+     "shape": "text",
+     "x": 300,
+     "y": 151,
+     "fs": 11,
+     "fw": 700,
+     "color": "navy",
+     "hl": true,
+     "label": "عرض رمز QR في المتصفّح",
+     "label_en": "Show the QR in the browser"
+    }
+   ],
+   "edges": [
+    {
+     "fromPoint": {
+      "x": 138,
+      "y": 112
+     },
+     "toPoint": {
+      "x": 462,
+      "y": 112
+     },
+     "color": "blue",
+     "hl": false
+    },
+    {
+     "fromPoint": {
+      "x": 462,
+      "y": 162
+     },
+     "toPoint": {
+      "x": 138,
+      "y": 162
+     },
+     "color": "blue",
+     "hl": true
+    }
+   ]
+  },
+  {
+   "caption": "الخطوة ٣ — تثبّت أليس تطبيق المصادقة على جهازها الموثوق (إجراءٌ يدويّ خارج القناة).",
+   "caption_en": "Step 3 — Alice installs an authenticator app on her trusted device (a manual, out-of-band step).",
+   "w": 600,
+   "h": 470,
+   "guides": [
+    {
+     "x": 130,
+     "y1": 76,
+     "y2": 352
+    },
+    {
+     "x": 470,
+     "y1": 76,
+     "y2": 352
+    }
+   ],
+   "nodes": [
+    {
+     "id": "LG",
+     "shape": "text",
+     "x": 300,
+     "y": 20,
+     "fs": 10.5,
+     "fw": 700,
+     "color": "default",
+     "label": "الأزرق: عبر HTTPS   ·   العنبريّ: إجراءٌ يدويّ",
+     "label_en": "Blue: over HTTPS   ·   Amber: manual step"
+    },
+    {
+     "id": "AL",
+     "shape": "actor",
+     "letter": "A",
+     "x": 130,
+     "y": 52,
+     "r": 18,
+     "color": "alice",
+     "hl": true,
+     "label": "أليس",
+     "sub": "Alice",
+     "label_en": "Alice",
+     "sub_en": "Alice"
+    },
+    {
+     "id": "PR",
+     "shape": "actor",
+     "letter": "S",
+     "x": 470,
+     "y": 52,
+     "r": 18,
+     "color": "navy",
+     "hl": false,
+     "label": "مزوّد الخدمة",
+     "sub": "Service Provider",
+     "label_en": "Service Provider",
+     "sub_en": "Service Provider"
+    },
+    {
+     "id": "M0",
+     "shape": "text",
+     "x": 300,
+     "y": 101,
+     "fs": 11,
+     "fw": 700,
+     "color": "ink",
+     "hl": false,
+     "label": "بدء تسجيل المصادقة الثنائية (2FA)",
+     "label_en": "Start 2FA registration"
+    },
+    {
+     "id": "M1",
+     "shape": "text",
+     "x": 300,
+     "y": 151,
+     "fs": 11,
+     "fw": 700,
+     "color": "ink",
+     "hl": false,
+     "label": "عرض رمز QR في المتصفّح",
+     "label_en": "Show the QR in the browser"
+    },
+    {
+     "id": "M2",
+     "x": 248,
+     "y": 212,
+     "w": 212,
+     "h": 26,
+     "color": "amber",
+     "hl": true,
+     "label": "تثبيت تطبيق المصادقة (يدويّ)",
+     "label_en": "Install authenticator (manual)"
+    }
+   ],
+   "edges": [
+    {
+     "fromPoint": {
+      "x": 138,
+      "y": 112
+     },
+     "toPoint": {
+      "x": 462,
+      "y": 112
+     },
+     "color": "blue",
+     "hl": false
+    },
+    {
+     "fromPoint": {
+      "x": 462,
+      "y": 162
+     },
+     "toPoint": {
+      "x": 138,
+      "y": 162
+     },
+     "color": "blue",
+     "hl": false
+    }
+   ]
+  },
+  {
+   "caption": "الخطوة ٤ — تمسح أليس رمز QR فيلتقط التطبيق السرَّ المشترك K. وهنا الجواب العلميّ: ماذا يُرمّز QR؟",
+   "caption_en": "Step 4 — Alice scans the QR so the app captures the shared secret K. The scientific answer: what does the QR encode?",
+   "w": 600,
+   "h": 470,
+   "guides": [
+    {
+     "x": 130,
+     "y1": 76,
+     "y2": 352
+    },
+    {
+     "x": 470,
+     "y1": 76,
+     "y2": 352
+    }
+   ],
+   "nodes": [
+    {
+     "id": "LG",
+     "shape": "text",
+     "x": 300,
+     "y": 20,
+     "fs": 10.5,
+     "fw": 700,
+     "color": "default",
+     "label": "الأزرق: عبر HTTPS   ·   العنبريّ: إجراءٌ يدويّ",
+     "label_en": "Blue: over HTTPS   ·   Amber: manual step"
+    },
+    {
+     "id": "AL",
+     "shape": "actor",
+     "letter": "A",
+     "x": 130,
+     "y": 52,
+     "r": 18,
+     "color": "alice",
+     "hl": true,
+     "label": "أليس",
+     "sub": "Alice",
+     "label_en": "Alice",
+     "sub_en": "Alice"
+    },
+    {
+     "id": "PR",
+     "shape": "actor",
+     "letter": "S",
+     "x": 470,
+     "y": 52,
+     "r": 18,
+     "color": "navy",
+     "hl": false,
+     "label": "مزوّد الخدمة",
+     "sub": "Service Provider",
+     "label_en": "Service Provider",
+     "sub_en": "Service Provider"
+    },
+    {
+     "id": "M0",
+     "shape": "text",
+     "x": 300,
+     "y": 101,
+     "fs": 11,
+     "fw": 700,
+     "color": "ink",
+     "hl": false,
+     "label": "بدء تسجيل المصادقة الثنائية (2FA)",
+     "label_en": "Start 2FA registration"
+    },
+    {
+     "id": "M1",
+     "shape": "text",
+     "x": 300,
+     "y": 151,
+     "fs": 11,
+     "fw": 700,
+     "color": "ink",
+     "hl": false,
+     "label": "عرض رمز QR في المتصفّح",
+     "label_en": "Show the QR in the browser"
+    },
+    {
+     "id": "M2",
+     "x": 248,
+     "y": 212,
+     "w": 212,
+     "h": 26,
+     "color": "amber",
+     "hl": false,
+     "label": "تثبيت تطبيق المصادقة (يدويّ)",
+     "label_en": "Install authenticator (manual)"
+    },
+    {
+     "id": "M3",
+     "x": 248,
+     "y": 262,
+     "w": 212,
+     "h": 26,
+     "color": "amber",
+     "hl": true,
+     "label": "مسح QR ← السرّ المشترك K (يدويّ)",
+     "label_en": "Scan QR → shared secret K (manual)"
+    },
+    {
+     "id": "BAr",
+     "x": 300,
+     "y": 374,
+     "w": 556,
+     "h": 30,
+     "color": "amber",
+     "hl": true,
+     "label": "ما يُرمّزه رمز QR: السرُّ المشترك K مع الحساب والمُصدِر",
+     "label_en": "What the QR encodes: shared secret K, account & issuer"
+    },
+    {
+     "id": "BAc",
+     "shape": "text",
+     "x": 300,
+     "y": 398,
+     "fs": 11,
+     "fw": 700,
+     "color": "ink",
+     "label": "⁦otpauth://totp/Issuer:alice?secret=K⁩",
+     "label_en": "⁦otpauth://totp/Issuer:alice?secret=K⁩"
+    }
+   ],
+   "edges": [
+    {
+     "fromPoint": {
+      "x": 138,
+      "y": 112
+     },
+     "toPoint": {
+      "x": 462,
+      "y": 112
+     },
+     "color": "blue",
+     "hl": false
+    },
+    {
+     "fromPoint": {
+      "x": 462,
+      "y": 162
+     },
+     "toPoint": {
+      "x": 138,
+      "y": 162
+     },
+     "color": "blue",
+     "hl": false
+    }
+   ]
+  },
+  {
+   "caption": "الخطوة ٥ — تُدخل أليس الرمز OTP يدويّاً في المتصفّح (يُرسَل عبر HTTPS). والجواب العلميّ: كيف يُولَّد OTP؟",
+   "caption_en": "Step 5 — Alice types the OTP into the browser (sent over HTTPS). The scientific answer: how is the OTP generated?",
+   "w": 600,
+   "h": 470,
+   "guides": [
+    {
+     "x": 130,
+     "y1": 76,
+     "y2": 352
+    },
+    {
+     "x": 470,
+     "y1": 76,
+     "y2": 352
+    }
+   ],
+   "nodes": [
+    {
+     "id": "LG",
+     "shape": "text",
+     "x": 300,
+     "y": 20,
+     "fs": 10.5,
+     "fw": 700,
+     "color": "default",
+     "label": "الأزرق: عبر HTTPS   ·   العنبريّ: إجراءٌ يدويّ",
+     "label_en": "Blue: over HTTPS   ·   Amber: manual step"
+    },
+    {
+     "id": "AL",
+     "shape": "actor",
+     "letter": "A",
+     "x": 130,
+     "y": 52,
+     "r": 18,
+     "color": "alice",
+     "hl": true,
+     "label": "أليس",
+     "sub": "Alice",
+     "label_en": "Alice",
+     "sub_en": "Alice"
+    },
+    {
+     "id": "PR",
+     "shape": "actor",
+     "letter": "S",
+     "x": 470,
+     "y": 52,
+     "r": 18,
+     "color": "navy",
+     "hl": false,
+     "label": "مزوّد الخدمة",
+     "sub": "Service Provider",
+     "label_en": "Service Provider",
+     "sub_en": "Service Provider"
+    },
+    {
+     "id": "M0",
+     "shape": "text",
+     "x": 300,
+     "y": 101,
+     "fs": 11,
+     "fw": 700,
+     "color": "ink",
+     "hl": false,
+     "label": "بدء تسجيل المصادقة الثنائية (2FA)",
+     "label_en": "Start 2FA registration"
+    },
+    {
+     "id": "M1",
+     "shape": "text",
+     "x": 300,
+     "y": 151,
+     "fs": 11,
+     "fw": 700,
+     "color": "ink",
+     "hl": false,
+     "label": "عرض رمز QR في المتصفّح",
+     "label_en": "Show the QR in the browser"
+    },
+    {
+     "id": "M2",
+     "x": 248,
+     "y": 212,
+     "w": 212,
+     "h": 26,
+     "color": "amber",
+     "hl": false,
+     "label": "تثبيت تطبيق المصادقة (يدويّ)",
+     "label_en": "Install authenticator (manual)"
+    },
+    {
+     "id": "M3",
+     "x": 248,
+     "y": 262,
+     "w": 212,
+     "h": 26,
+     "color": "amber",
+     "hl": false,
+     "label": "مسح QR ← السرّ المشترك K (يدويّ)",
+     "label_en": "Scan QR → shared secret K (manual)"
+    },
+    {
+     "id": "M4",
+     "shape": "text",
+     "x": 300,
+     "y": 301,
+     "fs": 11,
+     "fw": 700,
+     "color": "navy",
+     "hl": true,
+     "label": "إدخال الرمز OTP يدويّاً عبر HTTPS",
+     "label_en": "Enter the OTP (over HTTPS)"
+    },
+    {
+     "id": "BAr",
+     "x": 300,
+     "y": 374,
+     "w": 556,
+     "h": 30,
+     "color": "amber",
+     "hl": false,
+     "label": "ما يُرمّزه رمز QR: السرُّ المشترك K مع الحساب والمُصدِر",
+     "label_en": "What the QR encodes: shared secret K, account & issuer"
+    },
+    {
+     "id": "BAc",
+     "shape": "text",
+     "x": 300,
+     "y": 398,
+     "fs": 11,
+     "fw": 700,
+     "color": "ink",
+     "label": "⁦otpauth://totp/Issuer:alice?secret=K⁩",
+     "label_en": "⁦otpauth://totp/Issuer:alice?secret=K⁩"
+    },
+    {
+     "id": "BBr",
+     "x": 300,
+     "y": 426,
+     "w": 556,
+     "h": 30,
+     "color": "teal",
+     "hl": true,
+     "label": "كيف يُولَّد الرمز OTP",
+     "label_en": "How the OTP is generated"
+    },
+    {
+     "id": "BBf",
+     "shape": "text",
+     "x": 300,
+     "y": 450,
+     "fs": 12,
+     "fw": 700,
+     "color": "ink",
+     "label": "⁦OTP = Truncate(HMAC(K, T)),   T = ⌊t / 30⌋⁩",
+     "label_en": "⁦OTP = Truncate(HMAC(K, T)),   T = ⌊t / 30⌋⁩"
+    }
+   ],
+   "edges": [
+    {
+     "fromPoint": {
+      "x": 138,
+      "y": 112
+     },
+     "toPoint": {
+      "x": 462,
+      "y": 112
+     },
+     "color": "blue",
+     "hl": false
+    },
+    {
+     "fromPoint": {
+      "x": 462,
+      "y": 162
+     },
+     "toPoint": {
+      "x": 138,
+      "y": 162
+     },
+     "color": "blue",
+     "hl": false
+    },
+    {
+     "fromPoint": {
+      "x": 138,
+      "y": 312
+     },
+     "toPoint": {
+      "x": 462,
+      "y": 312
+     },
+     "color": "blue",
+     "hl": true
+    }
+   ]
+  }
+ ]
 },
   {
  "id": "challenge_response_flow",
@@ -7752,6 +12410,733 @@ const INTERACTIVE_DIAGRAM_TEMPLATES = [
  "audioDesc_en": "It matches the book's Schnorr figure: commit, then challenge, then respond — Alice proves she knows the secret x without revealing it, a cheater survives only by guessing the challenge, and the cheating probability shrinks exponentially over the rounds."
 },
   {
+ "id": "mitm_dh_m11",
+ "name": "MITM on Diffie–Hellman",
+ "icon": "🕵️‍♀️",
+ "desc": "Book-twin (ladder) of fig 12.1: an active man-in-the-middle on unauthenticated Diffie–Hellman — Mallory intercepts, substitutes, and forms two separate keys.",
+ "audioDesc": "يطابق شكل 12.1 في الكتاب: هجوم الرجل في الوسط ضدّ تبادل ديفي–هيلمان غير المُصادَق، يُكشف خطوةً خطوة بين أليس ومالوري المهاجِمة النشطة وبوب. تعترض مالوري إسهام أليس g أُس a، وتُحلّ محلّه أُسَّها g أُس m نحو بوب منتحلةً أليس، ويردّ بوب بإسهامه g أُس b فتعترضه، ثمّ تُرسل g أُس m إلى أليس منتحلةً بوب. فيقوم مفتاحان منفصلان: K واحد مع أليس يساوي تسعة، وK اثنان مع بوب يساوي عشرة؛ فتفكّ مالوري وتقرأ وتُعيد التشفير، ويبدو الاتصالُ سليماً وهو مخترَقٌ بالكامل. القيم من الكتاب: p يساوي ثلاثة وعشرين وg يساوي خمسة.",
+ "modules": [
+  11
+ ],
+ "type": "interactive",
+ "steps": [
+  {
+   "caption": "الخطوة ١ — الاعتراض: ترسل أليس إسهامها ⁦A = gᵃ⁩ قاصدةً بوب، لكنّ مالوري تعترضه في الطريق فلا يصل.",
+   "caption_en": "Step 1 — Interception: Alice sends her contribution ⁦A = gᵃ⁩ intending it for Bob, but Mallory intercepts it in transit.",
+   "w": 700,
+   "h": 360,
+   "guides": [
+    {
+     "x": 110,
+     "y1": 74,
+     "y2": 330
+    },
+    {
+     "x": 350,
+     "y1": 74,
+     "y2": 330
+    },
+    {
+     "x": 590,
+     "y1": 74,
+     "y2": 330
+    }
+   ],
+   "nodes": [
+    {
+     "id": "AL",
+     "shape": "actor",
+     "letter": "A",
+     "x": 110,
+     "y": 50,
+     "r": 18,
+     "color": "alice",
+     "hl": true,
+     "label": "أليس",
+     "sub": "المرسِلة",
+     "label_en": "Alice",
+     "sub_en": "sender"
+    },
+    {
+     "id": "ML",
+     "shape": "actor",
+     "letter": "M",
+     "x": 350,
+     "y": 50,
+     "r": 18,
+     "color": "mallory",
+     "hl": false,
+     "label": "مالوري",
+     "sub": "مهاجِمةٌ نشطة",
+     "label_en": "Mallory",
+     "sub_en": "active attacker"
+    },
+    {
+     "id": "BO",
+     "shape": "actor",
+     "letter": "B",
+     "x": 590,
+     "y": 50,
+     "r": 18,
+     "color": "bob",
+     "hl": false,
+     "label": "بوب",
+     "sub": "المستقبِل",
+     "label_en": "Bob",
+     "sub_en": "receiver"
+    },
+    {
+     "id": "M0",
+     "shape": "text",
+     "x": 230,
+     "y": 106,
+     "fs": 11,
+     "fw": 700,
+     "color": "alice",
+     "hl": true,
+     "label": "⁦A = gᵃ⁩ — تعترضها مالوري",
+     "label_en": "Alice sends ⁦A = gᵃ⁩; Mallory intercepts"
+    }
+   ],
+   "edges": [
+    {
+     "fromPoint": {
+      "x": 118,
+      "y": 116
+     },
+     "toPoint": {
+      "x": 342,
+      "y": 116
+     },
+     "color": "alice",
+     "hl": true
+    }
+   ]
+  },
+  {
+   "caption": "الخطوة ٢ — الإحلال نحو بوب: تُرسل مالوري أُسَّها ⁦M = gᵐ⁩ إلى بوب منتحلةً أليس.",
+   "caption_en": "Step 2 — Substitution toward Bob: Mallory sends her own ⁦M = gᵐ⁩ to Bob, impersonating Alice.",
+   "w": 700,
+   "h": 360,
+   "guides": [
+    {
+     "x": 110,
+     "y1": 74,
+     "y2": 330
+    },
+    {
+     "x": 350,
+     "y1": 74,
+     "y2": 330
+    },
+    {
+     "x": 590,
+     "y1": 74,
+     "y2": 330
+    }
+   ],
+   "nodes": [
+    {
+     "id": "AL",
+     "shape": "actor",
+     "letter": "A",
+     "x": 110,
+     "y": 50,
+     "r": 18,
+     "color": "alice",
+     "hl": false,
+     "label": "أليس",
+     "sub": "المرسِلة",
+     "label_en": "Alice",
+     "sub_en": "sender"
+    },
+    {
+     "id": "ML",
+     "shape": "actor",
+     "letter": "M",
+     "x": 350,
+     "y": 50,
+     "r": 18,
+     "color": "mallory",
+     "hl": true,
+     "label": "مالوري",
+     "sub": "مهاجِمةٌ نشطة",
+     "label_en": "Mallory",
+     "sub_en": "active attacker"
+    },
+    {
+     "id": "BO",
+     "shape": "actor",
+     "letter": "B",
+     "x": 590,
+     "y": 50,
+     "r": 18,
+     "color": "bob",
+     "hl": false,
+     "label": "بوب",
+     "sub": "المستقبِل",
+     "label_en": "Bob",
+     "sub_en": "receiver"
+    },
+    {
+     "id": "M0",
+     "shape": "text",
+     "x": 230,
+     "y": 106,
+     "fs": 11,
+     "fw": 700,
+     "color": "ink",
+     "hl": false,
+     "label": "⁦A = gᵃ⁩ — تعترضها مالوري",
+     "label_en": "Alice sends ⁦A = gᵃ⁩; Mallory intercepts"
+    },
+    {
+     "id": "M1",
+     "shape": "text",
+     "x": 470,
+     "y": 148,
+     "fs": 11,
+     "fw": 700,
+     "color": "mallory",
+     "hl": true,
+     "label": "⁦M = gᵐ⁩ — تنتحل أليس",
+     "label_en": "Mallory sends ⁦M = gᵐ⁩, posing as Alice"
+    }
+   ],
+   "edges": [
+    {
+     "fromPoint": {
+      "x": 118,
+      "y": 116
+     },
+     "toPoint": {
+      "x": 342,
+      "y": 116
+     },
+     "color": "alice",
+     "hl": false
+    },
+    {
+     "fromPoint": {
+      "x": 358,
+      "y": 158
+     },
+     "toPoint": {
+      "x": 582,
+      "y": 158
+     },
+     "color": "mallory",
+     "hl": true
+    }
+   ]
+  },
+  {
+   "caption": "الخطوة ٣ — ردّ بوب: يردّ بوب بإسهامه ⁦B = gᵇ⁩، فتعترضه مالوري أيضاً.",
+   "caption_en": "Step 3 — Bob's reply: Bob answers with ⁦B = gᵇ⁩, which Mallory also intercepts.",
+   "w": 700,
+   "h": 360,
+   "guides": [
+    {
+     "x": 110,
+     "y1": 74,
+     "y2": 330
+    },
+    {
+     "x": 350,
+     "y1": 74,
+     "y2": 330
+    },
+    {
+     "x": 590,
+     "y1": 74,
+     "y2": 330
+    }
+   ],
+   "nodes": [
+    {
+     "id": "AL",
+     "shape": "actor",
+     "letter": "A",
+     "x": 110,
+     "y": 50,
+     "r": 18,
+     "color": "alice",
+     "hl": false,
+     "label": "أليس",
+     "sub": "المرسِلة",
+     "label_en": "Alice",
+     "sub_en": "sender"
+    },
+    {
+     "id": "ML",
+     "shape": "actor",
+     "letter": "M",
+     "x": 350,
+     "y": 50,
+     "r": 18,
+     "color": "mallory",
+     "hl": false,
+     "label": "مالوري",
+     "sub": "مهاجِمةٌ نشطة",
+     "label_en": "Mallory",
+     "sub_en": "active attacker"
+    },
+    {
+     "id": "BO",
+     "shape": "actor",
+     "letter": "B",
+     "x": 590,
+     "y": 50,
+     "r": 18,
+     "color": "bob",
+     "hl": true,
+     "label": "بوب",
+     "sub": "المستقبِل",
+     "label_en": "Bob",
+     "sub_en": "receiver"
+    },
+    {
+     "id": "M0",
+     "shape": "text",
+     "x": 230,
+     "y": 106,
+     "fs": 11,
+     "fw": 700,
+     "color": "ink",
+     "hl": false,
+     "label": "⁦A = gᵃ⁩ — تعترضها مالوري",
+     "label_en": "Alice sends ⁦A = gᵃ⁩; Mallory intercepts"
+    },
+    {
+     "id": "M1",
+     "shape": "text",
+     "x": 470,
+     "y": 148,
+     "fs": 11,
+     "fw": 700,
+     "color": "ink",
+     "hl": false,
+     "label": "⁦M = gᵐ⁩ — تنتحل أليس",
+     "label_en": "Mallory sends ⁦M = gᵐ⁩, posing as Alice"
+    },
+    {
+     "id": "M2",
+     "shape": "text",
+     "x": 470,
+     "y": 190,
+     "fs": 11,
+     "fw": 700,
+     "color": "bob",
+     "hl": true,
+     "label": "⁦B = gᵇ⁩ — تعترضها مالوري",
+     "label_en": "Bob replies ⁦B = gᵇ⁩; Mallory intercepts"
+    }
+   ],
+   "edges": [
+    {
+     "fromPoint": {
+      "x": 118,
+      "y": 116
+     },
+     "toPoint": {
+      "x": 342,
+      "y": 116
+     },
+     "color": "alice",
+     "hl": false
+    },
+    {
+     "fromPoint": {
+      "x": 358,
+      "y": 158
+     },
+     "toPoint": {
+      "x": 582,
+      "y": 158
+     },
+     "color": "mallory",
+     "hl": false
+    },
+    {
+     "fromPoint": {
+      "x": 582,
+      "y": 200
+     },
+     "toPoint": {
+      "x": 358,
+      "y": 200
+     },
+     "color": "bob",
+     "hl": true
+    }
+   ]
+  },
+  {
+   "caption": "الخطوة ٤ — الإحلال نحو أليس: تُرسل مالوري ⁦M = gᵐ⁩ إلى أليس منتحلةً بوب — فلا يبلغ أيُّ إسهامٍ أصليٍّ الطرفَ الآخر.",
+   "caption_en": "Step 4 — Substitution toward Alice: Mallory sends ⁦M = gᵐ⁩ to Alice, impersonating Bob — so no genuine contribution ever reaches the other side.",
+   "w": 700,
+   "h": 360,
+   "guides": [
+    {
+     "x": 110,
+     "y1": 74,
+     "y2": 330
+    },
+    {
+     "x": 350,
+     "y1": 74,
+     "y2": 330
+    },
+    {
+     "x": 590,
+     "y1": 74,
+     "y2": 330
+    }
+   ],
+   "nodes": [
+    {
+     "id": "AL",
+     "shape": "actor",
+     "letter": "A",
+     "x": 110,
+     "y": 50,
+     "r": 18,
+     "color": "alice",
+     "hl": false,
+     "label": "أليس",
+     "sub": "المرسِلة",
+     "label_en": "Alice",
+     "sub_en": "sender"
+    },
+    {
+     "id": "ML",
+     "shape": "actor",
+     "letter": "M",
+     "x": 350,
+     "y": 50,
+     "r": 18,
+     "color": "mallory",
+     "hl": true,
+     "label": "مالوري",
+     "sub": "مهاجِمةٌ نشطة",
+     "label_en": "Mallory",
+     "sub_en": "active attacker"
+    },
+    {
+     "id": "BO",
+     "shape": "actor",
+     "letter": "B",
+     "x": 590,
+     "y": 50,
+     "r": 18,
+     "color": "bob",
+     "hl": false,
+     "label": "بوب",
+     "sub": "المستقبِل",
+     "label_en": "Bob",
+     "sub_en": "receiver"
+    },
+    {
+     "id": "M0",
+     "shape": "text",
+     "x": 230,
+     "y": 106,
+     "fs": 11,
+     "fw": 700,
+     "color": "ink",
+     "hl": false,
+     "label": "⁦A = gᵃ⁩ — تعترضها مالوري",
+     "label_en": "Alice sends ⁦A = gᵃ⁩; Mallory intercepts"
+    },
+    {
+     "id": "M1",
+     "shape": "text",
+     "x": 470,
+     "y": 148,
+     "fs": 11,
+     "fw": 700,
+     "color": "ink",
+     "hl": false,
+     "label": "⁦M = gᵐ⁩ — تنتحل أليس",
+     "label_en": "Mallory sends ⁦M = gᵐ⁩, posing as Alice"
+    },
+    {
+     "id": "M2",
+     "shape": "text",
+     "x": 470,
+     "y": 190,
+     "fs": 11,
+     "fw": 700,
+     "color": "ink",
+     "hl": false,
+     "label": "⁦B = gᵇ⁩ — تعترضها مالوري",
+     "label_en": "Bob replies ⁦B = gᵇ⁩; Mallory intercepts"
+    },
+    {
+     "id": "M3",
+     "shape": "text",
+     "x": 230,
+     "y": 232,
+     "fs": 11,
+     "fw": 700,
+     "color": "mallory",
+     "hl": true,
+     "label": "⁦M = gᵐ⁩ — تنتحل بوب",
+     "label_en": "Mallory sends ⁦M = gᵐ⁩, posing as Bob"
+    }
+   ],
+   "edges": [
+    {
+     "fromPoint": {
+      "x": 118,
+      "y": 116
+     },
+     "toPoint": {
+      "x": 342,
+      "y": 116
+     },
+     "color": "alice",
+     "hl": false
+    },
+    {
+     "fromPoint": {
+      "x": 358,
+      "y": 158
+     },
+     "toPoint": {
+      "x": 582,
+      "y": 158
+     },
+     "color": "mallory",
+     "hl": false
+    },
+    {
+     "fromPoint": {
+      "x": 582,
+      "y": 200
+     },
+     "toPoint": {
+      "x": 358,
+      "y": 200
+     },
+     "color": "bob",
+     "hl": false
+    },
+    {
+     "fromPoint": {
+      "x": 342,
+      "y": 242
+     },
+     "toPoint": {
+      "x": 118,
+      "y": 242
+     },
+     "color": "mallory",
+     "hl": true
+    }
+   ]
+  },
+  {
+   "caption": "الخطوة ٥ — مفتاحان منفصلان وتنصّتٌ شفّاف: يقوم ⁦K₁ = 9⁩ مع أليس و⁦K₂ = 10⁩ مع بوب؛ تفكّ مالوري وتقرأ وتُعيد التشفير. يبدو الاتصالُ سليماً وهو مخترَقٌ بالكامل.",
+   "caption_en": "Step 5 — Two separate keys, transparent relay: ⁦K₁ = 9⁩ with Alice and ⁦K₂ = 10⁩ with Bob; Mallory decrypts, reads and re-encrypts. The link looks fine yet is fully compromised.",
+   "w": 700,
+   "h": 360,
+   "guides": [
+    {
+     "x": 110,
+     "y1": 74,
+     "y2": 330
+    },
+    {
+     "x": 350,
+     "y1": 74,
+     "y2": 330
+    },
+    {
+     "x": 590,
+     "y1": 74,
+     "y2": 330
+    }
+   ],
+   "nodes": [
+    {
+     "id": "AL",
+     "shape": "actor",
+     "letter": "A",
+     "x": 110,
+     "y": 50,
+     "r": 18,
+     "color": "alice",
+     "hl": false,
+     "label": "أليس",
+     "sub": "المرسِلة",
+     "label_en": "Alice",
+     "sub_en": "sender"
+    },
+    {
+     "id": "ML",
+     "shape": "actor",
+     "letter": "M",
+     "x": 350,
+     "y": 50,
+     "r": 18,
+     "color": "mallory",
+     "hl": true,
+     "label": "مالوري",
+     "sub": "مهاجِمةٌ نشطة",
+     "label_en": "Mallory",
+     "sub_en": "active attacker"
+    },
+    {
+     "id": "BO",
+     "shape": "actor",
+     "letter": "B",
+     "x": 590,
+     "y": 50,
+     "r": 18,
+     "color": "bob",
+     "hl": false,
+     "label": "بوب",
+     "sub": "المستقبِل",
+     "label_en": "Bob",
+     "sub_en": "receiver"
+    },
+    {
+     "id": "M0",
+     "shape": "text",
+     "x": 230,
+     "y": 106,
+     "fs": 11,
+     "fw": 700,
+     "color": "ink",
+     "hl": false,
+     "label": "⁦A = gᵃ⁩ — تعترضها مالوري",
+     "label_en": "Alice sends ⁦A = gᵃ⁩; Mallory intercepts"
+    },
+    {
+     "id": "M1",
+     "shape": "text",
+     "x": 470,
+     "y": 148,
+     "fs": 11,
+     "fw": 700,
+     "color": "ink",
+     "hl": false,
+     "label": "⁦M = gᵐ⁩ — تنتحل أليس",
+     "label_en": "Mallory sends ⁦M = gᵐ⁩, posing as Alice"
+    },
+    {
+     "id": "M2",
+     "shape": "text",
+     "x": 470,
+     "y": 190,
+     "fs": 11,
+     "fw": 700,
+     "color": "ink",
+     "hl": false,
+     "label": "⁦B = gᵇ⁩ — تعترضها مالوري",
+     "label_en": "Bob replies ⁦B = gᵇ⁩; Mallory intercepts"
+    },
+    {
+     "id": "M3",
+     "shape": "text",
+     "x": 230,
+     "y": 232,
+     "fs": 11,
+     "fw": 700,
+     "color": "mallory",
+     "hl": true,
+     "label": "⁦M = gᵐ⁩ — تنتحل بوب",
+     "label_en": "Mallory sends ⁦M = gᵐ⁩, posing as Bob"
+    },
+    {
+     "id": "K1",
+     "x": 230,
+     "y": 292,
+     "w": 150,
+     "h": 26,
+     "color": "amber",
+     "hl": true,
+     "label": "⁦K₁ = 9⁩",
+     "label_en": "⁦K₁ = 9⁩"
+    },
+    {
+     "id": "K2",
+     "x": 470,
+     "y": 292,
+     "w": 150,
+     "h": 26,
+     "color": "amber",
+     "hl": true,
+     "label": "⁦K₂ = 10⁩",
+     "label_en": "⁦K₂ = 10⁩"
+    },
+    {
+     "id": "RL",
+     "shape": "text",
+     "x": 350,
+     "y": 322,
+     "fs": 11,
+     "fw": 700,
+     "color": "mallory",
+     "label": "تنتحل الطرفين وتُرحّل بينهما — ⁦K₁ ≠ K₂⁩",
+     "label_en": "Impersonates both and relays — ⁦K₁ ≠ K₂⁩"
+    }
+   ],
+   "edges": [
+    {
+     "fromPoint": {
+      "x": 118,
+      "y": 116
+     },
+     "toPoint": {
+      "x": 342,
+      "y": 116
+     },
+     "color": "alice",
+     "hl": false
+    },
+    {
+     "fromPoint": {
+      "x": 358,
+      "y": 158
+     },
+     "toPoint": {
+      "x": 582,
+      "y": 158
+     },
+     "color": "mallory",
+     "hl": false
+    },
+    {
+     "fromPoint": {
+      "x": 582,
+      "y": 200
+     },
+     "toPoint": {
+      "x": 358,
+      "y": 200
+     },
+     "color": "bob",
+     "hl": false
+    },
+    {
+     "fromPoint": {
+      "x": 342,
+      "y": 242
+     },
+     "toPoint": {
+      "x": 118,
+      "y": 242
+     },
+     "color": "mallory",
+     "hl": true
+    }
+   ]
+  }
+ ]
+},
+  {
  "id": "tls13_handshake",
  "name": "TLS 1.3 Handshake",
  "icon": "🔒",
@@ -8611,6 +13996,544 @@ const INTERACTIVE_DIAGRAM_TEMPLATES = [
  ]
 },
 {
+ "id": "elgamal_encrypt_m7",
+ "name": "ElGamal Encryption",
+ "icon": "🔑",
+ "desc": "Book-twin (flow) of fig 8.2: ElGamal encryption revealed stage by stage — Bob's key setup, Alice's encryption with ephemeral k, the channel Y=(a,b) seen by Eve, and Bob's decryption with private r.",
+ "audioDesc": "يطابق شكل 8.2 في الكتاب: التشفير بشفرة الجمل ElGamal يُكشف مرحلةً مرحلة. أوّلاً ينشئ بوب مفاتيحه: المعاملان p و g، ومفتاحٌ خاصّ r، ومفتاحٌ عام U يساوي g أُس r بقياس p ويُنشَر. ثمّ تشفّر أليس رسالتها x بأُسٍّ عابر k فتحسب a يساوي g أُس k، وb يساوي U أُس k في x. يُرسَل النصّ المشفّر Y وهو الزوج a وb عبر القناة، ولا ترى إيف سوى a وb ولا تقدر على x. أخيراً يفكّ بوب بمفتاحه الخاصّ r فيحسب s يساوي a أُس r ثمّ يستعيد x يساوي b في معكوس s. ويتطابق السرّ لأنّ s يساوي a أُس r يساوي g أُس k r يساوي U أُس k.",
+ "modules": [
+  7
+ ],
+ "type": "interactive",
+ "steps": [
+  {
+   "caption": "الخطوة ١ — إنشاء مفاتيح بوب: يختار بوب المعاملَين p و g ومفتاحاً خاصّاً r، ويحسب العام ⁦U = gʳ mod p⁩ وينشره.",
+   "caption_en": "Step 1 — Bob's key setup: Bob picks p, g and a private r, computes the public ⁦U = gʳ mod p⁩ and publishes it.",
+   "w": 680,
+   "h": 430,
+   "nodes": [
+    {
+     "id": "KG",
+     "x": 340,
+     "y": 70,
+     "w": 560,
+     "h": 34,
+     "color": "navy",
+     "hl": true,
+     "label": "إنشاء مفاتيح بوب: المعاملان p و g · الخاصّ r · العام U",
+     "label_en": "Bob's key setup: parameters p, g · private r · public U"
+    },
+    {
+     "id": "KGf",
+     "shape": "text",
+     "x": 340,
+     "y": 100,
+     "fs": 11,
+     "fw": 700,
+     "color": "ink",
+     "label": "⁦U = gʳ mod p⁩   (يُنشَر U للجميع)",
+     "label_en": "⁦U = gʳ mod p⁩   (U is published)"
+    },
+    {
+     "id": "AL",
+     "shape": "actor",
+     "letter": "A",
+     "x": 90,
+     "y": 150,
+     "r": 18,
+     "color": "alice",
+     "hl": false,
+     "label": "أليس",
+     "sub": "الرسالة ⁦x⁩",
+     "label_en": "Alice",
+     "sub_en": "message ⁦x⁩"
+    },
+    {
+     "id": "BO",
+     "shape": "actor",
+     "letter": "B",
+     "x": 610,
+     "y": 150,
+     "r": 18,
+     "color": "bob",
+     "hl": false,
+     "label": "بوب",
+     "sub": "يستعيد ⁦x⁩",
+     "label_en": "Bob",
+     "sub_en": "recovers ⁦x⁩"
+    },
+    {
+     "id": "EN",
+     "x": 250,
+     "y": 150,
+     "w": 150,
+     "h": 70,
+     "color": "alice",
+     "hl": false,
+     "label": "تشفير أليس\n(أُسٌّ عابر k)",
+     "label_en": "Alice encrypts\n(ephemeral k)"
+    },
+    {
+     "id": "ENf",
+     "shape": "text",
+     "x": 250,
+     "y": 202,
+     "fs": 10.5,
+     "fw": 700,
+     "color": "ink",
+     "label": "⁦a = gᵏ,  b = Uᵏ·x⁩",
+     "label_en": "⁦a = gᵏ,  b = Uᵏ·x⁩"
+    },
+    {
+     "id": "DE",
+     "x": 470,
+     "y": 150,
+     "w": 150,
+     "h": 70,
+     "color": "bob",
+     "hl": false,
+     "label": "فكّ بوب\n(بالخاصّ r)",
+     "label_en": "Bob decrypts\n(private r)"
+    },
+    {
+     "id": "DEf",
+     "shape": "text",
+     "x": 470,
+     "y": 202,
+     "fs": 10.5,
+     "fw": 700,
+     "color": "ink",
+     "label": "⁦s = aʳ,  x = b·s⁻¹⁩",
+     "label_en": "⁦s = aʳ,  x = b·s⁻¹⁩"
+    }
+   ],
+   "edges": []
+  },
+  {
+   "caption": "الخطوة ٢ — تشفير أليس: بأُسٍّ عابر k ومفتاح بوب العام U تحسب أليس ⁦a = gᵏ⁩ و⁦b = Uᵏ·x⁩.",
+   "caption_en": "Step 2 — Alice encrypts: with an ephemeral k and Bob's public U she computes ⁦a = gᵏ⁩ and ⁦b = Uᵏ·x⁩.",
+   "w": 680,
+   "h": 430,
+   "nodes": [
+    {
+     "id": "KG",
+     "x": 340,
+     "y": 70,
+     "w": 560,
+     "h": 34,
+     "color": "navy",
+     "hl": true,
+     "label": "إنشاء مفاتيح بوب: المعاملان p و g · الخاصّ r · العام U",
+     "label_en": "Bob's key setup: parameters p, g · private r · public U"
+    },
+    {
+     "id": "KGf",
+     "shape": "text",
+     "x": 340,
+     "y": 100,
+     "fs": 11,
+     "fw": 700,
+     "color": "ink",
+     "label": "⁦U = gʳ mod p⁩   (يُنشَر U للجميع)",
+     "label_en": "⁦U = gʳ mod p⁩   (U is published)"
+    },
+    {
+     "id": "AL",
+     "shape": "actor",
+     "letter": "A",
+     "x": 90,
+     "y": 150,
+     "r": 18,
+     "color": "alice",
+     "hl": false,
+     "label": "أليس",
+     "sub": "الرسالة ⁦x⁩",
+     "label_en": "Alice",
+     "sub_en": "message ⁦x⁩"
+    },
+    {
+     "id": "BO",
+     "shape": "actor",
+     "letter": "B",
+     "x": 610,
+     "y": 150,
+     "r": 18,
+     "color": "bob",
+     "hl": false,
+     "label": "بوب",
+     "sub": "يستعيد ⁦x⁩",
+     "label_en": "Bob",
+     "sub_en": "recovers ⁦x⁩"
+    },
+    {
+     "id": "EN",
+     "x": 250,
+     "y": 150,
+     "w": 150,
+     "h": 70,
+     "color": "alice",
+     "hl": true,
+     "label": "تشفير أليس\n(أُسٌّ عابر k)",
+     "label_en": "Alice encrypts\n(ephemeral k)"
+    },
+    {
+     "id": "ENf",
+     "shape": "text",
+     "x": 250,
+     "y": 202,
+     "fs": 10.5,
+     "fw": 700,
+     "color": "ink",
+     "label": "⁦a = gᵏ,  b = Uᵏ·x⁩",
+     "label_en": "⁦a = gᵏ,  b = Uᵏ·x⁩"
+    },
+    {
+     "id": "DE",
+     "x": 470,
+     "y": 150,
+     "w": 150,
+     "h": 70,
+     "color": "bob",
+     "hl": false,
+     "label": "فكّ بوب\n(بالخاصّ r)",
+     "label_en": "Bob decrypts\n(private r)"
+    },
+    {
+     "id": "DEf",
+     "shape": "text",
+     "x": 470,
+     "y": 202,
+     "fs": 10.5,
+     "fw": 700,
+     "color": "ink",
+     "label": "⁦s = aʳ,  x = b·s⁻¹⁩",
+     "label_en": "⁦s = aʳ,  x = b·s⁻¹⁩"
+    }
+   ],
+   "edges": [
+    {
+     "from": "AL",
+     "to": "EN",
+     "color": "navy",
+     "hl": true
+    }
+   ]
+  },
+  {
+   "caption": "الخطوة ٣ — القناة: يُرسَل النصّ المشفّر ⁦Y = (a, b)⁩ عبر القناة؛ لا ترى إيف سوى ⁦(a, b)⁩ ولا تقدر على x.",
+   "caption_en": "Step 3 — The channel: the ciphertext ⁦Y = (a, b)⁩ is sent; Eve sees only ⁦(a, b)⁩ and cannot recover x.",
+   "w": 680,
+   "h": 430,
+   "nodes": [
+    {
+     "id": "KG",
+     "x": 340,
+     "y": 70,
+     "w": 560,
+     "h": 34,
+     "color": "navy",
+     "hl": true,
+     "label": "إنشاء مفاتيح بوب: المعاملان p و g · الخاصّ r · العام U",
+     "label_en": "Bob's key setup: parameters p, g · private r · public U"
+    },
+    {
+     "id": "KGf",
+     "shape": "text",
+     "x": 340,
+     "y": 100,
+     "fs": 11,
+     "fw": 700,
+     "color": "ink",
+     "label": "⁦U = gʳ mod p⁩   (يُنشَر U للجميع)",
+     "label_en": "⁦U = gʳ mod p⁩   (U is published)"
+    },
+    {
+     "id": "AL",
+     "shape": "actor",
+     "letter": "A",
+     "x": 90,
+     "y": 150,
+     "r": 18,
+     "color": "alice",
+     "hl": false,
+     "label": "أليس",
+     "sub": "الرسالة ⁦x⁩",
+     "label_en": "Alice",
+     "sub_en": "message ⁦x⁩"
+    },
+    {
+     "id": "BO",
+     "shape": "actor",
+     "letter": "B",
+     "x": 610,
+     "y": 150,
+     "r": 18,
+     "color": "bob",
+     "hl": false,
+     "label": "بوب",
+     "sub": "يستعيد ⁦x⁩",
+     "label_en": "Bob",
+     "sub_en": "recovers ⁦x⁩"
+    },
+    {
+     "id": "EN",
+     "x": 250,
+     "y": 150,
+     "w": 150,
+     "h": 70,
+     "color": "alice",
+     "hl": true,
+     "label": "تشفير أليس\n(أُسٌّ عابر k)",
+     "label_en": "Alice encrypts\n(ephemeral k)"
+    },
+    {
+     "id": "ENf",
+     "shape": "text",
+     "x": 250,
+     "y": 202,
+     "fs": 10.5,
+     "fw": 700,
+     "color": "ink",
+     "label": "⁦a = gᵏ,  b = Uᵏ·x⁩",
+     "label_en": "⁦a = gᵏ,  b = Uᵏ·x⁩"
+    },
+    {
+     "id": "DE",
+     "x": 470,
+     "y": 150,
+     "w": 150,
+     "h": 70,
+     "color": "bob",
+     "hl": false,
+     "label": "فكّ بوب\n(بالخاصّ r)",
+     "label_en": "Bob decrypts\n(private r)"
+    },
+    {
+     "id": "DEf",
+     "shape": "text",
+     "x": 470,
+     "y": 202,
+     "fs": 10.5,
+     "fw": 700,
+     "color": "ink",
+     "label": "⁦s = aʳ,  x = b·s⁻¹⁩",
+     "label_en": "⁦s = aʳ,  x = b·s⁻¹⁩"
+    },
+    {
+     "id": "CH",
+     "shape": "text",
+     "x": 360,
+     "y": 132,
+     "fs": 12,
+     "fw": 800,
+     "color": "navy",
+     "label": "⁦Y = (a, b)⁩",
+     "label_en": "⁦Y = (a, b)⁩"
+    },
+    {
+     "id": "EV",
+     "shape": "actor",
+     "letter": "E",
+     "x": 340,
+     "y": 250,
+     "r": 16,
+     "color": "eve",
+     "hl": true,
+     "label": "إيف",
+     "sub": "ترى (a, b) فقط",
+     "label_en": "Eve",
+     "sub_en": "⁦sees (a, b) only⁩"
+    }
+   ],
+   "edges": [
+    {
+     "from": "AL",
+     "to": "EN",
+     "color": "navy",
+     "hl": false
+    },
+    {
+     "from": "EN",
+     "to": "DE",
+     "color": "navy",
+     "hl": true
+    },
+    {
+     "fromPoint": {
+      "x": 360,
+      "y": 160
+     },
+     "toPoint": {
+      "x": 340,
+      "y": 232
+     },
+     "color": "eve",
+     "hl": true
+    }
+   ]
+  },
+  {
+   "caption": "الخطوة ٤ — فكّ بوب: بالخاصّ r يحسب ⁦s = aʳ⁩ ثمّ يستعيد ⁦x = b·s⁻¹⁩. يتطابق السرّ لأنّ ⁦s = aʳ = gᵏʳ = Uᵏ⁩.",
+   "caption_en": "Step 4 — Bob decrypts: with private r he computes ⁦s = aʳ⁩ then recovers ⁦x = b·s⁻¹⁩. The secret matches since ⁦s = aʳ = gᵏʳ = Uᵏ⁩.",
+   "w": 680,
+   "h": 430,
+   "nodes": [
+    {
+     "id": "KG",
+     "x": 340,
+     "y": 70,
+     "w": 560,
+     "h": 34,
+     "color": "navy",
+     "hl": true,
+     "label": "إنشاء مفاتيح بوب: المعاملان p و g · الخاصّ r · العام U",
+     "label_en": "Bob's key setup: parameters p, g · private r · public U"
+    },
+    {
+     "id": "KGf",
+     "shape": "text",
+     "x": 340,
+     "y": 100,
+     "fs": 11,
+     "fw": 700,
+     "color": "ink",
+     "label": "⁦U = gʳ mod p⁩   (يُنشَر U للجميع)",
+     "label_en": "⁦U = gʳ mod p⁩   (U is published)"
+    },
+    {
+     "id": "AL",
+     "shape": "actor",
+     "letter": "A",
+     "x": 90,
+     "y": 150,
+     "r": 18,
+     "color": "alice",
+     "hl": false,
+     "label": "أليس",
+     "sub": "الرسالة ⁦x⁩",
+     "label_en": "Alice",
+     "sub_en": "message ⁦x⁩"
+    },
+    {
+     "id": "BO",
+     "shape": "actor",
+     "letter": "B",
+     "x": 610,
+     "y": 150,
+     "r": 18,
+     "color": "bob",
+     "hl": false,
+     "label": "بوب",
+     "sub": "يستعيد ⁦x⁩",
+     "label_en": "Bob",
+     "sub_en": "recovers ⁦x⁩"
+    },
+    {
+     "id": "EN",
+     "x": 250,
+     "y": 150,
+     "w": 150,
+     "h": 70,
+     "color": "alice",
+     "hl": true,
+     "label": "تشفير أليس\n(أُسٌّ عابر k)",
+     "label_en": "Alice encrypts\n(ephemeral k)"
+    },
+    {
+     "id": "ENf",
+     "shape": "text",
+     "x": 250,
+     "y": 202,
+     "fs": 10.5,
+     "fw": 700,
+     "color": "ink",
+     "label": "⁦a = gᵏ,  b = Uᵏ·x⁩",
+     "label_en": "⁦a = gᵏ,  b = Uᵏ·x⁩"
+    },
+    {
+     "id": "DE",
+     "x": 470,
+     "y": 150,
+     "w": 150,
+     "h": 70,
+     "color": "bob",
+     "hl": true,
+     "label": "فكّ بوب\n(بالخاصّ r)",
+     "label_en": "Bob decrypts\n(private r)"
+    },
+    {
+     "id": "DEf",
+     "shape": "text",
+     "x": 470,
+     "y": 202,
+     "fs": 10.5,
+     "fw": 700,
+     "color": "ink",
+     "label": "⁦s = aʳ,  x = b·s⁻¹⁩",
+     "label_en": "⁦s = aʳ,  x = b·s⁻¹⁩"
+    },
+    {
+     "id": "CH",
+     "shape": "text",
+     "x": 360,
+     "y": 132,
+     "fs": 12,
+     "fw": 800,
+     "color": "navy",
+     "label": "⁦Y = (a, b)⁩",
+     "label_en": "⁦Y = (a, b)⁩"
+    },
+    {
+     "id": "EV",
+     "shape": "actor",
+     "letter": "E",
+     "x": 340,
+     "y": 250,
+     "r": 16,
+     "color": "eve",
+     "hl": true,
+     "label": "إيف",
+     "sub": "ترى (a, b) فقط",
+     "label_en": "Eve",
+     "sub_en": "⁦sees (a, b) only⁩"
+    }
+   ],
+   "edges": [
+    {
+     "from": "AL",
+     "to": "EN",
+     "color": "navy",
+     "hl": false
+    },
+    {
+     "from": "EN",
+     "to": "DE",
+     "color": "navy",
+     "hl": false
+    },
+    {
+     "from": "DE",
+     "to": "BO",
+     "color": "navy",
+     "hl": true
+    },
+    {
+     "fromPoint": {
+      "x": 360,
+      "y": 160
+     },
+     "toPoint": {
+      "x": 340,
+      "y": 232
+     },
+     "color": "eve",
+     "hl": true
+    }
+   ]
+  }
+ ]
+},
+  {
  "id": "dh_exchange_m7",
  "name": "Diffie–Hellman Exchange & the Elliptic Bridge",
  "icon": "🔑",
