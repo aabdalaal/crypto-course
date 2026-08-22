@@ -36452,6 +36452,9 @@ function preprocessSpeechText(raw) {
     .replace(/\bOCSP\b/g,    'O-C-S-P')
     .replace(/\bZKP\b/g,     'zero-knowledge proof')
     .replace(/\bIoT\b/g,     'internet of things')
+    // ── Variant suffix: acronym/letter followed by "-<number>" (e.g. AES-128,
+    //    R-S-A-2048) — turn the joining hyphen into a space so TTS never says "minus"
+    .replace(/([A-Za-z])[-\u2011](\d)/g, '$1 $2')
     .replace(/\b(www)\.([a-z0-9-]+)\.([a-z]{2,})/gi, '$1 dot $2 dot $3')
     .replace(/‖/g,            ' concatenated with ')
     .replace(/⊕/g,            ' exclusive OR ')
