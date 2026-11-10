@@ -22,7 +22,8 @@ alwaysApply: true
 | `rebuildDynamicGroup(group)` | Recalculate dynamic group membership |
 | `renderAnalyticsTab()` | Render analytics from xAPI + state |
 | `emitXAPI(verb, obj, ext)` | Record learning event |
-| `triggerSync()` | Simulate server sync (PR13 6-field payload) |
+| `triggerSync()` | Push the PR13 6-field payload to the sync server (needs a write token; guests stay local) |
+| `cloudSyncAllowed()` | v1.6.0 guard: false for guest sessions or when no write token — no sync request is sent |
 | `issueCertificate(moduleId)` | Award completion certificate |
 | `startDiagnostic()` | Launch 10-question entry assessment (PR12) |
 | `setLanguage(lang)` | Switch UI language: `'en'` / `'ar'` (PR11) |
