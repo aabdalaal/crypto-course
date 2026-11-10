@@ -2463,6 +2463,19 @@ body.high-contrast {
       </div>
     </div>
 
+    <!-- ASSESSMENT (v1.6.0) — two assessments built on the course labs; rendered by renderAssess() -->
+    <div class="screen" id="screen-assess">
+      <div class="screen-header" style="padding-bottom:12px">
+        <div class="header-row">
+          <div>
+            <div class="header-title" role="heading" aria-level="1" data-i18n="asm_title">Assessment</div>
+            <div class="header-sub" data-i18n="asm_sub">Two assessments built on the course labs. Your work is saved on this device.</div>
+          </div>
+          <div class="asm-saved" id="asm-saved"></div>
+        </div>
+      </div>
+      <div id="assess-body"></div>
+    </div>
   </div>
 
     <!-- LEADERBOARD SCREEN -->
@@ -2495,20 +2508,6 @@ body.high-contrast {
       <div style="padding:0 20px 100px" id="mywork-body">
         <div style="text-align:center;padding:60px 20px;color:var(--muted)">Loading…</div>
       </div>
-    </div>
-
-    <!-- ASSESSMENT (v1.6.0) — two assessments built on the course labs; rendered by renderAssess() -->
-    <div class="screen" id="screen-assess">
-      <div class="screen-header" style="padding-bottom:12px">
-        <div class="header-row">
-          <div>
-            <div class="header-title" role="heading" aria-level="1" data-i18n="asm_title">Assessment</div>
-            <div class="header-sub" data-i18n="asm_sub">Two assessments built on the course labs. Your work is saved on this device.</div>
-          </div>
-          <div class="asm-saved" id="asm-saved"></div>
-        </div>
-      </div>
-      <div id="assess-body"></div>
     </div>
 
   <!-- CONTENT EDITOR OVERLAY -->
@@ -2582,7 +2581,7 @@ body.high-contrast {
 // Bump on EVERY deploy; keep sw.js CACHE_NAME in lockstep.
 // MAJOR = breaking data/schema change · MINOR = feature batch · PATCH = fix
 // ============================================================
-const APP_VERSION = '1.6.0';
+const APP_VERSION = '1.6.1';
 const APP_VERSION_DATE = '2026-11-10';
 const WHATS_NEW = 'New Assessment tab: a Cryptography Skills Portfolio and an applied post-quantum readiness project, with personal data, instant checks, autosave and an exported report; plus three new labs — hash-then-sign (58), an X.509 parser (59) and 2-D lattices (60).';
 
